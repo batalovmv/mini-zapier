@@ -1,5 +1,26 @@
 {
   "name": "@mini-zapier/api",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "scripts": {
+    "build": "pnpm run prisma:generate && node ../../packages/shared/node_modules/typescript/bin/tsc -p tsconfig.build.json",
+    "start": "node --env-file=.env dist/main.js",
+    "start:dev": "pnpm run build && node --env-file=.env dist/main.js",
+    "start:prod": "node --env-file=.env dist/main.js",
+    "prisma:generate": "prisma generate && node -e \"const fs=require('node:fs');const path=require('node:path');const clientDir=fs.realpathSync(path.dirname(require.resolve('@prisma/client/package.json')));const generatedDir=path.join(path.dirname(path.dirname(clientDir)),'.prisma');const targetDir=path.join(clientDir,'node_modules','.prisma');fs.rmSync(targetDir,{recursive:true,force:true});fs.mkdirSync(path.dirname(targetDir),{recursive:true});fs.cpSync(generatedDir,targetDir,{recursive:true,force:true});\"",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@mini-zapier/shared": "workspace:*",
+    "@nestjs/common": "^11.1.16",
+    "@nestjs/core": "^11.1.16",
+    "@nestjs/platform-express": "^11.1.16",
+    "@prisma/client": "^6.19.2",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.2"
+  }
 }

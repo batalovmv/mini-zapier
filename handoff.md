@@ -3,28 +3,34 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последняя задача**: TASK-001 (done)
-- **Статус проекта**: scaffold + документация готовы, приступаем к API
+- **Последняя задача**: TASK-002 (done)
+- **Статус проекта**: API scaffold и база готовы; можно переходить к server-utils
 - **Что сделано**:
-  - Monorepo: pnpm workspaces (apps/api, apps/worker, apps/web, packages/shared)
-  - Docker Compose: PostgreSQL на порту **5434**, Redis на порту **6380**
-  - Shared types: все enums + DTOs (WorkflowStatus, TriggerType, ActionType, ExecutionStatus, ConnectionType)
-  - Git initialized, ветка `main`
-  - Документация: spec-v1.md, decisions.md, backlog.md (17 задач), test-checklist.md, CLAUDE.md
+  - `apps/api` поднят как минимальное NestJS приложение (`main.ts`, `AppModule`)
+  - Добавлены `PrismaModule` и `PrismaService` (global, `OnModuleInit`, `OnModuleDestroy`)
+  - Описана полная Prisma schema на 7 моделей и все enum-ы из `spec-v1.md`
+  - Создана и применена initial migration `20260308184207_init`
+  - `pnpm dev:api` собирает Prisma Client перед стартом; дефолтный порт приложения — `3000`
 - **Что сломано**: —
-- **Частично сделано**: apps/api, apps/worker, apps/web — только placeholder package.json, NestJS ещё не установлен
-- **Root scripts** (`pnpm dev:api`, `dev:worker`, `dev:web` и т.д.) — заработают только после TASK-002 (api), TASK-007 (worker), TASK-013 (web)
+- **Частично сделано**:
+  - `apps/worker` и `apps/web` всё ещё placeholders
+  - `apps/api` пока без контроллеров, сервисов бизнес-логики и Swagger — это следующие TASK-и backlog
+- **Root scripts**:
+  - `pnpm dev:api` работает
+  - `pnpm dev:worker` заработает после TASK-007
+  - `pnpm dev:web` заработает после TASK-013
 
 ## Следующий шаг
-**TASK-002**: apps/api scaffold + Prisma schema + migrations
+**TASK-003**: Common utilities (crypto, redact, truncate)
 
 ## Блокеры
-Нет
+- На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`). API по умолчанию слушает `3000`, но для локальной smoke-проверки можно временно запускать с `PORT=3001`.
 
 ## Важные заметки
-- **Порты**: PostgreSQL=**5434**, Redis=**6380** (стандартные 5432/6379 заняты другими проектами!)
-- packages/shared/dist/ — уже собран, можно импортировать `@mini-zapier/shared`
-- Docker контейнеры могут быть остановлены — перед работой проверь `docker compose up -d`
+- **Порты инфраструктуры**: PostgreSQL=**5434**, Redis=**6380**
+- Для `apps/api` зафиксирован Prisma **6.19.2**: это оставляет классическую `schema.prisma` и стандартный `PrismaClient` без нового Prisma 7 datasource/runtime слоя
+- `pnpm dev:api` перед стартом автоматически делает `prisma generate`
+- После следующего изменения `apps/api/prisma/schema.prisma` запускай `pnpm --filter @mini-zapier/api run prisma:migrate -- --name <migration_name>`
 
 ---
 
@@ -69,4 +75,5 @@
 | Task | Status | Коммит | Заметки |
 |------|--------|--------|---------|
 | TASK-001 | done | b65ea23 | Monorepo scaffold, docker, shared types |
+| TASK-002 | done | см. `git log` (`TASK-002: apps/api scaffold + Prisma schema + migrations`) | apps/api scaffold, PrismaModule/Service, 7-model schema, init migration |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |

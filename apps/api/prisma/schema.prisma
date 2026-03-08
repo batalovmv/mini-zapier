@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WorkflowStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+}
+
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+enum StepStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
+enum TriggerType {
+  WEBHOOK
+  CRON
+  EMAIL
+}
+
+enum ActionType {
+  HTTP_REQUEST
+  EMAIL
+  TELEGRAM
+  DB_QUERY
+  DATA_TRANSFORM
+}
+
+enum ConnectionType {
+  SMTP
+  TELEGRAM
+  POSTGRESQL
+  WEBHOOK
+}
+
+model Workflow {
+  id            String              @id @default(cuid())
+  name          String
+  description   String?
+  status        WorkflowStatus      @default(DRAFT)
+  version       Int                 @default(1)
+  timezone      String              @default("UTC")
+  viewport      Json?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  nodes         WorkflowNode[]
+  edges         WorkflowEdge[]
+  executions    WorkflowExecution[]
+  triggerEvents TriggerEvent[]
+}
+
+model WorkflowNode {
+  id            String         @id @default(cuid())
+  workflowId    String
+  positionX     Float
+  positionY     Float
+  nodeKind      String
+  nodeType      String
+  label         String
+  config        Json
+  connectionId  String?
+  retryCount    Int            @default(0)
+  retryBackoff  Int            @default(0)
+  timeoutMs     Int?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  workflow      Workflow       @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  connection    Connection?    @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+  outgoingEdges WorkflowEdge[] @relation("WorkflowEdgeSource")
+  incomingEdges WorkflowEdge[] @relation("WorkflowEdgeTarget")
+
+  @@index([workflowId])
+  @@index([connectionId])
+}
+
+model WorkflowEdge {
+  id           String       @id @default(cuid())
+  workflowId   String
+  sourceNodeId String
+  targetNodeId String
+  sourceHandle String?
+  targetHandle String?
+  workflow     Workflow     @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  sourceNode   WorkflowNode @relation("WorkflowEdgeSource", fields: [sourceNodeId], references: [id], onDelete: Cascade)
+  targetNode   WorkflowNode @relation("WorkflowEdgeTarget", fields: [targetNodeId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceNodeId, targetNodeId])
+  @@index([workflowId])
+  @@index([sourceNodeId])
+  @@index([targetNodeId])
+}
+
+model Connection {
+  id            String         @id @default(cuid())
+  name          String
+  type          ConnectionType
+  credentials   String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  workflowNodes WorkflowNode[]
+}
+
+model WorkflowExecution {
+  id                 String            @id @default(cuid())
+  workflowId         String
+  workflowVersion    Int
+  status             ExecutionStatus   @default(PENDING)
+  triggerData        Json?
+  definitionSnapshot Json
+  startedAt          DateTime?
+  completedAt        DateTime?
+  errorMessage       String?
+  createdAt          DateTime          @default(now())
+  workflow           Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  stepLogs           ExecutionStepLog[]
+
+  @@index([workflowId])
+  @@index([status])
+}
+
+model ExecutionStepLog {
+  id           String            @id @default(cuid())
+  executionId  String
+  nodeId       String
+  nodeLabel    String
+  nodeType     String
+  status       StepStatus        @default(PENDING)
+  inputData    Json?
+  outputData   Json?
+  errorMessage String?
+  retryAttempt Int               @default(0)
+  truncated    Boolean           @default(false)
+  startedAt    DateTime?
+  completedAt  DateTime?
+  durationMs   Int?
+  createdAt    DateTime          @default(now())
+  execution    WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+}
+
+model TriggerEvent {
+  id             String      @id @default(cuid())
+  workflowId     String
+  source         TriggerType
+  idempotencyKey String?
+  processed      Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  workflow       Workflow    @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@unique([workflowId, source, idempotencyKey])
+  @@index([workflowId])
+}

@@ -17,7 +17,7 @@
 - **Проверка**: `pnpm install && docker compose up -d && pnpm --filter @mini-zapier/shared build`
 
 ### TASK-002: apps/api scaffold + Prisma schema + migrations
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: NestJS API приложение с Prisma, все 7 моделей, PrismaModule
 - **Scope**:
   - Scaffold NestJS app в apps/api (nest new или вручную)
@@ -458,3 +458,4 @@
   - Нет unhandled errors в консоли
   - Loading/empty states везде где нужно
   - Toast на успешные/ошибочные операции
+
