@@ -3,23 +3,26 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последняя задача**: TASK-007 (done)
-- **Статус проекта**: Webhook/manual execution теперь проходят end-to-end через Redis queue и standalone worker; execution переходит из `PENDING` в `RUNNING` и затем в `SUCCESS`/`FAILED` со step logs
+- **Последняя задача**: TASK-008 (done)
+- **Статус проекта**: Webhook/manual execution проходят end-to-end через Redis queue и standalone worker; `HTTP_REQUEST` теперь выполняет реальный HTTP вызов, execution пишет step logs и workflow auto-pause срабатывает после 5 подряд `FAILED`
 - **Что сделано**:
   - Добавлен standalone `apps/worker`: `NestFactory.createApplicationContext`, `WorkerModule`, локальные `PrismaModule`/`PrismaService`, bootstrap без HTTP
   - Добавлен BullMQ consumer `workflow-execution`: worker подключается к Redis и обрабатывает jobs из очереди `workflow-execution`
   - Реализован `ExecutionEngine`: читает execution c `definitionSnapshot`, переводит execution в `RUNNING`, извлекает линейную action-цепочку из snapshot, прокидывает `dataContext`, расшифровывает credentials по `connectionId`, применяет timeout/retry/backoff и завершает execution в `SUCCESS` или `FAILED`
   - Реализован `LogService`: создаёт денормализованные `ExecutionStepLog`, пишет `nodeLabel`/`nodeType`, делает redaction чувствительных полей и truncation payload > 64KB до записи в БД
-  - Добавлен минимальный `ActionService` с noop strategy для всех 5 action types v1; это даёт рабочий execution path без выхода за scope TASK-007
-  - Smoke-проверка прошла:
-    - worker стартует и подключается к Redis queue
-    - webhook workflow `cmmi9vfjk0003wyd4cif2tgxp` → execution `cmmi9vfkf0006wyd4pki6n9ag` завершился `SUCCESS`, создан 1 step log, redaction в `inputData`/`outputData` сработал (`password` → `****`)
-    - негативный smoke: workflow `cmmi9vwbn0008wyd4pj7dxib1` с unsupported action → execution `cmmi9vwcb000bwyd4g7d1t627` завершился `FAILED`, step log тоже `FAILED`
+  - `ActionService` переведён на `Map<ActionType, ActionStrategy>`; `HTTP_REQUEST` зарегистрирован как первая реальная strategy, остальные action types v1 пока остаются на noop stub
+  - Добавлен `HttpRequestAction`: template interpolation для `{{input.*}}` в config, реальный HTTP вызов, поддержка `AbortSignal` и контракт результата `{ status, headers, data }`
+  - В `ExecutionEngine` добавлен auto-pause: после обновления execution в `FAILED` worker проверяет последние 5 executions workflow и переводит workflow в `PAUSED`, если все 5 подряд завершились `FAILED`
+  - Smoke-проверка `TASK-008` прошла:
+    - success workflow `cmmiadsou0001wyiwxecxv37r` → execution `cmmiadspr0004wyiwjkw510af` завершился `SUCCESS`; `HTTP_REQUEST` сходил в `https://httpbin.org/anything`, `{{input.name}}` и `{{input.profile.city}}` корректно подставились в URL/body
+    - dedupe подтвердился и для `Idempotency-Key`, и для `X-Event-ID`: повторный webhook вернул `{ duplicate: true }`, лишний execution не создался
+    - retry подтвердился на workflow `cmmiadv51000dwyiwduvmpwad`: первый failed execution `cmmiadv5n000gwyiw0xjfl034` сохранил `retryAttempt=2` при `retryCount=2`
+    - auto-pause сработал после 5 подряд failed executions: workflow `cmmiadv51000dwyiwduvmpwad` переведён в `PAUSED`, worker записал warning в лог
+    - webhook secret не попал ни в `step logs`, ни в `definitionSnapshot`
 - **Что сломано**:
-  - Реальные action strategies ещё не реализованы: `HTTP_REQUEST`, `EMAIL`, `TELEGRAM`, `DB_QUERY`, `DATA_TRANSFORM` пока работают через noop stub
+  - Реальные action strategies ещё не реализованы для `EMAIL`, `TELEGRAM`, `DB_QUERY`, `DATA_TRANSFORM`: они всё ещё работают через noop stub
 - **Частично сделано**:
   - `apps/api` всё ещё без `StatsModule`
-  - auto-pause после 5 подряд FAILED ещё не реализован
   - `apps/web` всё ещё placeholder
 - **Root scripts**:
   - `pnpm dev:api` работает
@@ -27,7 +30,7 @@
   - `pnpm dev:web` заработает после TASK-013
 
 ## Следующий шаг
-**TASK-008**: HttpRequestAction + auto-pause + E2E smoke
+**TASK-009**: Cron trigger + startup reconciliation
 
 ## Блокеры
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`). API по умолчанию слушает `3000`, но для локальной smoke-проверки можно временно запускать с `PORT=3001`.
@@ -41,12 +44,13 @@
 - Валидация workflow выполняется в `apps/api/src/workflow/workflow.validation.ts`; при сохранении node ids берутся из payload и затем используются в edges как есть
 - Для `apps/api` зафиксирован Prisma **6.19.2**: это оставляет классическую `schema.prisma` и стандартный `PrismaClient` без нового Prisma 7 datasource/runtime слоя
 - `pnpm dev:api` перед стартом автоматически делает `prisma generate`
-- Для `TASK-007` реальных action implementations пока нет: worker регистрирует noop strategy для action types v1, а failure path можно проверить через unsupported `nodeType`
-- Для smoke-проверок `TASK-007` использовались тестовые сущности:
-  - success `Workflow`: `cmmi9vfjk0003wyd4cif2tgxp`
-  - success `Execution`: `cmmi9vfkf0006wyd4pki6n9ag`
-  - failed `Workflow`: `cmmi9vwbn0008wyd4pj7dxib1`
-  - failed `Execution`: `cmmi9vwcb000bwyd4g7d1t627`
+- Для `TASK-008` `HTTP_REQUEST` реализован без новой dependency: используется встроенный Node `fetch`, но контракт strategy сохранён (`{ status, headers, data }`), non-2xx ответы считаются ошибкой
+- Для smoke-проверок `TASK-008` использовались тестовые сущности:
+  - `Connection`: `cmmiadsob0000wyiwt7amu01e`
+  - success `Workflow`: `cmmiadsou0001wyiwxecxv37r`
+  - success `Execution`: `cmmiadspr0004wyiwjkw510af`
+  - auto-pause `Workflow`: `cmmiadv51000dwyiwduvmpwad`
+  - first failed `Execution`: `cmmiadv5n000gwyiw0xjfl034`
 - После следующего изменения `apps/api/prisma/schema.prisma` запускай `pnpm --filter @mini-zapier/api run prisma:migrate -- --name <migration_name>`
 
 ---
@@ -98,4 +102,5 @@
 | TASK-005 | done | см. `git log` (`TASK-005: WorkflowModule CRUD + linear validation`) | Workflow CRUD, full graph replace, versioning, linear graph validation, paginated list/status filter |
 | TASK-006 | done | см. `git log` (`TASK-006: ExecutionService + TriggerController (webhook + dedupe)`) | ExecutionModule, webhook TriggerController, BullMQ queue setup, atomic dedupe, execution snapshot/enqueue smoke-checked |
 | TASK-007 | done | см. `git log` (`TASK-007: apps/worker scaffold + BullMQ processor + execution engine`) | standalone worker, BullMQ consumer, chain resolver, retry/timeout wrapper, step logs, success/failure smoke-checked |
+| TASK-008 | done | см. `git log` (`TASK-008: HttpRequestAction + auto-pause + E2E smoke`) | real HTTP_REQUEST strategy, template interpolation, retry smoke, 5x failed auto-pause, dedupe + snapshot/log secrecy checks |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |

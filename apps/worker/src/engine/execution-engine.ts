@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { decrypt } from '@mini-zapier/server-utils';
-import { ExecutionStatus } from '@mini-zapier/shared';
+import { ExecutionStatus, WorkflowStatus } from '@mini-zapier/shared';
 
 import { ActionService } from '../action/action.service';
 import { LogService } from '../log/log.service';
@@ -20,6 +20,8 @@ function wait(delayMs: number): Promise<void> {
     setTimeout(resolve, delayMs);
   });
 }
+
+const AUTO_PAUSE_FAILURE_THRESHOLD = 5;
 
 class ActionExecutionError extends Error {
   constructor(
@@ -108,7 +110,11 @@ export class ExecutionEngine {
             Date.now() - stepStartedAt,
           );
 
-          await this.markExecutionFailed(executionId, actionError.message);
+          await this.markExecutionFailed(
+            executionId,
+            execution.workflowId,
+            actionError.message,
+          );
           return;
         }
       }
@@ -128,7 +134,11 @@ export class ExecutionEngine {
         `Execution "${executionId}" failed before completing the action chain: ${errorMessage}`,
       );
 
-      await this.markExecutionFailed(executionId, errorMessage);
+      await this.markExecutionFailed(
+        executionId,
+        execution.workflowId,
+        errorMessage,
+      );
     }
   }
 
@@ -266,16 +276,56 @@ export class ExecutionEngine {
 
   private async markExecutionFailed(
     executionId: string,
+    workflowId: string,
     errorMessage: string,
   ): Promise<void> {
-    await this.prisma.workflowExecution.update({
-      where: { id: executionId },
-      data: {
-        status: ExecutionStatus.FAILED,
-        completedAt: new Date(),
-        errorMessage,
-      },
+    const autoPaused = await this.prisma.$transaction(async (tx) => {
+      await tx.workflowExecution.update({
+        where: { id: executionId },
+        data: {
+          status: ExecutionStatus.FAILED,
+          completedAt: new Date(),
+          errorMessage,
+        },
+      });
+
+      const latestExecutions = await tx.workflowExecution.findMany({
+        where: { workflowId },
+        take: AUTO_PAUSE_FAILURE_THRESHOLD,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        select: { status: true },
+      });
+
+      if (latestExecutions.length < AUTO_PAUSE_FAILURE_THRESHOLD) {
+        return false;
+      }
+
+      if (
+        latestExecutions.some(
+          (execution) => execution.status !== ExecutionStatus.FAILED,
+        )
+      ) {
+        return false;
+      }
+
+      const updateResult = await tx.workflow.updateMany({
+        where: {
+          id: workflowId,
+          status: WorkflowStatus.ACTIVE,
+        },
+        data: {
+          status: WorkflowStatus.PAUSED,
+        },
+      });
+
+      return updateResult.count > 0;
     });
+
+    if (autoPaused) {
+      this.logger.warn(
+        `Workflow "${workflowId}" auto-paused after ${AUTO_PAUSE_FAILURE_THRESHOLD} consecutive failed executions.`,
+      );
+    }
   }
 
   private toActionExecutionError(error: unknown): ActionExecutionError {

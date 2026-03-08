@@ -179,7 +179,7 @@
 - **Проверка**: запустить api + worker, curl webhook с X-Webhook-Secret, проверить что execution переходит в RUNNING → SUCCESS/FAILED
 
 ### TASK-008: HttpRequestAction + auto-pause + E2E smoke
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: первая реальная action strategy + auto-pause + первый E2E тест
 - **Scope**:
   - `apps/worker/src/action/strategies/action-strategy.interface.ts`:

@@ -2,14 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { ActionType } from '@mini-zapier/shared';
 
 import { ActionStrategy } from './strategies/action-strategy.interface';
+import { HttpRequestAction } from './strategies/http-request.action';
 import { NoopAction } from './strategies/noop.action';
 
 @Injectable()
 export class ActionService {
-  private readonly registry = new Map<string, ActionStrategy>();
+  private readonly registry = new Map<ActionType, ActionStrategy>();
 
-  constructor(noopAction: NoopAction) {
-    this.registry.set(ActionType.HTTP_REQUEST, noopAction);
+  constructor(
+    httpRequestAction: HttpRequestAction,
+    noopAction: NoopAction,
+  ) {
+    this.registry.set(ActionType.HTTP_REQUEST, httpRequestAction);
     this.registry.set(ActionType.EMAIL, noopAction);
     this.registry.set(ActionType.TELEGRAM, noopAction);
     this.registry.set(ActionType.DB_QUERY, noopAction);
@@ -17,7 +21,11 @@ export class ActionService {
   }
 
   resolve(nodeType: string): ActionStrategy {
-    const strategy = this.registry.get(nodeType);
+    if (!Object.values(ActionType).includes(nodeType as ActionType)) {
+      throw new Error(`Unknown action type "${nodeType}".`);
+    }
+
+    const strategy = this.registry.get(nodeType as ActionType);
 
     if (!strategy) {
       throw new Error(`No action strategy registered for nodeType "${nodeType}".`);
