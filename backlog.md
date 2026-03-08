@@ -55,7 +55,7 @@
 - **Проверка**: `pnpm --filter @mini-zapier/server-utils test`
 
 ### TASK-004: ConnectionModule CRUD
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: CRUD для Connection entity с шифрованием credentials и защитой от удаления
 - **Scope**:
   - `apps/api/src/connection/connection.module.ts`
