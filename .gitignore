@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+coverage/
+.turbo/
+
+# Prisma
+apps/api/prisma/*.db
+apps/api/prisma/migrations/*.sql.bak
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
