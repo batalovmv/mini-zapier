@@ -3,27 +3,31 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последняя задача**: TASK-006 (done)
-- **Статус проекта**: Execution + webhook ingress готовы; API умеет создавать execution, делать webhook dedupe и ставить jobs в BullMQ queue
+- **Последняя задача**: TASK-007 (done)
+- **Статус проекта**: Webhook/manual execution теперь проходят end-to-end через Redis queue и standalone worker; execution переходит из `PENDING` в `RUNNING` и затем в `SUCCESS`/`FAILED` со step logs
 - **Что сделано**:
-  - Добавлены `ExecutionModule` и `QueueModule` в `apps/api`: `POST /api/workflows/:id/execute`, `GET /api/workflows/:id/executions`, `GET /api/executions/:id`
-  - `ExecutionService.startExecution()` делает атомарный dedupe через `TriggerEvent.createMany(..., skipDuplicates: true)`, создаёт `WorkflowExecution` со `status=PENDING`, сохраняет `definitionSnapshot` без credentials и затем enqueue'ит job в BullMQ queue `workflow-execution`
-  - При падении `queue.add()` выполняется compensating cleanup: удаляются созданные `WorkflowExecution` и `TriggerEvent`
-  - После успешного enqueue `TriggerEvent.processed` помечается в `true`
-  - Добавлен `TriggerController` с `POST /api/webhooks/:workflowId`: проверка `X-Webhook-Secret` через `Connection(type=WEBHOOK)`, dedupe по `Idempotency-Key` / `X-Event-ID`, 200 для duplicate и 202 для нового execution
-  - Smoke-проверка прошла: manual execute, list/detail executions, webhook success, dedupe по `Idempotency-Key`, dedupe по `X-Event-ID`, webhook без dedupe, 401 на missing/invalid secret, 422 на неактивный workflow, проверка в БД `TriggerEvent.processed=true`, `definitionSnapshot` без credentials, 4 jobs в BullMQ queue
+  - Добавлен standalone `apps/worker`: `NestFactory.createApplicationContext`, `WorkerModule`, локальные `PrismaModule`/`PrismaService`, bootstrap без HTTP
+  - Добавлен BullMQ consumer `workflow-execution`: worker подключается к Redis и обрабатывает jobs из очереди `workflow-execution`
+  - Реализован `ExecutionEngine`: читает execution c `definitionSnapshot`, переводит execution в `RUNNING`, извлекает линейную action-цепочку из snapshot, прокидывает `dataContext`, расшифровывает credentials по `connectionId`, применяет timeout/retry/backoff и завершает execution в `SUCCESS` или `FAILED`
+  - Реализован `LogService`: создаёт денормализованные `ExecutionStepLog`, пишет `nodeLabel`/`nodeType`, делает redaction чувствительных полей и truncation payload > 64KB до записи в БД
+  - Добавлен минимальный `ActionService` с noop strategy для всех 5 action types v1; это даёт рабочий execution path без выхода за scope TASK-007
+  - Smoke-проверка прошла:
+    - worker стартует и подключается к Redis queue
+    - webhook workflow `cmmi9vfjk0003wyd4cif2tgxp` → execution `cmmi9vfkf0006wyd4pki6n9ag` завершился `SUCCESS`, создан 1 step log, redaction в `inputData`/`outputData` сработал (`password` → `****`)
+    - негативный smoke: workflow `cmmi9vwbn0008wyd4pj7dxib1` с unsupported action → execution `cmmi9vwcb000bwyd4g7d1t627` завершился `FAILED`, step log тоже `FAILED`
 - **Что сломано**:
-  - `apps/worker` ещё не реализован, поэтому jobs остаются в очереди, а executions после webhook/manual trigger остаются в статусе `PENDING`
+  - Реальные action strategies ещё не реализованы: `HTTP_REQUEST`, `EMAIL`, `TELEGRAM`, `DB_QUERY`, `DATA_TRANSFORM` пока работают через noop stub
 - **Частично сделано**:
   - `apps/api` всё ещё без `StatsModule`
-  - `apps/worker` и `apps/web` всё ещё placeholders
+  - auto-pause после 5 подряд FAILED ещё не реализован
+  - `apps/web` всё ещё placeholder
 - **Root scripts**:
   - `pnpm dev:api` работает
-  - `pnpm dev:worker` заработает после TASK-007
+  - `pnpm dev:worker` работает
   - `pnpm dev:web` заработает после TASK-013
 
 ## Следующий шаг
-**TASK-007**: apps/worker scaffold + BullMQ processor + execution engine
+**TASK-008**: HttpRequestAction + auto-pause + E2E smoke
 
 ## Блокеры
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`). API по умолчанию слушает `3000`, но для локальной smoke-проверки можно временно запускать с `PORT=3001`.
@@ -32,13 +36,17 @@
 - **Порты инфраструктуры**: PostgreSQL=**5434**, Redis=**6380**
 - Для `ConnectionModule` и webhook secret-check нужен `APP_ENCRYPTION_KEY` в env процесса API; в smoke-проверке он передавался явно при запуске на `3001`
 - Для `QueueModule` используются `REDIS_HOST`/`REDIS_PORT`; при отсутствии env в коде выставлен fallback на `localhost:6380`
+- Для `apps/worker` `start`/`start:dev` читают env из корневого `.env`; это покрывает `DATABASE_URL`, `REDIS_HOST`, `REDIS_PORT`, `APP_ENCRYPTION_KEY`
 - Для `WorkflowModule` отдельная миграция не понадобилась: использована существующая Prisma schema из TASK-002
 - Валидация workflow выполняется в `apps/api/src/workflow/workflow.validation.ts`; при сохранении node ids берутся из payload и затем используются в edges как есть
 - Для `apps/api` зафиксирован Prisma **6.19.2**: это оставляет классическую `schema.prisma` и стандартный `PrismaClient` без нового Prisma 7 datasource/runtime слоя
 - `pnpm dev:api` перед стартом автоматически делает `prisma generate`
-- Для smoke-проверки `TASK-006` использовались тестовые сущности:
-  - `Connection`: `cmmi8amf60000wyk4tway62fr`
-  - `Workflow`: `cmmi8amfw0001wyk4oxvfnrzx`
+- Для `TASK-007` реальных action implementations пока нет: worker регистрирует noop strategy для action types v1, а failure path можно проверить через unsupported `nodeType`
+- Для smoke-проверок `TASK-007` использовались тестовые сущности:
+  - success `Workflow`: `cmmi9vfjk0003wyd4cif2tgxp`
+  - success `Execution`: `cmmi9vfkf0006wyd4pki6n9ag`
+  - failed `Workflow`: `cmmi9vwbn0008wyd4pj7dxib1`
+  - failed `Execution`: `cmmi9vwcb000bwyd4g7d1t627`
 - После следующего изменения `apps/api/prisma/schema.prisma` запускай `pnpm --filter @mini-zapier/api run prisma:migrate -- --name <migration_name>`
 
 ---
@@ -89,4 +97,5 @@
 | TASK-004 | done | см. `git log` (`TASK-004: ConnectionModule CRUD`) | ConnectionModule CRUD, encrypted credentials, masked reads, delete guard, Swagger decorators |
 | TASK-005 | done | см. `git log` (`TASK-005: WorkflowModule CRUD + linear validation`) | Workflow CRUD, full graph replace, versioning, linear graph validation, paginated list/status filter |
 | TASK-006 | done | см. `git log` (`TASK-006: ExecutionService + TriggerController (webhook + dedupe)`) | ExecutionModule, webhook TriggerController, BullMQ queue setup, atomic dedupe, execution snapshot/enqueue smoke-checked |
+| TASK-007 | done | см. `git log` (`TASK-007: apps/worker scaffold + BullMQ processor + execution engine`) | standalone worker, BullMQ consumer, chain resolver, retry/timeout wrapper, step logs, success/failure smoke-checked |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |

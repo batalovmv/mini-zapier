@@ -140,7 +140,7 @@
 - **Проверка**: curl webhook дважды с -H "X-Webhook-Secret: <secret>" и одним Idempotency-Key (или X-Event-ID), проверить в БД что execution один
 
 ### TASK-007: apps/worker scaffold + BullMQ processor + execution engine
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: standalone NestJS worker, chain execution engine, LogService
 - **Scope**:
   - `apps/worker/` — NestJS standalone application (NestFactory.createApplicationContext, без HTTP)

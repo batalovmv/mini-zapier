@@ -2,7 +2,26 @@
   "name": "@mini-zapier/worker",
   "version": "0.0.1",
   "private": true,
+  "scripts": {
+    "build": "pnpm run prisma:generate && tsc -p tsconfig.build.json",
+    "start": "node --env-file=../../.env dist/main.js",
+    "start:dev": "pnpm run build && node --env-file=../../.env dist/main.js",
+    "start:prod": "node --env-file=../../.env dist/main.js",
+    "prisma:generate": "prisma generate --schema ../api/prisma/schema.prisma"
+  },
   "dependencies": {
-    "@mini-zapier/server-utils": "workspace:*"
+    "@mini-zapier/server-utils": "workspace:*",
+    "@mini-zapier/shared": "workspace:*",
+    "@nestjs/common": "^11.1.16",
+    "@nestjs/core": "^11.1.16",
+    "@prisma/client": "^6.19.2",
+    "bullmq": "^5.70.4",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "prisma": "^6.19.2",
+    "typescript": "^5.4.0"
   }
 }
