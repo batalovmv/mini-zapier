@@ -75,7 +75,7 @@
 - **Проверка**: curl POST/GET/DELETE через Swagger или curl
 
 ### TASK-005: WorkflowModule CRUD + linear validation
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: CRUD workflow с full graph replace, линейной валидацией, версионированием
 - **Scope**:
   - `apps/api/src/workflow/workflow.module.ts`
