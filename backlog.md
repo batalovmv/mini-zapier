@@ -34,7 +34,7 @@
 - **Проверка**: `pnpm --filter @mini-zapier/api prisma migrate dev && pnpm dev:api`
 
 ### TASK-003: Common utilities (crypto, redact, truncate)
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: переиспользуемые серверные утилиты для шифрования, маскировки и truncation
 - **Scope**:
   - Создать **`packages/server-utils`** (`@mini-zapier/server-utils`) — отдельный пакет для серверных утилит (НЕ в shared, чтобы не тянуть node crypto в apps/web)

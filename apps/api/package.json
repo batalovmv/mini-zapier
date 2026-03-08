@@ -12,6 +12,7 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@mini-zapier/server-utils": "workspace:*",
     "@mini-zapier/shared": "workspace:*",
     "@nestjs/common": "^11.1.16",
     "@nestjs/core": "^11.1.16",
