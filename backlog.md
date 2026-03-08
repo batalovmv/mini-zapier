@@ -106,7 +106,7 @@
 - **Проверка**: curl с валидным и невалидным payload через Swagger
 
 ### TASK-006: ExecutionService + TriggerController (webhook + dedupe)
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: создание execution с snapshot + атомарный dedupe + enqueue в BullMQ. Webhook endpoint
 - **Scope**:
   - `apps/api/src/execution/execution.module.ts`
