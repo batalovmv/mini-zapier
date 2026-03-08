@@ -22,11 +22,17 @@
 - [ ] PATCH /api/workflows/:id/status — меняет статус, НЕ меняет version
 
 ### Webhook → Execution
-- [ ] POST /api/webhooks/:workflowId — создаёт TriggerEvent + WorkflowExecution + BullMQ job
-- [ ] Повторный POST с тем же Idempotency-Key → 200 no-op, без нового execution
-- [ ] POST без Idempotency-Key → создаёт execution (без dedupe)
+- [ ] POST /api/webhooks/:workflowId с валидным X-Webhook-Secret — создаёт TriggerEvent + WorkflowExecution + BullMQ job
+- [ ] Повторный POST с валидным X-Webhook-Secret и тем же Idempotency-Key → 200 no-op, без нового execution
+- [ ] Повторный POST с валидным X-Webhook-Secret и тем же X-Event-ID → 200 no-op, без нового execution
+- [ ] POST с валидным X-Webhook-Secret без Idempotency-Key → создаёт execution (без dedupe)
 - [ ] Worker берёт job → status RUNNING → выполняет HTTP action → step logs → status SUCCESS
 - [ ] GET /api/executions/:id — возвращает execution + step logs
+
+### Webhook Security (негативные)
+- [ ] POST /api/webhooks/:workflowId БЕЗ X-Webhook-Secret → 401 Unauthorized (если у trigger node есть Connection с secret)
+- [ ] POST /api/webhooks/:workflowId с НЕВАЛИДНЫМ секретом → 401 Unauthorized
+- [ ] POST /api/webhooks/:workflowId к НЕАКТИВНОМУ workflow → 422
 
 ### Step Logs
 - [ ] Step log содержит nodeLabel, nodeType (денормализованные)
@@ -46,10 +52,16 @@
 ### Cron
 - [ ] ACTIVE workflow с cron trigger создаёт BullMQ repeatable job
 - [ ] PAUSED → repeatable job удаляется
+- [ ] PUT /workflows/:id для ACTIVE cron workflow с новым cronExpression → old job удалён, new job создан
 - [ ] Рестарт api → cron reconciliation, jobs восстановлены
 
 ### Email Inbound
-- [ ] POST /api/inbound-email/:workflowId → execution с email data
+- [ ] POST /api/inbound-email/:workflowId с валидной подписью → execution с email data
+
+### Email Inbound Security (негативные)
+- [ ] POST /api/inbound-email/:workflowId БЕЗ подписи → 401 Unauthorized
+- [ ] POST /api/inbound-email/:workflowId с НЕВАЛИДНОЙ подписью → 401 Unauthorized
+- [ ] POST /api/inbound-email/:workflowId к НЕАКТИВНОМУ workflow → 422
 
 ### Actions
 - [ ] EmailSendAction — отправляет email через SMTP (credentials из Connection)
@@ -83,5 +95,5 @@
 ### E2E
 - [ ] Создать workflow через UI (Webhook → HTTP → Transform)
 - [ ] Сохранить, активировать
-- [ ] curl webhook → execution appears in history
+- [ ] curl webhook с X-Webhook-Secret → execution appears in history
 - [ ] Step logs показывают input/output

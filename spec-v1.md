@@ -9,7 +9,8 @@
 - **apps/api**: NestJS + Prisma + Swagger (REST API, CRUD, triggers, cron registration)
 - **apps/worker**: NestJS standalone (BullMQ consumer, execution engine, actions, step logs)
 - **apps/web**: React + Vite + React Flow + Zustand + Tailwind CSS
-- **packages/shared**: только types/enums/DTOs
+- **packages/shared**: только types/enums/DTOs (safe for frontend import)
+- **packages/server-utils**: серверные утилиты (crypto, redact, truncate) — НЕ импортируется в apps/web
 - **DB**: PostgreSQL
 - **Queue**: Redis + BullMQ
 - **Infra**: Docker Compose (PostgreSQL + Redis)
@@ -74,10 +75,16 @@
 - Redaction в логах до записи в БД
 - Удаление Connection блокируется если используется любым workflow
 
+### Trigger security
+- **Webhook**: проверка секрета из Connection (type=WEBHOOK) через header X-Webhook-Secret. Без валидного секрета → 401
+- **Email inbound**: проверка HMAC-подписи провайдера через signing secret из Connection. Без валидной подписи → 401
+- **Cron**: внутренний trigger, security не требуется
+
 ### Версионирование
 - Workflow.version++ только при PUT /workflows/:id (изменение definition)
 - PATCH status НЕ меняет version
 - WorkflowExecution хранит workflowVersion
+- PUT для ACTIVE cron workflow → re-register: unregister old repeatable job, register new
 
 ### Truncation
 - inputData/outputData в step logs: max 64KB, флаг truncated
