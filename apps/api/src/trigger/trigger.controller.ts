@@ -17,6 +17,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiAcceptedResponse,
+  ApiBadRequestResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -89,6 +90,7 @@ export class TriggerController {
     },
   })
   @ApiUnauthorizedResponse({ description: 'Webhook secret is missing or invalid.' })
+  @ApiBadRequestResponse({ description: 'Webhook payload is invalid.' })
   @ApiUnprocessableEntityResponse({
     description: 'Workflow is not ACTIVE or not configured for webhook trigger.',
   })
@@ -163,6 +165,7 @@ export class TriggerController {
     },
   })
   @ApiUnauthorizedResponse({ description: 'Email signature is missing or invalid.' })
+  @ApiBadRequestResponse({ description: 'Inbound email payload is invalid.' })
   @ApiUnprocessableEntityResponse({
     description: 'Workflow is not ACTIVE or not configured for email trigger.',
   })

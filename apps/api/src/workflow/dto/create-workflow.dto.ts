@@ -1,34 +1,57 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 
-class WorkflowNodeInputDto {
+export class WorkflowNodeInputDto {
   @ApiProperty({
     example: 'trigger-1',
     description: 'Client-generated node id used by edges.',
   })
+  @IsString()
+  @IsNotEmpty()
   id!: string;
 
   @ApiProperty({ example: 120 })
+  @IsNumber()
   positionX!: number;
 
   @ApiProperty({ example: 80 })
+  @IsNumber()
   positionY!: number;
 
   @ApiProperty({
     example: 'trigger',
     enum: ['trigger', 'action'],
   })
+  @IsIn(['trigger', 'action'])
   nodeKind!: 'trigger' | 'action';
 
   @ApiProperty({
     example: 'WEBHOOK',
     description: 'TriggerType or ActionType value.',
   })
+  @IsString()
+  @IsNotEmpty()
   nodeType!: string;
 
   @ApiProperty({
     example: 'Incoming Webhook',
     description: 'Human-readable node label.',
   })
+  @IsString()
+  @IsNotEmpty()
   label!: string;
 
   @ApiProperty({
@@ -37,6 +60,7 @@ class WorkflowNodeInputDto {
     example: { path: '/orders' },
     description: 'Node configuration payload.',
   })
+  @IsObject()
   config!: Record<string, unknown>;
 
   @ApiPropertyOptional({
@@ -44,18 +68,27 @@ class WorkflowNodeInputDto {
     nullable: true,
     description: 'Optional connection reference stored on the node.',
   })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
   connectionId?: string | null;
 
   @ApiPropertyOptional({
     example: 0,
     description: 'Retry count for action nodes.',
   })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
   retryCount?: number;
 
   @ApiPropertyOptional({
     example: 0,
     description: 'Retry backoff in milliseconds for action nodes.',
   })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
   retryBackoff?: number;
 
   @ApiPropertyOptional({
@@ -63,26 +96,36 @@ class WorkflowNodeInputDto {
     nullable: true,
     description: 'Optional timeout in milliseconds for action nodes.',
   })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
   timeoutMs?: number | null;
 }
 
-class WorkflowEdgeInputDto {
+export class WorkflowEdgeInputDto {
   @ApiPropertyOptional({
     example: 'edge-1',
     description: 'Optional client-generated edge id.',
   })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
   id?: string;
 
   @ApiProperty({
     example: 'trigger-1',
     description: 'Source node id.',
   })
+  @IsString()
+  @IsNotEmpty()
   sourceNodeId!: string;
 
   @ApiProperty({
     example: 'action-1',
     description: 'Target node id.',
   })
+  @IsString()
+  @IsNotEmpty()
   targetNodeId!: string;
 
   @ApiPropertyOptional({
@@ -90,6 +133,9 @@ class WorkflowEdgeInputDto {
     nullable: true,
     description: 'Optional React Flow source handle.',
   })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
   sourceHandle?: string | null;
 
   @ApiPropertyOptional({
@@ -97,6 +143,9 @@ class WorkflowEdgeInputDto {
     nullable: true,
     description: 'Optional React Flow target handle.',
   })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
   targetHandle?: string | null;
 }
 
@@ -105,6 +154,8 @@ export class CreateWorkflowDto {
     example: 'Orders webhook pipeline',
     description: 'Workflow name.',
   })
+  @IsString()
+  @IsNotEmpty()
   name!: string;
 
   @ApiPropertyOptional({
@@ -112,12 +163,18 @@ export class CreateWorkflowDto {
     nullable: true,
     description: 'Optional workflow description.',
   })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
   description?: string | null;
 
   @ApiPropertyOptional({
     example: 'UTC',
     description: 'IANA timezone for workflow execution context.',
   })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
   timezone?: string;
 
   @ApiPropertyOptional({
@@ -127,17 +184,26 @@ export class CreateWorkflowDto {
     nullable: true,
     description: 'Editor viewport payload.',
   })
+  @IsOptional()
+  @IsObject()
   viewport?: Record<string, unknown> | null;
 
   @ApiProperty({
     type: () => [WorkflowNodeInputDto],
     description: 'Workflow graph nodes.',
   })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => WorkflowNodeInputDto)
   nodes!: WorkflowNodeInputDto[];
 
   @ApiProperty({
     type: () => [WorkflowEdgeInputDto],
     description: 'Workflow graph edges.',
   })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WorkflowEdgeInputDto)
   edges!: WorkflowEdgeInputDto[];
 }

@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiNoContentResponse,
@@ -23,6 +24,7 @@ export class ConnectionController {
   @Post()
   @ApiOperation({ summary: 'Create connection' })
   @ApiCreatedResponse({ description: 'Connection created.' })
+  @ApiBadRequestResponse({ description: 'Connection payload is invalid.' })
   create(@Body() createConnectionDto: CreateConnectionDto): Promise<ConnectionDto> {
     return this.connectionService.create(createConnectionDto);
   }
@@ -47,6 +49,7 @@ export class ConnectionController {
   @ApiOperation({ summary: 'Update connection' })
   @ApiParam({ name: 'id', description: 'Connection id' })
   @ApiOkResponse({ description: 'Connection updated.' })
+  @ApiBadRequestResponse({ description: 'Connection payload is invalid.' })
   @ApiNotFoundResponse({ description: 'Connection not found.' })
   update(
     @Param('id') id: string,

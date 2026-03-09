@@ -296,7 +296,7 @@
   - Все берут credentials из Connection (расшифровка в engine)
 
 ### TASK-012: StatsController + Swagger + global middleware
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: GET /api/stats, Swagger UI, глобальные middleware
 - **Scope**:
   - `apps/api/src/stats/stats.module.ts`

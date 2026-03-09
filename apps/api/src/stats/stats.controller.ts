@@ -1,0 +1,168 @@
+import { Controller, Get } from '@nestjs/common';
+import {
+  ApiOkResponse,
+  ApiOperation,
+  ApiProperty,
+  ApiTags,
+} from '@nestjs/swagger';
+import { ExecutionStatus, WorkflowExecutionDto } from '@mini-zapier/shared';
+import {
+  ExecutionStatus as PrismaExecutionStatus,
+  WorkflowStatus as PrismaWorkflowStatus,
+} from '@prisma/client';
+
+import { PrismaService } from '../prisma/prisma.service';
+
+class RecentExecutionStatsDto implements WorkflowExecutionDto {
+  @ApiProperty({ example: 'cm123execution' })
+  id!: string;
+
+  @ApiProperty({ example: 'cm123workflow' })
+  workflowId!: string;
+
+  @ApiProperty({ example: 3 })
+  workflowVersion!: number;
+
+  @ApiProperty({
+    enum: ExecutionStatus,
+    enumName: 'ExecutionStatus',
+    example: ExecutionStatus.SUCCESS,
+  })
+  status!: ExecutionStatus;
+
+  @ApiProperty({
+    example: { orderId: '1001' },
+    nullable: true,
+    required: false,
+  })
+  triggerData?: unknown;
+
+  @ApiProperty({
+    example: '2026-03-09T08:15:00.000Z',
+    nullable: true,
+    required: false,
+  })
+  startedAt?: string | null;
+
+  @ApiProperty({
+    example: '2026-03-09T08:15:02.000Z',
+    nullable: true,
+    required: false,
+  })
+  completedAt?: string | null;
+
+  @ApiProperty({
+    example: null,
+    nullable: true,
+    required: false,
+  })
+  errorMessage?: string | null;
+
+  @ApiProperty({ example: '2026-03-09T08:15:00.000Z' })
+  createdAt!: string;
+}
+
+class StatsResponseDto {
+  @ApiProperty({ example: 12 })
+  totalWorkflows!: number;
+
+  @ApiProperty({ example: 7 })
+  activeWorkflows!: number;
+
+  @ApiProperty({ example: 2 })
+  pausedWorkflows!: number;
+
+  @ApiProperty({ example: 48 })
+  totalExecutions!: number;
+
+  @ApiProperty({ example: 36 })
+  successfulExecutions!: number;
+
+  @ApiProperty({ example: 8 })
+  failedExecutions!: number;
+
+  @ApiProperty({
+    example: 81.82,
+    description: 'SUCCESS / (SUCCESS + FAILED) * 100.',
+  })
+  successRate!: number;
+
+  @ApiProperty({
+    type: () => [RecentExecutionStatsDto],
+  })
+  recentExecutions!: RecentExecutionStatsDto[];
+}
+
+@ApiTags('stats')
+@Controller('api/stats')
+export class StatsController {
+  constructor(private readonly prisma: PrismaService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Get dashboard statistics' })
+  @ApiOkResponse({
+    description: 'Aggregated workflow and execution statistics.',
+    type: StatsResponseDto,
+  })
+  async getStats(): Promise<StatsResponseDto> {
+    const [
+      totalWorkflows,
+      activeWorkflows,
+      pausedWorkflows,
+      totalExecutions,
+      successfulExecutions,
+      failedExecutions,
+      recentExecutions,
+    ] = await this.prisma.$transaction([
+      this.prisma.workflow.count(),
+      this.prisma.workflow.count({
+        where: { status: PrismaWorkflowStatus.ACTIVE },
+      }),
+      this.prisma.workflow.count({
+        where: { status: PrismaWorkflowStatus.PAUSED },
+      }),
+      this.prisma.workflowExecution.count(),
+      this.prisma.workflowExecution.count({
+        where: { status: PrismaExecutionStatus.SUCCESS },
+      }),
+      this.prisma.workflowExecution.count({
+        where: { status: PrismaExecutionStatus.FAILED },
+      }),
+      this.prisma.workflowExecution.findMany({
+        take: 10,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+    ]);
+
+    const completedExecutions = successfulExecutions + failedExecutions;
+
+    return {
+      totalWorkflows,
+      activeWorkflows,
+      pausedWorkflows,
+      totalExecutions,
+      successfulExecutions,
+      failedExecutions,
+      successRate:
+        completedExecutions === 0
+          ? 0
+          : Number(
+              ((successfulExecutions / completedExecutions) * 100).toFixed(2),
+            ),
+      recentExecutions: recentExecutions.map((execution) => ({
+        id: execution.id,
+        workflowId: execution.workflowId,
+        workflowVersion: execution.workflowVersion,
+        status: execution.status as ExecutionStatus,
+        triggerData:
+          execution.triggerData === null ? undefined : execution.triggerData,
+        startedAt: execution.startedAt?.toISOString() ?? null,
+        completedAt: execution.completedAt?.toISOString() ?? null,
+        errorMessage: execution.errorMessage,
+        createdAt: execution.createdAt.toISOString(),
+      })),
+    };
+  }
+}
