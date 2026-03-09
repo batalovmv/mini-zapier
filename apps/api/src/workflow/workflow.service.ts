@@ -18,6 +18,7 @@ import {
   WorkflowEdgeValidationInput,
   WorkflowNodeValidationInput,
 } from './workflow.validation';
+import { TriggerService } from '../trigger/trigger.service';
 
 declare const process: {
   env: Record<string, string | undefined>;
@@ -74,7 +75,10 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 @Injectable()
 export class WorkflowService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly triggerService: TriggerService,
+  ) {}
 
   async create(createWorkflowDto: CreateWorkflowDto): Promise<WorkflowDto> {
     const normalizedDefinition =
@@ -190,7 +194,7 @@ export class WorkflowService {
   }
 
   async update(id: string, updateWorkflowDto: UpdateWorkflowDto): Promise<WorkflowDto> {
-    await this.ensureWorkflowExists(id);
+    const previousWorkflow = await this.getWorkflowWithGraphOrThrow(id);
 
     const normalizedDefinition =
       this.normalizeWorkflowDefinition(updateWorkflowDto);
@@ -261,6 +265,11 @@ export class WorkflowService {
       throw new NotFoundException(`Workflow "${id}" not found.`);
     }
 
+    await this.triggerService.handleWorkflowDefinitionUpdated(
+      previousWorkflow,
+      workflow,
+    );
+
     return this.toWorkflowDto(workflow);
   }
 
@@ -268,7 +277,7 @@ export class WorkflowService {
     id: string,
     updateWorkflowStatusDto: UpdateWorkflowStatusDto,
   ): Promise<WorkflowDto> {
-    await this.ensureWorkflowExists(id);
+    const previousWorkflow = await this.getWorkflowWithGraphOrThrow(id);
 
     const workflow = await this.prisma.workflow.update({
       where: { id },
@@ -283,6 +292,11 @@ export class WorkflowService {
         edges: true,
       },
     });
+
+    await this.triggerService.handleWorkflowStatusChanged(
+      previousWorkflow,
+      workflow,
+    );
 
     return this.toWorkflowDto(workflow);
   }
@@ -304,6 +318,24 @@ export class WorkflowService {
     if (!workflow) {
       throw new NotFoundException(`Workflow "${id}" not found.`);
     }
+  }
+
+  private async getWorkflowWithGraphOrThrow(
+    id: string,
+  ): Promise<WorkflowWithGraph> {
+    const workflow = await this.prisma.workflow.findUnique({
+      where: { id },
+      include: {
+        nodes: true,
+        edges: true,
+      },
+    });
+
+    if (!workflow) {
+      throw new NotFoundException(`Workflow "${id}" not found.`);
+    }
+
+    return workflow;
   }
 
   private async ensureConnectionsExist(

@@ -3,22 +3,21 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последняя задача**: TASK-008 (done)
-- **Статус проекта**: Webhook/manual execution проходят end-to-end через Redis queue и standalone worker; `HTTP_REQUEST` теперь выполняет реальный HTTP вызов, execution пишет step logs и workflow auto-pause срабатывает после 5 подряд `FAILED`
+- **Последняя задача**: TASK-009 (done)
+- **Статус проекта**: API умеет регистрировать cron workflows в BullMQ, пересинхронизирует их при старте и создаёт `WorkflowExecution` на каждый cron tick через уже существующий `ExecutionService`; webhook/manual execution и standalone worker из среза 1 остаются рабочими
 - **Что сделано**:
-  - Добавлен standalone `apps/worker`: `NestFactory.createApplicationContext`, `WorkerModule`, локальные `PrismaModule`/`PrismaService`, bootstrap без HTTP
-  - Добавлен BullMQ consumer `workflow-execution`: worker подключается к Redis и обрабатывает jobs из очереди `workflow-execution`
-  - Реализован `ExecutionEngine`: читает execution c `definitionSnapshot`, переводит execution в `RUNNING`, извлекает линейную action-цепочку из snapshot, прокидывает `dataContext`, расшифровывает credentials по `connectionId`, применяет timeout/retry/backoff и завершает execution в `SUCCESS` или `FAILED`
-  - Реализован `LogService`: создаёт денормализованные `ExecutionStepLog`, пишет `nodeLabel`/`nodeType`, делает redaction чувствительных полей и truncation payload > 64KB до записи в БД
-  - `ActionService` переведён на `Map<ActionType, ActionStrategy>`; `HTTP_REQUEST` зарегистрирован как первая реальная strategy, остальные action types v1 пока остаются на noop stub
-  - Добавлен `HttpRequestAction`: template interpolation для `{{input.*}}` в config, реальный HTTP вызов, поддержка `AbortSignal` и контракт результата `{ status, headers, data }`
-  - В `ExecutionEngine` добавлен auto-pause: после обновления execution в `FAILED` worker проверяет последние 5 executions workflow и переводит workflow в `PAUSED`, если все 5 подряд завершились `FAILED`
-  - Smoke-проверка `TASK-008` прошла:
-    - success workflow `cmmiadsou0001wyiwxecxv37r` → execution `cmmiadspr0004wyiwjkw510af` завершился `SUCCESS`; `HTTP_REQUEST` сходил в `https://httpbin.org/anything`, `{{input.name}}` и `{{input.profile.city}}` корректно подставились в URL/body
-    - dedupe подтвердился и для `Idempotency-Key`, и для `X-Event-ID`: повторный webhook вернул `{ duplicate: true }`, лишний execution не создался
-    - retry подтвердился на workflow `cmmiadv51000dwyiwduvmpwad`: первый failed execution `cmmiadv5n000gwyiw0xjfl034` сохранил `retryAttempt=2` при `retryCount=2`
-    - auto-pause сработал после 5 подряд failed executions: workflow `cmmiadv51000dwyiwduvmpwad` переведён в `PAUSED`, worker записал warning в лог
-    - webhook secret не попал ни в `step logs`, ни в `definitionSnapshot`
+  - Добавлен `apps/api/src/trigger/strategies/cron.trigger.ts`: отдельная BullMQ queue `workflow-cron-trigger`, deterministic scheduler key `workflow:<workflowId>`, `register()`/`unregister()` для cron trigger с `workflow.timezone`
+  - Добавлен `apps/api/src/trigger/trigger.service.ts`: internal BullMQ worker в API обрабатывает cron jobs, собирает dedupe key как `{cronExpression}:{scheduledAt}` из `job.opts.prevMillis`, вызывает `ExecutionService.startExecution()` и на `onModuleInit()` пересинхронизирует все ACTIVE cron workflows
+  - `WorkflowService` теперь вызывает cron register/unregister только в рамках scope TASK-009:
+    - `PATCH /api/workflows/:id/status`: `ACTIVE` → register, `PAUSED`/`DRAFT` → unregister
+    - `PUT /api/workflows/:id` для ACTIVE cron workflow: unregister old scheduler → register new scheduler
+  - Smoke-проверка `TASK-009` прошла:
+    - ACTIVE workflow с cron trigger создал repeatable job в BullMQ queue `workflow-cron-trigger`
+    - PATCH в `PAUSED` удалил scheduler
+    - PUT для ACTIVE workflow сменил pattern с `*/10 * * * * *` на `*/15 * * * * *` и BullMQ показал уже новый scheduler
+    - после ручного удаления scheduler из Redis и рестарта API reconciliation восстановил 1 ACTIVE cron workflow из БД
+    - cron ticks создали `WorkflowExecution` в статусе `PENDING`, а `TriggerEvent` сохранил dedupe keys вида `*/10 * * * * *:2026-03-09T08:24:20.000Z`
+    - временный smoke workflow `cmmiwzvux0000wyf8fjqt6ouo` после проверки удалён из БД, scheduler очищен
 - **Что сломано**:
   - Реальные action strategies ещё не реализованы для `EMAIL`, `TELEGRAM`, `DB_QUERY`, `DATA_TRANSFORM`: они всё ещё работают через noop stub
 - **Частично сделано**:
@@ -30,7 +29,7 @@
   - `pnpm dev:web` заработает после TASK-013
 
 ## Следующий шаг
-**TASK-009**: Cron trigger + startup reconciliation
+**TASK-010**: Email inbound trigger
 
 ## Блокеры
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`). API по умолчанию слушает `3000`, но для локальной smoke-проверки можно временно запускать с `PORT=3001`.
@@ -39,11 +38,13 @@
 - **Порты инфраструктуры**: PostgreSQL=**5434**, Redis=**6380**
 - Для `ConnectionModule` и webhook secret-check нужен `APP_ENCRYPTION_KEY` в env процесса API; в smoke-проверке он передавался явно при запуске на `3001`
 - Для `QueueModule` используются `REDIS_HOST`/`REDIS_PORT`; при отсутствии env в коде выставлен fallback на `localhost:6380`
+- Для cron scheduling в API используется отдельная BullMQ queue `workflow-cron-trigger`; `workflow-execution` по-прежнему остаётся очередью для standalone worker
 - Для `apps/worker` `start`/`start:dev` читают env из корневого `.env`; это покрывает `DATABASE_URL`, `REDIS_HOST`, `REDIS_PORT`, `APP_ENCRYPTION_KEY`
 - Для `WorkflowModule` отдельная миграция не понадобилась: использована существующая Prisma schema из TASK-002
 - Валидация workflow выполняется в `apps/api/src/workflow/workflow.validation.ts`; при сохранении node ids берутся из payload и затем используются в edges как есть
 - Для `apps/api` зафиксирован Prisma **6.19.2**: это оставляет классическую `schema.prisma` и стандартный `PrismaClient` без нового Prisma 7 datasource/runtime слоя
 - `pnpm dev:api` перед стартом автоматически делает `prisma generate`
+- Cron reconciliation живёт в `apps/api/src/trigger/trigger.service.ts` и запускается на старте API; если scheduler потерян в Redis, ACTIVE cron workflow будет заново зарегистрирован
 - Для `TASK-008` `HTTP_REQUEST` реализован без новой dependency: используется встроенный Node `fetch`, но контракт strategy сохранён (`{ status, headers, data }`), non-2xx ответы считаются ошибкой
 - Для smoke-проверок `TASK-008` использовались тестовые сущности:
   - `Connection`: `cmmiadsob0000wyiwt7amu01e`
@@ -103,4 +104,5 @@
 | TASK-006 | done | см. `git log` (`TASK-006: ExecutionService + TriggerController (webhook + dedupe)`) | ExecutionModule, webhook TriggerController, BullMQ queue setup, atomic dedupe, execution snapshot/enqueue smoke-checked |
 | TASK-007 | done | см. `git log` (`TASK-007: apps/worker scaffold + BullMQ processor + execution engine`) | standalone worker, BullMQ consumer, chain resolver, retry/timeout wrapper, step logs, success/failure smoke-checked |
 | TASK-008 | done | см. `git log` (`TASK-008: HttpRequestAction + auto-pause + E2E smoke`) | real HTTP_REQUEST strategy, template interpolation, retry smoke, 5x failed auto-pause, dedupe + snapshot/log secrecy checks |
+| TASK-009 | done | см. `git log` (`TASK-009: Cron trigger + startup reconciliation`) | separate cron queue/worker in API, register/unregister on PATCH status, re-register on PUT, startup reconciliation, cron dedupe smoke-checked |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |

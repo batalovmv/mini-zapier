@@ -225,7 +225,7 @@
 ## Срез 2: Cron + Email inbound + остальные actions
 
 ### TASK-009: Cron trigger + startup reconciliation
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: BullMQ repeatable jobs для cron, register/unregister при смене статуса, reconciliation при старте API
 - **Scope**:
   - `apps/api/src/trigger/strategies/cron.trigger.ts`:
