@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -17,12 +18,9 @@ async function bootstrap(): Promise<void> {
     rawBody: true,
   });
   const port = Number(process.env.PORT ?? '3000');
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Mini-Zapier API')
-    .setDescription('REST API for workflows, triggers, executions, connections, and stats.')
-    .setVersion('1.0.0')
-    .build();
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  app.use(cookieParser());
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -31,10 +29,26 @@ async function bootstrap(): Promise<void> {
     }),
   );
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  // CORS: split CORS_ORIGIN by comma, fallback to localhost for dev
+  const corsOrigin = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+    : ['http://localhost:5173'];
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: corsOrigin,
+    credentials: true,
   });
-  SwaggerModule.setup('/api/docs', app, swaggerDocument);
+
+  // Swagger only in non-production
+  if (!isProduction) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Mini-Zapier API')
+      .setDescription('REST API for workflows, triggers, executions, connections, and stats.')
+      .setVersion('1.0.0')
+      .build();
+    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('/api/docs', app, swaggerDocument);
+  }
 
   app.get(PrismaService);
 

@@ -22,10 +22,9 @@
     "bullmq": "^5.70.4",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "cookie-parser": "^1.4.7",
+    "prisma": "^6.19.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
-  },
-  "devDependencies": {
-    "prisma": "^6.19.2"
   }
 }

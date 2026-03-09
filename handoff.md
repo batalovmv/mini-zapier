@@ -3,30 +3,46 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: post-v1 fix — `server-generated node IDs + lockfile sync`
-- **Статус проекта**: backlog v1 по-прежнему закрыт целиком, плюс закрыты два post-v1 дефекта из внешнего ревью: невоспроизводимый `pnpm` install/build и коллизии `WorkflowNode.id` при повторяющихся client node ids
-- **Что сделано**:
-  - `apps/api/src/workflow/workflow.service.ts` больше не пишет client node ids в БД как глобальные PK:
-    - после нормализации и линейной валидации workflow сервер генерирует fresh node ids через `crypto.randomUUID()`
-    - edges ремапятся по `clientId -> serverId` внутри payload
-    - `POST /api/workflows` теперь принимает два разных workflow с одинаковыми `trigger-1/action-1` без unique-collision
-    - `PUT /api/workflows/:id` пересоздаёт graph с новыми серверными node ids
-  - `apps/api/src/workflow/dto/create-workflow.dto.ts` уточняет контракт:
-    - `WorkflowNodeInputDto.id` теперь описан как client-local reference внутри request payload
-    - persisted database id генерируется сервером
-  - `pnpm install --prefer-offline` успешно синхронизировал workspace и `pnpm-lock.yaml`:
-    - importers для `apps/web` и полного workspace теперь отражены в lockfile
-    - worker снова получает типы/зависимости через `pnpm`, без временного npm-only install state
-  - Post-v1 проверки прошли:
-    - `pnpm --filter @mini-zapier/api run build`
-    - smoke: два `POST /api/workflows` с одинаковыми `trigger-1/action-1` -> оба `201`, сервер возвращает разные node ids
+- **Последнее изменение**: TASK-018 — `deployment config + minimal admin login`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт
+- **Что сделано в TASK-018**:
+  - **Deploy конфигурация**:
+    - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
+    - `deploy/Dockerfile.worker` — multi-stage build с `pnpm deploy --legacy`
+    - `deploy/docker-compose.prod.yml` — Caddy + PostgreSQL + Redis + API + Worker, healthchecks, depends_on
+    - `deploy/api-entrypoint.sh` — pg_isready wait + prisma migrate deploy + start
+    - `deploy/Caddyfile` — reverse_proxy to api:3000
+    - `deploy/deploy.sh` — build + up + health check
+    - `deploy/.env.production.example` — all required env vars
+    - `vercel.json` — buildCommand, outputDirectory, `/api/*` rewrite to VPS
+    - `.dockerignore` — node_modules, dist, .env, .git, etc.
+  - **Auth module (backend)**:
+    - `apps/api/src/auth/auth.service.ts` — signed cookie HMAC-SHA256, verify, login/logout
+    - `apps/api/src/auth/auth.controller.ts` — POST login (public), POST logout, GET me (public, auth-aware)
+    - `apps/api/src/auth/auth.guard.ts` — global guard, checks signed cookie, skips @Public()
+    - `apps/api/src/auth/public.decorator.ts` — @Public() decorator
+    - `apps/api/src/auth/auth.module.ts` — registers guard as APP_GUARD
+  - **Health endpoint**: `apps/api/src/health/health.controller.ts` — GET /api/health (public)
+  - **Public trigger routes**: `@Public()` added to `TriggerController` (webhooks + inbound-email)
+  - **main.ts updates**: cookie-parser middleware, CORS from CORS_ORIGIN env with credentials:true, Swagger disabled in production
+  - **app.module.ts**: AuthModule + HealthController registered
+  - **Auth module (frontend)**:
+    - `apps/web/src/pages/LoginPage.tsx` — login form, redirect if already authenticated
+    - `apps/web/src/components/auth/ProtectedRoute.tsx` — checks /api/auth/me, redirects to /login
+    - `apps/web/src/lib/api/auth.ts` — login/logout/getMe API functions
+    - `apps/web/src/App.tsx` — /login route, product routes wrapped in ProtectedRoute
+    - `apps/web/src/layouts/AppLayout.tsx` — Logout button in header
+    - `apps/web/src/lib/api/client.ts` — withCredentials: true
+  - **package.json updates**:
+    - Root: engines.node >=22, packageManager pnpm@10.25.0
+    - apps/api: cookie-parser in dependencies, prisma moved from devDependencies to dependencies
+  - **Проверки прошли**:
     - `pnpm install --frozen-lockfile`
-    - `pnpm build`
-    - `pnpm --filter @mini-zapier/web run e2e` -> `1 passed`
+    - `pnpm build` (shared + api + worker + web)
 - **Что сломано**:
-  - Критичных известных поломок после post-v1 fix не выявлено
+  - Критичных известных поломок не выявлено
 - **Частично сделано**:
-  - Частичных хвостов по backlog v1 и по этому fix-пакету не осталось
+  - Docker образы ещё не собирались (`docker compose build`) — требуется VPS с Docker
 - **Root scripts**:
   - `pnpm install --frozen-lockfile` работает
   - `pnpm build` работает
@@ -36,7 +52,10 @@
   - `pnpm --filter @mini-zapier/web run e2e` запускает Playwright smoke
 
 ## Следующий шаг
-**Следующий шаг по backlog отсутствует**: v1 scope из `backlog.md` закрыт, post-v1 fix-пакет тоже закрыт. Дальше только новый явно поставленный TASK / новый scope.
+**Деплой на VPS + Vercel**: deploy-конфигурация готова. Нужно:
+1. Настроить VPS: скопировать `deploy/`, создать `.env` из `.env.production.example`, запустить `deploy/deploy.sh`
+2. Настроить Vercel: обновить `vercel.json` rewrite destination с реальным доменом VPS
+3. Smoke-тест: POST /api/auth/login через Vercel URL, проверить Set-Cookie проходит через rewrite
 
 ## Блокеры
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`), а порт `5173` — внешним Vite-процессом (`D:\TZ\Finance_tracker\client`). Для smoke-проверок использовались `3001`, `5174`, `5175`, `5176`, `5177`, `5178`.
@@ -62,6 +81,12 @@
 - Для `TASK-008` `HTTP_REQUEST` реализован без новой dependency: используется встроенный Node `fetch`, но контракт strategy сохранён (`{ status, headers, data }`), non-2xx ответы считаются ошибкой
 - После `pnpm install --prefer-offline` `pnpm-lock.yaml` снова является источником истины для workspace; отдельный npm-installed state для `apps/web` больше не нужен
 - После следующего изменения `apps/api/prisma/schema.prisma` запускай `pnpm --filter @mini-zapier/api run prisma:migrate -- --name <migration_name>`
+- **Auth**: signed cookie HMAC-SHA256, env vars: `AUTH_USERNAME`, `AUTH_PASSWORD`, `AUTH_SESSION_SECRET`; cookie name `mz_session`, Max-Age 7 дней
+- **Public endpoints** (не требуют auth): `POST /api/auth/login`, `GET /api/health`, `POST /api/webhooks/:workflowId`, `POST /api/inbound-email/:workflowId`, `GET /api/auth/me` (auth-aware: 200/401)
+- **Swagger** отключен при `NODE_ENV=production`; доступен только в dev
+- **CORS**: origin из `CORS_ORIGIN` env (comma-separated), fallback `http://localhost:5173`; `credentials: true`
+- **Docker**: используй `deploy/deploy.sh` для сборки и запуска на VPS; Caddy обеспечивает auto-TLS
+- **Vercel**: `vercel.json` rewrite `/api/*` → VPS; нужно заменить `api.example.com` на реальный домен
 
 ---
 
@@ -124,3 +149,4 @@
 | TASK-017 | done | см. `git log` (`TASK-017: UI polish + E2E test`) | toasts/loading-empty states/error boundary/confirm dialogs, inline connection create in editor, Playwright UI smoke with webhook -> history -> step logs |
 | post-v1-fix | done | см. `git log` (`fix: server-generated node IDs + lockfile sync`) | workflow nodes now get server-generated ids with edge remap; lockfile synced via pnpm; `frozen-lockfile`, root build and Playwright smoke pass again |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |
+| TASK-018 | done | см. `git log` (`TASK-018: deployment config + minimal admin login`) | deploy config (Docker, Caddy, Vercel), auth module (signed cookie HMAC), health endpoint, frontend login/logout/protected routes |

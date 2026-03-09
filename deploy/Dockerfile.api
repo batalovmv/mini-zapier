@@ -1,0 +1,37 @@
+# ---- Builder ----
+FROM node:22-alpine AS builder
+RUN corepack enable pnpm
+
+WORKDIR /build
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/shared/package.json packages/shared/
+COPY packages/server-utils/package.json packages/server-utils/
+COPY apps/api/package.json apps/api/
+
+RUN pnpm install --frozen-lockfile
+
+COPY packages/ packages/
+COPY apps/api/ apps/api/
+
+RUN pnpm --filter @mini-zapier/shared run build && \
+    pnpm --filter @mini-zapier/server-utils run build && \
+    pnpm --filter @mini-zapier/api run build
+
+RUN pnpm deploy --legacy --filter @mini-zapier/api --prod /out/api
+
+# Copy build artifacts into the deployed directory
+RUN cp -r /build/apps/api/dist /out/api/dist && \
+    cp -r /build/apps/api/prisma /out/api/prisma
+
+# ---- Runner ----
+FROM node:22-alpine AS runner
+RUN apk add --no-cache postgresql-client wget
+
+WORKDIR /app/apps/api
+COPY --from=builder /out/api ./
+
+COPY deploy/api-entrypoint.sh /app/deploy/api-entrypoint.sh
+RUN chmod +x /app/deploy/api-entrypoint.sh
+
+EXPOSE 3000
+CMD ["sh", "/app/deploy/api-entrypoint.sh"]

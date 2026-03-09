@@ -1,0 +1,10 @@
+node_modules
+dist
+test-results
+.git
+*.log
+.env
+.env.*
+!.env.production.example
+coverage
+.turbo

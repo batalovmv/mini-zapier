@@ -459,3 +459,35 @@
   - Loading/empty states везде где нужно
   - Toast на успешные/ошибочные операции
 
+---
+
+## Post-v1: Deployment + Auth
+
+### TASK-018: Deployment config + minimal admin login
+- **Статус**: `done`
+- **Цель**: deploy-конфигурация (Vercel frontend + VPS Docker backend) и минимальный admin login (signed cookie, без БД/регистрации)
+- **Scope**:
+  - Docker multi-stage Dockerfiles для API и Worker (`pnpm deploy --legacy`)
+  - docker-compose.prod.yml: Caddy + PostgreSQL + Redis + API + Worker
+  - Caddy для автоматического TLS
+  - vercel.json с rewrite `/api/*` на VPS
+  - Minimal auth: signed cookie (HMAC-SHA256), single admin из env vars
+  - AuthModule: AuthService, AuthController (login/logout/me), AuthGuard (global), @Public() decorator
+  - HealthController: GET /api/health (public)
+  - Frontend: LoginPage, ProtectedRoute, Logout кнопка
+  - CORS из CORS_ORIGIN env, credentials: true
+  - Swagger отключен в production
+  - cookie-parser middleware
+- **Не входит**: регистрация, RBAC, multi-user, sessions в БД
+- **Файлы**: deploy/, vercel.json, .dockerignore, apps/api/src/auth/, apps/api/src/health/, apps/web/src/pages/LoginPage.tsx, apps/web/src/components/auth/
+- **Acceptance**:
+  - `pnpm install --frozen-lockfile` проходит
+  - `pnpm build` проходит
+  - POST /api/auth/login с валидными creds → 200 + Set-Cookie
+  - GET /api/auth/me с cookie → 200
+  - GET /api/workflows без cookie → 401
+  - POST /api/auth/logout → clears cookie
+  - GET /api/health → 200 (public)
+  - POST /api/webhooks/:id → работает без login (public)
+  - Swagger отключен при NODE_ENV=production
+

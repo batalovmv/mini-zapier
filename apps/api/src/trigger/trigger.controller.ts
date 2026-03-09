@@ -30,6 +30,7 @@ import { decrypt } from '@mini-zapier/server-utils';
 import { ConnectionType, TriggerType, WorkflowStatus } from '@mini-zapier/shared';
 import { Connection as PrismaConnection } from '@prisma/client';
 
+import { Public } from '../auth/public.decorator';
 import { ExecutionService } from '../execution/execution.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -62,6 +63,7 @@ interface InboundEmailData {
   html?: string;
 }
 
+@Public()
 @ApiTags('triggers')
 @Controller('api')
 export class TriggerController {
