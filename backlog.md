@@ -366,7 +366,7 @@
   - Create → navigate to `/workflows/new/edit`
 
 ### TASK-015: Workflow Editor (React Flow)
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: визуальный drag-and-drop editor для workflow
 - **Scope**:
   - `apps/web/src/stores/workflow-editor.store.ts` (Zustand):

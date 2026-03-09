@@ -1,0 +1,50 @@
+import type { NodeProps } from 'reactflow';
+import { Handle, Position } from 'reactflow';
+
+import { getNodeDefinition, type WorkflowEditorNodeData } from '../editor-definitions';
+
+export function TriggerNode({
+  data,
+  selected,
+}: NodeProps<WorkflowEditorNodeData>) {
+  const definition = getNodeDefinition(data.nodeKind, data.nodeType);
+
+  return (
+    <div
+      className={`min-w-[220px] rounded-3xl border bg-white shadow-lg transition ${
+        selected
+          ? 'border-emerald-500 shadow-emerald-900/20'
+          : 'border-emerald-900/10 shadow-slate-900/10'
+      }`}
+    >
+      <div className="rounded-t-3xl bg-emerald-600 px-4 py-3 text-white">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/18 text-xs font-black tracking-[0.24em]">
+            {definition?.icon ?? 'TR'}
+          </span>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-50/80">
+              Trigger
+            </p>
+            <p className="text-sm font-semibold">{data.label}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 py-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
+          {data.nodeType}
+        </p>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          {definition?.description ?? 'Workflow trigger node.'}
+        </p>
+      </div>
+
+      <Handle
+        className="h-3 w-3 border-2 border-white bg-emerald-500"
+        position={Position.Bottom}
+        type="source"
+      />
+    </div>
+  );
+}

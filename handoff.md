@@ -3,34 +3,51 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последняя задача**: TASK-014 (done)
-- **Статус проекта**: backend scope v1 остаётся закрытым до `TASK-012`, а для `apps/web` закрыт `TASK-014`: dashboard теперь показывает реальные stats, список workflow и действия `Run` / `Pause|Activate` / `Delete` поверх существующего API; editor и history по backlog всё ещё впереди, следующий шаг — `TASK-015`
+- **Последняя задача**: TASK-015 (done)
+- **Статус проекта**: backend scope v1 остаётся закрытым до `TASK-012`, а для `apps/web` закрыт `TASK-015`: dashboard и workflow editor теперь работают поверх существующего API; по backlog из frontend core остаётся `TASK-016` (history / step logs), следующий шаг — `TASK-016`
 - **Что сделано**:
-  - В `apps/web/package.json` добавлен `zustand`, а в `apps/web/src/stores/dashboard.store.ts` реализован store строго по scope `TASK-014`: `workflows[]`, `stats`, `loading`, `fetchWorkflows`, `fetchStats`, `deleteWorkflow`
-  - Placeholder `DashboardPage` заменён на реальную dashboard-страницу:
-    - hero + кнопка `Create Workflow` → `/workflows/new/edit`
-    - inline notifications для `Run` / `Pause|Activate` / `Delete`
-    - error banner при проблемах загрузки dashboard
-  - Добавлены компоненты `apps/web/src/components/dashboard/StatsOverview.tsx`, `WorkflowList.tsx`, `WorkflowCard.tsx`
-    - `StatsOverview` показывает 4 карточки: total workflows, active workflows, total executions, success rate
-    - `WorkflowCard` показывает `name`, status badge, `last execution`, `Edit`, `Run`, `Pause|Activate`, `Delete`
-    - `Delete` использует confirmation dialog через `window.confirm`
-  - Для `last execution` dashboard добирает по одному `GET /api/workflows/:id/executions?limit=1` на workflow, без backend-изменений и без выхода за scope
-  - `Run` вызывает `POST /api/workflows/:id/execute` с пустым `{}` payload; `Pause|Activate` вызывает `PATCH /api/workflows/:id/status`; после мутаций dashboard рефрешит stats + workflow list
-  - В frontend убраны runtime-импорты enum из `@mini-zapier/shared`; dashboard использует type-only imports и строковые значения статусов, чтобы Vite build не спотыкался о текущий CJS runtime linked package
-  - Smoke-проверка `TASK-014` прошла:
-    - `npm install zustand --save --no-package-lock --prefer-offline --fetch-timeout=600000 --fetch-retries=5` в `apps/web`
+  - В `apps/web/package.json` добавлен `reactflow`, а в `apps/web/src/main.tsx` подключён `reactflow/dist/style.css`
+  - Добавлен Zustand store `apps/web/src/stores/workflow-editor.store.ts` строго по scope `TASK-015`:
+    - `nodes`, `edges`, `onNodesChange`, `onEdgesChange`, `onConnect`
+    - `selectedNodeId`, `selectNode`
+    - `workflowId`, `workflowName`, `workflowStatus`, `workflowVersion`
+    - `addNode`, `updateNodeConfig`, `removeNode`
+    - `loadWorkflow()` и `saveWorkflow()` с маппингом `API <-> React Flow`
+  - Добавлены editor-компоненты `apps/web/src/components/editor/`:
+    - `FlowCanvas.tsx` с React Flow canvas, `screenToFlowPosition` в `onDrop`, custom node types, background grid и controls
+    - `NodeSidebar.tsx` с секциями `Triggers` / `Actions` и draggable palette для 3 trigger + 5 action типов
+    - `ConfigPanel.tsx` с формой по `nodeType`, dropdown для `GET /api/connections` и `Delete Node`
+    - `nodes/TriggerNode.tsx` и `nodes/ActionNode.tsx` с кастомным render для trigger/action нод
+    - 8 config forms в `config-forms/`: `Webhook`, `Cron`, `EmailTrigger`, `HttpRequest`, `EmailAction`, `Telegram`, `DbQuery`, `DataTransform`
+  - `WorkflowEditorPage.tsx` перестал быть placeholder:
+    - layout `sidebar | canvas | config panel`
+    - toolbar с `workflow name`, `status badge`, `Save`, `Activate/Pause`, `Run`
+    - `GET /api/workflows/:id` для load existing workflow
+    - `POST /api/workflows` для `/workflows/new/edit`, `PUT /api/workflows/:id` для existing workflow
+    - `PATCH /api/workflows/:id/status` и `POST /api/workflows/:id/execute` подключены к кнопкам toolbar
+  - В editor store добавлена клиентская защита линейных связей без изменения backend scope:
+    - не создаётся второй outgoing edge от той же ноды
+    - не создаётся второй incoming edge в target action
+    - не создаётся cycle/self-link
+  - Smoke-проверка `TASK-015` прошла:
+    - `npm install reactflow --save --no-package-lock --prefer-offline --fetch-timeout=600000 --fetch-retries=5` в `apps/web`
     - `npm run build` в `apps/web` → успешно
-    - временный API: `node --env-file=.env dist/main.js` в `apps/api` на `PORT=3001` с `APP_ENCRYPTION_KEY`, `REDIS_HOST`, `REDIS_PORT`
-    - `GET http://127.0.0.1:3001/api/stats` → `200`
-    - `node ./node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5176` в `apps/web` c `VITE_API_PROXY_TARGET=http://127.0.0.1:3001`
-    - `GET http://127.0.0.1:5176/` → `200`
-    - proxy smoke: `GET /api/stats`, `GET /api/workflows?page=1&limit=2`, `GET /api/workflows/cmmiadsou0001wyiwxecxv37r/executions?page=1&limit=1` через Vite proxy → `200`
+    - временный API: `node --env-file=..\\..\\.env dist/main.js` в `apps/api` на `PORT=3001`
+    - временный web: `node ./node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5177` в `apps/web` с `VITE_API_PROXY_TARGET=http://127.0.0.1:3001`
+    - `GET http://127.0.0.1:5177/workflows/new/edit` → `200`
+    - `GET http://127.0.0.1:5177/api/workflows?page=1&limit=1` через Vite proxy → `200`
+    - editor-compatible API smoke на временном workflow:
+      - `POST /api/workflows` → `201`
+      - `GET /api/workflows/:id` → `200`
+      - `PUT /api/workflows/:id` → `200`, `version=2`
+      - `PATCH /api/workflows/:id/status` → `200`, `ACTIVE`
+      - `POST /api/workflows/:id/execute` → `202`
+      - временный workflow `cmmj4bc0e0000wy8ceyh3mrcq` после smoke удалён через `DELETE /api/workflows/:id` → `204`
 - **Что сломано**:
-  - Критичных поломок по закрытому scope `TASK-014` не выявлено
+  - Критичных поломок по закрытому scope `TASK-015` не выявлено
 - **Частично сделано**:
-  - `WorkflowEditorPage` и `ExecutionHistoryPage` по-прежнему placeholder-only до `TASK-015` / `TASK-016`
-  - Интерактивный browser smoke по кликам `Run` / `Pause|Activate` / `Delete` в этой сессии не запускался; подтверждены сборка и proxy/API wiring без мутаций существующих workflow
+  - `ExecutionHistoryPage` всё ещё placeholder-only до `TASK-016`
+  - Полноценный интерактивный browser smoke для drag-and-drop/click-through editor canvas в этой сессии не запускался; подтверждены сборка, route/proxy и API wiring editor-а
 - **Root scripts**:
   - `pnpm dev:api` работает, если порт `3000` свободен; для локального smoke можно временно запускать API на `3001`
   - `pnpm dev:worker` работает
@@ -38,10 +55,10 @@
   - `pnpm build:web` работает
 
 ## Следующий шаг
-**TASK-015**: Workflow Editor (React Flow)
+**TASK-016**: Execution History + Step Log Viewer
 
 ## Блокеры
-- На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`), а порт `5173` — внешним Vite-процессом (`D:\TZ\Finance_tracker\client`). Для smoke-проверок использовались `3001`, `5174`, `5175`, `5176`.
+- На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`), а порт `5173` — внешним Vite-процессом (`D:\TZ\Finance_tracker\client`). Для smoke-проверок использовались `3001`, `5174`, `5175`, `5176`, `5177`.
 - В этом workspace `pnpm install` всё ещё зависает без вывода. Для `TASK-013` зависимости `apps/web` были установлены локально через `npm install --prefer-offline`, из-за чего `pnpm-lock.yaml` не обновлялся.
 - `apps/web/package.json` использует `"@mini-zapier/shared": "file:../../packages/shared"` как обход зависающего `pnpm install` и несовместимости `npm` с `workspace:*`.
 
@@ -124,4 +141,5 @@
 | TASK-012 | done | см. `git log` (`TASK-012: StatsController + Swagger + global middleware`) | `/api/stats`, Swagger UI `/api/docs`, global ValidationPipe/CORS/exception filter, DTO validation + runtime smoke |
 | TASK-013 | done | см. `git log` (`TASK-013: Frontend scaffold + API client + layout`) | apps/web scaffold, Tailwind, router, AppLayout, typed axios client, build + dev/proxy smoke |
 | TASK-014 | done | см. `git log` (`TASK-014: Dashboard page`) | Zustand dashboard store, live stats cards, workflow cards with Edit/Run/Pause-Activate/Delete, Vite proxy + API smoke |
+| TASK-015 | done | см. `git log` (`TASK-015: Workflow Editor (React Flow)`) | React Flow workflow editor, Zustand editor store, drag-and-drop sidebar/canvas/config panel, load-save-status-run wiring, build + route/API smoke |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |
