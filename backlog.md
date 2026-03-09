@@ -265,7 +265,7 @@
   - Dedupe по event ID работает
 
 ### TASK-011: Remaining action strategies (Email, Telegram, DB, Transform)
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: реализовать оставшиеся 4 action strategy
 - **Scope**:
   - `apps/worker/src/action/strategies/email-send.action.ts`:

@@ -2,8 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { ActionType } from '@mini-zapier/shared';
 
 import { ActionStrategy } from './strategies/action-strategy.interface';
+import { DataTransformAction } from './strategies/data-transform.action';
+import { DbQueryAction } from './strategies/db-query.action';
+import { EmailSendAction } from './strategies/email-send.action';
 import { HttpRequestAction } from './strategies/http-request.action';
-import { NoopAction } from './strategies/noop.action';
+import { TelegramAction } from './strategies/telegram.action';
 
 @Injectable()
 export class ActionService {
@@ -11,13 +14,16 @@ export class ActionService {
 
   constructor(
     httpRequestAction: HttpRequestAction,
-    noopAction: NoopAction,
+    emailSendAction: EmailSendAction,
+    telegramAction: TelegramAction,
+    dbQueryAction: DbQueryAction,
+    dataTransformAction: DataTransformAction,
   ) {
     this.registry.set(ActionType.HTTP_REQUEST, httpRequestAction);
-    this.registry.set(ActionType.EMAIL, noopAction);
-    this.registry.set(ActionType.TELEGRAM, noopAction);
-    this.registry.set(ActionType.DB_QUERY, noopAction);
-    this.registry.set(ActionType.DATA_TRANSFORM, noopAction);
+    this.registry.set(ActionType.EMAIL, emailSendAction);
+    this.registry.set(ActionType.TELEGRAM, telegramAction);
+    this.registry.set(ActionType.DB_QUERY, dbQueryAction);
+    this.registry.set(ActionType.DATA_TRANSFORM, dataTransformAction);
   }
 
   resolve(nodeType: string): ActionStrategy {

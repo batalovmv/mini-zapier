@@ -3,30 +3,27 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последняя задача**: TASK-010 (done)
-- **Статус проекта**: API теперь принимает inbound email webhook'и, проверяет HMAC-подпись провайдера по `rawBody`, дедуплицирует события по provider event ID и создаёт `WorkflowExecution` через существующий `ExecutionService`; cron/webhook/manual execution из предыдущих срезов остаются рабочими
+- **Последняя задача**: TASK-011 (done)
+- **Статус проекта**: worker теперь выполняет все action types из backend scope v1: `HTTP_REQUEST`, `EMAIL`, `TELEGRAM`, `DB_QUERY`, `DATA_TRANSFORM`; API/worker flow из предыдущих срезов остаётся рабочим, следующий backend gap — `TASK-012` (stats + Swagger + global middleware)
 - **Что сделано**:
-  - В `apps/api/src/main.ts` включён `rawBody: true` для Nest bootstrap: это нужно именно для `TASK-010`, чтобы HMAC считался по сырым байтам запроса, а не по уже распарсенному JSON
-  - В `apps/api/src/trigger/trigger.controller.ts` добавлен `POST /api/inbound-email/:workflowId`:
-    - проверяет, что workflow в статусе `ACTIVE`
-    - проверяет, что trigger node имеет type `EMAIL`
-    - требует `Connection` типа `WEBHOOK` с `credentials.signingSecret`
-    - валидирует `X-Signature` как HMAC-SHA256 по `rawBody`
-    - извлекает email payload `{from, to, subject, text, html}` из body
-    - извлекает provider event ID из `X-Event-ID` или body и передаёт его в `ExecutionService.startExecution(..., TriggerType.EMAIL, eventId)`
-  - Smoke-проверка `TASK-010` прошла на `PORT=3001`:
-    - `DRAFT` workflow вернул `422`
-    - запрос без `X-Signature` вернул `401`
-    - запрос с невалидной подписью вернул `401`
-    - валидный email webhook вернул `202`, создал execution `PENDING`
-    - повтор того же payload с тем же provider event ID вернул `200 { duplicate: true }`
-    - `GET /api/executions/:id` вернул `triggerData` с `from`, `to`, `subject`, `text`, `html`
-    - в БД `TriggerEvent` сохранил `source=EMAIL` и `idempotencyKey=evt-success-1773045473522`
-    - временные smoke entities `cmmixhv7p0000wyiorugfe83f` / `cmmixhv8c0001wyiotwr7s8i7` / `cmmixhva40005wyiotr3es95h` после проверки удалены, queue job `26` очищен
+  - В `apps/worker/src/action/strategies/` добавлены реальные стратегии:
+    - `email-send.action.ts` — `nodemailer` transporter из credentials (`host`, `port`, `user`, `pass`), template interpolation для `to`, `subject`, `body`, return `{messageId, accepted}`
+    - `telegram.action.ts` — `axios POST` в Telegram Bot API с `credentials.botToken`, interpolation для `chatId` и `message`, return `{messageId, ok}`
+    - `db-query.action.ts` — `pg Client` из `connectionString` или `host`/`port`/`user`/`password`/`database`, interpolation для `params`, return `{rows, rowCount}`
+    - `data-transform.action.ts` — `mode=template` и `mode=mapping` по `{{input.path}}`
+  - Добавлен `apps/worker/src/action/strategies/template-interpolation.util.ts`, чтобы новые action strategies использовали общий interpolation/path resolution контракт без изменения `execution-engine`
+  - `apps/worker/src/action/action.service.ts` и `apps/worker/src/action/action.module.ts` теперь регистрируют реальные стратегии вместо `noop` для `EMAIL`, `TELEGRAM`, `DB_QUERY`, `DATA_TRANSFORM`
+  - `apps/worker/package.json` и `pnpm-lock.yaml` обновлены под runtime/type зависимости `axios`, `nodemailer`, `pg`, `@types/nodemailer`, `@types/pg`
+  - Smoke-проверка `TASK-011` прошла:
+    - `pnpm --filter @mini-zapier/worker run build`
+    - inline registry-check подтвердил, что `ActionRegistry.resolve()` отдаёт новые стратегии
+    - inline smoke с mock transport/API подтвердил `EmailSendAction` и `TelegramAction`
+    - inline smoke с локальным PostgreSQL (`localhost:5434`) подтвердил `DbQueryAction` через `SELECT $1::text AS name, $2::int AS code`
+    - inline smoke подтвердил `DataTransformAction` для `template` и `mapping`
 - **Что сломано**:
-  - Реальные action strategies ещё не реализованы для `EMAIL`, `TELEGRAM`, `DB_QUERY`, `DATA_TRANSFORM`: они всё ещё работают через noop stub
+  - Критичных поломок по уже закрытому backend scope не выявлено
 - **Частично сделано**:
-  - `apps/api` всё ещё без `StatsModule`
+  - `apps/api` всё ещё без `StatsModule`, Swagger setup и global middleware из `TASK-012`
   - `apps/web` всё ещё placeholder
 - **Root scripts**:
   - `pnpm dev:api` работает
@@ -34,10 +31,11 @@
   - `pnpm dev:web` заработает после TASK-013
 
 ## Следующий шаг
-**TASK-011**: Remaining action strategies (Email, Telegram, DB, Transform)
+**TASK-012**: StatsController + Swagger + global middleware
 
 ## Блокеры
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`). API по умолчанию слушает `3000`, но для локальной smoke-проверки можно временно запускать с `PORT=3001`.
+- В этом workspace `pnpm add` / `pnpm install --lockfile-only` зависали без вывода; для `TASK-011` lockfile был синхронизирован по временному чистому `pnpm`-проекту, после чего сборка воркера и smoke-проверки выполнены успешно
 
 ## Важные заметки
 - **Порты инфраструктуры**: PostgreSQL=**5434**, Redis=**6380**
@@ -112,4 +110,5 @@
 | TASK-008 | done | см. `git log` (`TASK-008: HttpRequestAction + auto-pause + E2E smoke`) | real HTTP_REQUEST strategy, template interpolation, retry smoke, 5x failed auto-pause, dedupe + snapshot/log secrecy checks |
 | TASK-009 | done | см. `git log` (`TASK-009: Cron trigger + startup reconciliation`) | separate cron queue/worker in API, register/unregister on PATCH status, re-register on PUT, startup reconciliation, cron dedupe smoke-checked |
 | TASK-010 | done | см. `git log` (`TASK-010: Email inbound trigger`) | inbound email endpoint, rawBody HMAC verification, ACTIVE/type guards, provider event dedupe, smoke-checked and cleaned up |
+| TASK-011 | done | см. `git log` (`TASK-011: Remaining action strategies (Email, Telegram, DB, Transform)`) | real EMAIL/TELEGRAM/DB_QUERY/DATA_TRANSFORM strategies, registry wiring, worker deps/lock update, build + smoke-checked |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |
