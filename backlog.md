@@ -413,7 +413,7 @@
   - Activate/Pause → PATCH status
 
 ### TASK-016: Execution History + Step Log Viewer
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: страница истории выполнений, timeline step logs
 - **Scope**:
   - `apps/web/src/pages/ExecutionHistoryPage.tsx` — для конкретного workflow

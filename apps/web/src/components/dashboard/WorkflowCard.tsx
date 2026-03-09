@@ -110,6 +110,13 @@ export function WorkflowCard({
           Edit
         </Link>
 
+        <Link
+          className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+          to={`/workflows/${workflow.id}/history`}
+        >
+          History
+        </Link>
+
         <button
           className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-sky-400 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isBusy}
