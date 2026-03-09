@@ -3,66 +3,48 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последняя задача**: TASK-017 (done)
-- **Статус проекта**: backlog v1 закрыт целиком: backend scope остаётся закрытым до `TASK-012`, а frontend scope `TASK-013` → `TASK-017` завершён, включая UI polish и browser E2E smoke поверх существующего API/worker
+- **Последнее изменение**: post-v1 fix — `server-generated node IDs + lockfile sync`
+- **Статус проекта**: backlog v1 по-прежнему закрыт целиком, плюс закрыты два post-v1 дефекта из внешнего ревью: невоспроизводимый `pnpm` install/build и коллизии `WorkflowNode.id` при повторяющихся client node ids
 - **Что сделано**:
-  - В `apps/web` добавлен общий polish-слой без расширения product scope:
-    - глобальный `ErrorBoundary` в `src/main.tsx`
-    - toast-notifications через `react-hot-toast`
-    - переиспользуемые UI-компоненты `Spinner`, `LoadingState`, `EmptyState`, `ModalShell`, `ConfirmationDialog`
-  - Dashboard / Editor / History приведены к acceptance `TASK-017`:
-    - loading states на страницах и в таблицах теперь показывают spinners, а не только текст
-    - empty states для workflow/execution реализованы явно (`Нет workflows`, `Нет executions`)
-    - destructive actions подтверждаются модальными dialog-ами:
-      - delete workflow в `DashboardPage.tsx`
-      - delete node в `ConfigPanel.tsx`
-    - success/error toasts добавлены на workflow CRUD / run / status toggle / connection create
-  - В editor добавлена минимальная UI-точка создания connection внутри scope acceptance:
-    - новый `ConnectionCreateDialog.tsx` использует существующий `POST /api/connections`
-    - после создания connection автоматически подставляется в selected node
-    - это закрывает требование “полный flow от создания connection до просмотра результатов через UI”
-  - Для стабильного browser smoke в dev-only режиме добавлен test hook на линейное соединение нод в `FlowCanvas.tsx`; production build не меняется
-  - Добавлен полный E2E smoke через Playwright:
-    - `apps/web/playwright.config.ts`
-    - `apps/web/e2e/ui-smoke.spec.ts`
-    - `apps/web/package.json` scripts: `e2e`, `e2e:headed`
-    - сценарий покрывает:
-      - создание `WEBHOOK` connection через UI
-      - создание workflow `Webhook -> HTTP Request -> Data Transform`
-      - настройку нод через config panel
-      - save + activate
-      - POST webhook с `X-Webhook-Secret`
-      - переход в history и проверку step logs / output data
-      - cleanup workflow + connection после теста
-  - Smoke-проверка `TASK-017` прошла:
-    - `docker compose up -d`
-    - `npm run build` в `apps/web`
-    - временный API: `node --env-file=..\\..\\.env dist/main.js` в `apps/api` на `PORT=3001`
-    - временный web: `node ./node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5179` в `apps/web` с `VITE_API_PROXY_TARGET=http://127.0.0.1:3001`
-    - worker запущен на существующем dist и обработал UI smoke flow
-    - `npm run e2e` в `apps/web` -> `1 passed`
+  - `apps/api/src/workflow/workflow.service.ts` больше не пишет client node ids в БД как глобальные PK:
+    - после нормализации и линейной валидации workflow сервер генерирует fresh node ids через `crypto.randomUUID()`
+    - edges ремапятся по `clientId -> serverId` внутри payload
+    - `POST /api/workflows` теперь принимает два разных workflow с одинаковыми `trigger-1/action-1` без unique-collision
+    - `PUT /api/workflows/:id` пересоздаёт graph с новыми серверными node ids
+  - `apps/api/src/workflow/dto/create-workflow.dto.ts` уточняет контракт:
+    - `WorkflowNodeInputDto.id` теперь описан как client-local reference внутри request payload
+    - persisted database id генерируется сервером
+  - `pnpm install --prefer-offline` успешно синхронизировал workspace и `pnpm-lock.yaml`:
+    - importers для `apps/web` и полного workspace теперь отражены в lockfile
+    - worker снова получает типы/зависимости через `pnpm`, без временного npm-only install state
+  - Post-v1 проверки прошли:
+    - `pnpm --filter @mini-zapier/api run build`
+    - smoke: два `POST /api/workflows` с одинаковыми `trigger-1/action-1` -> оба `201`, сервер возвращает разные node ids
+    - `pnpm install --frozen-lockfile`
+    - `pnpm build`
+    - `pnpm --filter @mini-zapier/web run e2e` -> `1 passed`
 - **Что сломано**:
-  - Критичных поломок по закрытому scope `TASK-017` не выявлено
+  - Критичных известных поломок после post-v1 fix не выявлено
 - **Частично сделано**:
-  - Частичных хвостов по backlog v1 не осталось
+  - Частичных хвостов по backlog v1 и по этому fix-пакету не осталось
 - **Root scripts**:
-  - `pnpm dev:api` работает, если порт `3000` свободен; для локального smoke можно временно запускать API на `3001`
+  - `pnpm install --frozen-lockfile` работает
+  - `pnpm build` работает
+  - `pnpm dev:api` работает, если порт `3000` свободен; для локального smoke по-прежнему удобно использовать `PORT=3001`
   - `pnpm dev:worker` работает
   - `pnpm dev:web` работает, если порт `5173` свободен
-  - `pnpm build:web` работает
-  - `npm run e2e` в `apps/web` запускает Playwright smoke для `TASK-017`
+  - `pnpm --filter @mini-zapier/web run e2e` запускает Playwright smoke
 
 ## Следующий шаг
-**Следующий шаг по backlog отсутствует**: v1 scope из `backlog.md` закрыт. Дальше только новый явно поставленный TASK / post-v1 scope.
+**Следующий шаг по backlog отсутствует**: v1 scope из `backlog.md` закрыт, post-v1 fix-пакет тоже закрыт. Дальше только новый явно поставленный TASK / новый scope.
 
 ## Блокеры
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`), а порт `5173` — внешним Vite-процессом (`D:\TZ\Finance_tracker\client`). Для smoke-проверок использовались `3001`, `5174`, `5175`, `5176`, `5177`, `5178`.
-- В этом workspace `pnpm install` всё ещё зависает без вывода. Для `TASK-013` зависимости `apps/web` были установлены локально через `npm install --prefer-offline`, из-за чего `pnpm-lock.yaml` не обновлялся.
 - `apps/web/package.json` использует `"@mini-zapier/shared": "file:../../packages/shared"` как обход зависающего `pnpm install` и несовместимости `npm` с `workspace:*`.
-- Для smoke `TASK-017` worker в локальном окружении не стартовал “из коробки” из-за неполного install состояния (`apps/worker/node_modules` не содержал top-level `pg`, `nodemailer`, `axios`). Для этой сессии runtime был добран временно вне git. Если понадобится новый backend smoke, сначала проверь локальный install worker dependencies.
 
 ## Важные заметки
 - **Порты инфраструктуры**: PostgreSQL=**5434**, Redis=**6380**
+- Workflow node ids в create/update payload теперь трактуются только как client-local references для связи nodes ↔ edges; persisted ids генерируются сервером и приходят обратно в API response
 - Для `apps/web` Vite proxy по умолчанию шлёт `/api/*` на `http://localhost:3000`; для локального smoke можно переопределить target через `VITE_API_PROXY_TARGET`
 - `apps/web/playwright.config.ts` по умолчанию ждёт `MINI_ZAPIER_E2E_BASE_URL=http://127.0.0.1:5179`; если прогоняешь e2e на другом порту, передай env явно
 - В `ExecutionTable` колонка `trigger` сейчас показывает короткий preview из `triggerData`, потому что текущий `WorkflowExecutionDto` не содержит отдельного поля `source`; backend contract не менялся в рамках `TASK-016`
@@ -78,12 +60,7 @@
 - Cron reconciliation живёт в `apps/api/src/trigger/trigger.service.ts` и запускается на старте API; если scheduler потерян в Redis, ACTIVE cron workflow будет заново зарегистрирован
 - Inbound email trigger ожидает `X-Signature` и `Connection.credentials.signingSecret`; подпись считается как HMAC-SHA256 по `rawBody`
 - Для `TASK-008` `HTTP_REQUEST` реализован без новой dependency: используется встроенный Node `fetch`, но контракт strategy сохранён (`{ status, headers, data }`), non-2xx ответы считаются ошибкой
-- Для smoke-проверок `TASK-008` использовались тестовые сущности:
-  - `Connection`: `cmmiadsob0000wyiwt7amu01e`
-  - success `Workflow`: `cmmiadsou0001wyiwxecxv37r`
-  - success `Execution`: `cmmiadspr0004wyiwjkw510af`
-  - auto-pause `Workflow`: `cmmiadv51000dwyiwduvmpwad`
-  - first failed `Execution`: `cmmiadv5n000gwyiw0xjfl034`
+- После `pnpm install --prefer-offline` `pnpm-lock.yaml` снова является источником истины для workspace; отдельный npm-installed state для `apps/web` больше не нужен
 - После следующего изменения `apps/api/prisma/schema.prisma` запускай `pnpm --filter @mini-zapier/api run prisma:migrate -- --name <migration_name>`
 
 ---
@@ -145,4 +122,5 @@
 | TASK-015 | done | см. `git log` (`TASK-015: Workflow Editor (React Flow)`) | React Flow workflow editor, Zustand editor store, drag-and-drop sidebar/canvas/config panel, load-save-status-run wiring, build + route/API smoke |
 | TASK-016 | done | см. `git log` (`TASK-016: Execution History + Step Log Viewer`) | execution history page, paginated execution table, step log timeline with JSON viewer, 5s polling for RUNNING executions, dashboard history link |
 | TASK-017 | done | см. `git log` (`TASK-017: UI polish + E2E test`) | toasts/loading-empty states/error boundary/confirm dialogs, inline connection create in editor, Playwright UI smoke with webhook -> history -> step logs |
+| post-v1-fix | done | см. `git log` (`fix: server-generated node IDs + lockfile sync`) | workflow nodes now get server-generated ids with edge remap; lockfile synced via pnpm; `frozen-lockfile`, root build and Playwright smoke pass again |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |

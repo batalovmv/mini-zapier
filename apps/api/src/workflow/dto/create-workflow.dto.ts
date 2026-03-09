@@ -17,7 +17,8 @@ import {
 export class WorkflowNodeInputDto {
   @ApiProperty({
     example: 'trigger-1',
-    description: 'Client-generated node id used by edges.',
+    description:
+      'Client-local node reference used by edges within the request payload. The server generates the persisted database id.',
   })
   @IsString()
   @IsNotEmpty()

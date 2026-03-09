@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { NodeKind, WorkflowDto, WorkflowStatus } from '@mini-zapier/shared';
 import {
@@ -24,6 +26,20 @@ declare const process: {
   env: Record<string, string | undefined>;
 };
 
+interface NormalizedWorkflowNodeInput extends WorkflowNodeValidationInput {
+  id: string;
+  positionX: number;
+  positionY: number;
+  nodeKind: NodeKind;
+  nodeType: string;
+  label: string;
+  config: Prisma.InputJsonObject;
+  connectionId: string | null;
+  retryCount: number;
+  retryBackoff: number;
+  timeoutMs: number | null;
+}
+
 interface NormalizedWorkflowNode extends WorkflowNodeValidationInput {
   id: string;
   positionX: number;
@@ -36,6 +52,13 @@ interface NormalizedWorkflowNode extends WorkflowNodeValidationInput {
   retryCount: number;
   retryBackoff: number;
   timeoutMs: number | null;
+}
+
+interface NormalizedWorkflowEdgeInput extends WorkflowEdgeValidationInput {
+  sourceNodeId: string;
+  targetNodeId: string;
+  sourceHandle: string | null;
+  targetHandle: string | null;
 }
 
 interface NormalizedWorkflowEdge extends WorkflowEdgeValidationInput {
@@ -379,10 +402,15 @@ export class WorkflowService {
   private normalizeWorkflowDefinition(
     workflowDto: CreateWorkflowDto | UpdateWorkflowDto,
   ): NormalizedWorkflowDefinition {
-    const normalizedNodes = this.normalizeNodes(workflowDto.nodes);
-    const normalizedEdges = this.normalizeEdges(workflowDto.edges);
+    const normalizedNodeInputs = this.normalizeNodes(workflowDto.nodes);
+    const normalizedEdgeInputs = this.normalizeEdges(workflowDto.edges);
 
-    validateLinearWorkflowGraph(normalizedNodes, normalizedEdges);
+    validateLinearWorkflowGraph(normalizedNodeInputs, normalizedEdgeInputs);
+
+    const { nodes, edges } = this.assignServerNodeIds(
+      normalizedNodeInputs,
+      normalizedEdgeInputs,
+    );
 
     return {
       name: this.normalizeRequiredString(workflowDto.name, 'Workflow name'),
@@ -396,12 +424,12 @@ export class WorkflowService {
         process.env.DEFAULT_TIMEZONE ??
         'UTC',
       viewport: this.normalizeViewport(workflowDto.viewport),
-      nodes: normalizedNodes,
-      edges: normalizedEdges,
+      nodes,
+      edges,
     };
   }
 
-  private normalizeNodes(nodes: unknown): NormalizedWorkflowNode[] {
+  private normalizeNodes(nodes: unknown): NormalizedWorkflowNodeInput[] {
     if (!Array.isArray(nodes) || nodes.length === 0) {
       throw new BadRequestException(
         'Workflow nodes must be a non-empty array.',
@@ -420,7 +448,10 @@ export class WorkflowService {
     return normalizedNodes;
   }
 
-  private normalizeNode(node: unknown, index: number): NormalizedWorkflowNode {
+  private normalizeNode(
+    node: unknown,
+    index: number,
+  ): NormalizedWorkflowNodeInput {
     if (!isPlainObject(node)) {
       throw new BadRequestException(
         `Workflow node at index ${index} must be an object.`,
@@ -474,7 +505,7 @@ export class WorkflowService {
     };
   }
 
-  private normalizeEdges(edges: unknown): NormalizedWorkflowEdge[] {
+  private normalizeEdges(edges: unknown): NormalizedWorkflowEdgeInput[] {
     if (!Array.isArray(edges)) {
       throw new BadRequestException('Workflow edges must be an array.');
     }
@@ -482,7 +513,10 @@ export class WorkflowService {
     return edges.map((edge, index) => this.normalizeEdge(edge, index));
   }
 
-  private normalizeEdge(edge: unknown, index: number): NormalizedWorkflowEdge {
+  private normalizeEdge(
+    edge: unknown,
+    index: number,
+  ): NormalizedWorkflowEdgeInput {
     if (!isPlainObject(edge)) {
       throw new BadRequestException(
         `Workflow edge at index ${index} must be an object.`,
@@ -508,6 +542,44 @@ export class WorkflowService {
           edge.targetHandle,
           `Workflow edge ${index} targetHandle`,
         ) ?? null,
+    };
+  }
+
+  private assignServerNodeIds(
+    nodes: NormalizedWorkflowNodeInput[],
+    edges: NormalizedWorkflowEdgeInput[],
+  ): Pick<NormalizedWorkflowDefinition, 'nodes' | 'edges'> {
+    const clientToServerId = new Map<string, string>();
+    const remappedNodes: NormalizedWorkflowNode[] = nodes.map((node) => {
+      const serverNodeId = randomUUID();
+
+      clientToServerId.set(node.id, serverNodeId);
+
+      return {
+        ...node,
+        id: serverNodeId,
+      };
+    });
+    const remappedEdges: NormalizedWorkflowEdge[] = edges.map((edge, index) => {
+      const sourceNodeId = clientToServerId.get(edge.sourceNodeId);
+      const targetNodeId = clientToServerId.get(edge.targetNodeId);
+
+      if (!sourceNodeId || !targetNodeId) {
+        throw new BadRequestException(
+          `Workflow edge ${index} references an unknown client node id.`,
+        );
+      }
+
+      return {
+        ...edge,
+        sourceNodeId,
+        targetNodeId,
+      };
+    });
+
+    return {
+      nodes: remappedNodes,
+      edges: remappedEdges,
     };
   }
 
