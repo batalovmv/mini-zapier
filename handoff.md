@@ -3,21 +3,26 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последняя задача**: TASK-009 (done)
-- **Статус проекта**: API умеет регистрировать cron workflows в BullMQ, пересинхронизирует их при старте и создаёт `WorkflowExecution` на каждый cron tick через уже существующий `ExecutionService`; webhook/manual execution и standalone worker из среза 1 остаются рабочими
+- **Последняя задача**: TASK-010 (done)
+- **Статус проекта**: API теперь принимает inbound email webhook'и, проверяет HMAC-подпись провайдера по `rawBody`, дедуплицирует события по provider event ID и создаёт `WorkflowExecution` через существующий `ExecutionService`; cron/webhook/manual execution из предыдущих срезов остаются рабочими
 - **Что сделано**:
-  - Добавлен `apps/api/src/trigger/strategies/cron.trigger.ts`: отдельная BullMQ queue `workflow-cron-trigger`, deterministic scheduler key `workflow:<workflowId>`, `register()`/`unregister()` для cron trigger с `workflow.timezone`
-  - Добавлен `apps/api/src/trigger/trigger.service.ts`: internal BullMQ worker в API обрабатывает cron jobs, собирает dedupe key как `{cronExpression}:{scheduledAt}` из `job.opts.prevMillis`, вызывает `ExecutionService.startExecution()` и на `onModuleInit()` пересинхронизирует все ACTIVE cron workflows
-  - `WorkflowService` теперь вызывает cron register/unregister только в рамках scope TASK-009:
-    - `PATCH /api/workflows/:id/status`: `ACTIVE` → register, `PAUSED`/`DRAFT` → unregister
-    - `PUT /api/workflows/:id` для ACTIVE cron workflow: unregister old scheduler → register new scheduler
-  - Smoke-проверка `TASK-009` прошла:
-    - ACTIVE workflow с cron trigger создал repeatable job в BullMQ queue `workflow-cron-trigger`
-    - PATCH в `PAUSED` удалил scheduler
-    - PUT для ACTIVE workflow сменил pattern с `*/10 * * * * *` на `*/15 * * * * *` и BullMQ показал уже новый scheduler
-    - после ручного удаления scheduler из Redis и рестарта API reconciliation восстановил 1 ACTIVE cron workflow из БД
-    - cron ticks создали `WorkflowExecution` в статусе `PENDING`, а `TriggerEvent` сохранил dedupe keys вида `*/10 * * * * *:2026-03-09T08:24:20.000Z`
-    - временный smoke workflow `cmmiwzvux0000wyf8fjqt6ouo` после проверки удалён из БД, scheduler очищен
+  - В `apps/api/src/main.ts` включён `rawBody: true` для Nest bootstrap: это нужно именно для `TASK-010`, чтобы HMAC считался по сырым байтам запроса, а не по уже распарсенному JSON
+  - В `apps/api/src/trigger/trigger.controller.ts` добавлен `POST /api/inbound-email/:workflowId`:
+    - проверяет, что workflow в статусе `ACTIVE`
+    - проверяет, что trigger node имеет type `EMAIL`
+    - требует `Connection` типа `WEBHOOK` с `credentials.signingSecret`
+    - валидирует `X-Signature` как HMAC-SHA256 по `rawBody`
+    - извлекает email payload `{from, to, subject, text, html}` из body
+    - извлекает provider event ID из `X-Event-ID` или body и передаёт его в `ExecutionService.startExecution(..., TriggerType.EMAIL, eventId)`
+  - Smoke-проверка `TASK-010` прошла на `PORT=3001`:
+    - `DRAFT` workflow вернул `422`
+    - запрос без `X-Signature` вернул `401`
+    - запрос с невалидной подписью вернул `401`
+    - валидный email webhook вернул `202`, создал execution `PENDING`
+    - повтор того же payload с тем же provider event ID вернул `200 { duplicate: true }`
+    - `GET /api/executions/:id` вернул `triggerData` с `from`, `to`, `subject`, `text`, `html`
+    - в БД `TriggerEvent` сохранил `source=EMAIL` и `idempotencyKey=evt-success-1773045473522`
+    - временные smoke entities `cmmixhv7p0000wyiorugfe83f` / `cmmixhv8c0001wyiotwr7s8i7` / `cmmixhva40005wyiotr3es95h` после проверки удалены, queue job `26` очищен
 - **Что сломано**:
   - Реальные action strategies ещё не реализованы для `EMAIL`, `TELEGRAM`, `DB_QUERY`, `DATA_TRANSFORM`: они всё ещё работают через noop stub
 - **Частично сделано**:
@@ -29,7 +34,7 @@
   - `pnpm dev:web` заработает после TASK-013
 
 ## Следующий шаг
-**TASK-010**: Email inbound trigger
+**TASK-011**: Remaining action strategies (Email, Telegram, DB, Transform)
 
 ## Блокеры
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`). API по умолчанию слушает `3000`, но для локальной smoke-проверки можно временно запускать с `PORT=3001`.
@@ -45,6 +50,7 @@
 - Для `apps/api` зафиксирован Prisma **6.19.2**: это оставляет классическую `schema.prisma` и стандартный `PrismaClient` без нового Prisma 7 datasource/runtime слоя
 - `pnpm dev:api` перед стартом автоматически делает `prisma generate`
 - Cron reconciliation живёт в `apps/api/src/trigger/trigger.service.ts` и запускается на старте API; если scheduler потерян в Redis, ACTIVE cron workflow будет заново зарегистрирован
+- Inbound email trigger ожидает `X-Signature` и `Connection.credentials.signingSecret`; подпись считается как HMAC-SHA256 по `rawBody`
 - Для `TASK-008` `HTTP_REQUEST` реализован без новой dependency: используется встроенный Node `fetch`, но контракт strategy сохранён (`{ status, headers, data }`), non-2xx ответы считаются ошибкой
 - Для smoke-проверок `TASK-008` использовались тестовые сущности:
   - `Connection`: `cmmiadsob0000wyiwt7amu01e`
@@ -105,4 +111,5 @@
 | TASK-007 | done | см. `git log` (`TASK-007: apps/worker scaffold + BullMQ processor + execution engine`) | standalone worker, BullMQ consumer, chain resolver, retry/timeout wrapper, step logs, success/failure smoke-checked |
 | TASK-008 | done | см. `git log` (`TASK-008: HttpRequestAction + auto-pause + E2E smoke`) | real HTTP_REQUEST strategy, template interpolation, retry smoke, 5x failed auto-pause, dedupe + snapshot/log secrecy checks |
 | TASK-009 | done | см. `git log` (`TASK-009: Cron trigger + startup reconciliation`) | separate cron queue/worker in API, register/unregister on PATCH status, re-register on PUT, startup reconciliation, cron dedupe smoke-checked |
+| TASK-010 | done | см. `git log` (`TASK-010: Email inbound trigger`) | inbound email endpoint, rawBody HMAC verification, ACTIVE/type guards, provider event dedupe, smoke-checked and cleaned up |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |

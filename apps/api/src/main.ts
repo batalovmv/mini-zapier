@@ -10,7 +10,9 @@ declare const process: {
 };
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true,
+  });
   const port = Number(process.env.PORT ?? '3000');
 
   app.get(PrismaService);

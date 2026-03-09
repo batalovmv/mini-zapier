@@ -246,7 +246,7 @@
   - Каждый cron tick → новый execution с dedupe
 
 ### TASK-010: Email inbound trigger
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: POST /api/inbound-email/:workflowId endpoint для приёма email от провайдера с проверкой подписи
 - **Scope**:
   - `apps/api/src/trigger/trigger.controller.ts` — добавить POST /api/inbound-email/:workflowId
