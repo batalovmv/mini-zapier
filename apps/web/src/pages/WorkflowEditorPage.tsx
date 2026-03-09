@@ -1,10 +1,12 @@
 import type { WorkflowDto } from '@mini-zapier/shared';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { ConfigPanel } from '../components/editor/ConfigPanel';
 import { FlowCanvas } from '../components/editor/FlowCanvas';
 import { NodeSidebar } from '../components/editor/NodeSidebar';
+import { LoadingState } from '../components/ui/LoadingState';
 import { getApiErrorMessage } from '../lib/api/client';
 import { executeWorkflow } from '../lib/api/executions';
 import {
@@ -14,11 +16,6 @@ import {
   updateWorkflowStatus,
 } from '../lib/api/workflows';
 import { useWorkflowEditorStore } from '../stores/workflow-editor.store';
-
-interface EditorNotice {
-  tone: 'success' | 'error';
-  message: string;
-}
 
 const ACTIVE_STATUS = 'ACTIVE' as WorkflowDto['status'];
 const PAUSED_STATUS = 'PAUSED' as WorkflowDto['status'];
@@ -54,14 +51,12 @@ export function WorkflowEditorPage() {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [running, setRunning] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<EditorNotice | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadEditor() {
       setPageError(null);
-      setNotice(null);
 
       if (id === 'new') {
         setLoading(false);
@@ -99,7 +94,6 @@ export function WorkflowEditorPage() {
   async function handleSave() {
     setSaving(true);
     setPageError(null);
-    setNotice(null);
 
     try {
       const payload = saveWorkflowPayload();
@@ -109,13 +103,11 @@ export function WorkflowEditorPage() {
           : await updateWorkflow(workflowId, payload);
 
       loadWorkflow(workflow);
-      setNotice({
-        tone: 'success',
-        message:
-          workflowId === null
-            ? `Workflow created: ${workflow.id}.`
-            : `Workflow saved. Version ${workflow.version}.`,
-      });
+      toast.success(
+        workflowId === null
+          ? `Workflow created: ${workflow.id}.`
+          : `Workflow saved. Version ${workflow.version}.`,
+      );
 
       if (workflowId === null) {
         navigate(`/workflows/${workflow.id}/edit`, {
@@ -123,7 +115,7 @@ export function WorkflowEditorPage() {
         });
       }
     } catch (error) {
-      setPageError(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -136,7 +128,6 @@ export function WorkflowEditorPage() {
 
     setStatusUpdating(true);
     setPageError(null);
-    setNotice(null);
 
     const nextStatus =
       workflowStatus === ACTIVE_STATUS ? PAUSED_STATUS : ACTIVE_STATUS;
@@ -147,12 +138,9 @@ export function WorkflowEditorPage() {
       });
 
       loadWorkflow(workflow);
-      setNotice({
-        tone: 'success',
-        message: `Workflow is now ${nextStatus}.`,
-      });
+      toast.success(`Workflow is now ${nextStatus}.`);
     } catch (error) {
-      setPageError(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error));
     } finally {
       setStatusUpdating(false);
     }
@@ -165,17 +153,13 @@ export function WorkflowEditorPage() {
 
     setRunning(true);
     setPageError(null);
-    setNotice(null);
 
     try {
       const response = await executeWorkflow(workflowId, {});
 
-      setNotice({
-        tone: 'success',
-        message: `Execution queued: ${response.executionId}.`,
-      });
+      toast.success(`Execution queued: ${response.executionId}.`);
     } catch (error) {
-      setPageError(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error));
     } finally {
       setRunning(false);
     }
@@ -220,6 +204,7 @@ export function WorkflowEditorPage() {
               <span className="muted-label">Workflow name</span>
               <input
                 className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-lg font-semibold text-slate-900 outline-none transition focus:border-amber-500"
+                data-testid="workflow-name-input"
                 onChange={(event) => setWorkflowName(event.target.value)}
                 placeholder="Untitled workflow"
                 type="text"
@@ -231,6 +216,7 @@ export function WorkflowEditorPage() {
           <div className="flex flex-wrap gap-3">
             <button
               className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              data-testid="save-workflow-button"
               disabled={saving}
               onClick={() => void handleSave()}
               type="button"
@@ -239,6 +225,7 @@ export function WorkflowEditorPage() {
             </button>
             <button
               className="rounded-full border border-slate-900/10 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+              data-testid="toggle-workflow-status-button"
               disabled={!workflowId || statusUpdating}
               onClick={() => void handleToggleStatus()}
               type="button"
@@ -251,6 +238,7 @@ export function WorkflowEditorPage() {
             </button>
             <button
               className="rounded-full border border-slate-900/10 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+              data-testid="run-workflow-button"
               disabled={!workflowId || running}
               onClick={() => void handleRun()}
               type="button"
@@ -260,27 +248,13 @@ export function WorkflowEditorPage() {
           </div>
         </div>
 
-        {(notice || pageError) && (
-          <div className="space-y-3 px-8 pb-8">
-            {notice ? (
-              <div
-                className={`rounded-2xl border px-4 py-3 text-sm ${
-                  notice.tone === 'success'
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : 'border-rose-200 bg-rose-50 text-rose-700'
-                }`}
-              >
-                {notice.message}
-              </div>
-            ) : null}
-
-            {pageError ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                {pageError}
-              </div>
-            ) : null}
+        {pageError ? (
+          <div className="px-8 pb-8">
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {pageError}
+            </div>
           </div>
-        )}
+        ) : null}
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)_360px]">
@@ -290,9 +264,10 @@ export function WorkflowEditorPage() {
 
         <div className="min-h-[720px]">
           {loading ? (
-            <div className="app-panel flex h-full items-center justify-center px-6 text-sm text-slate-600">
-              Loading workflow editor...
-            </div>
+            <LoadingState
+              description="The saved workflow graph is loading into the editor."
+              title="Loading workflow editor..."
+            />
           ) : (
             <FlowCanvas />
           )}

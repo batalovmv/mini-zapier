@@ -17,6 +17,7 @@ export function WebhookConfig({ workflowId }: WebhookConfigProps) {
         <span className="muted-label">Webhook URL</span>
         <input
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+          data-testid="webhook-url-input"
           readOnly
           value={buildWebhookUrl(workflowId)}
         />

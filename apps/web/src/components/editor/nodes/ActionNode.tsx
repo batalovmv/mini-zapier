@@ -4,6 +4,7 @@ import { Handle, Position } from 'reactflow';
 import { getNodeDefinition, type WorkflowEditorNodeData } from '../editor-definitions';
 
 export function ActionNode({
+  id,
   data,
   selected,
 }: NodeProps<WorkflowEditorNodeData>) {
@@ -11,6 +12,11 @@ export function ActionNode({
 
   return (
     <div
+      data-node-id={id}
+      data-node-kind={data.nodeKind}
+      data-node-label={data.label}
+      data-node-type={data.nodeType}
+      data-testid="editor-node"
       className={`min-w-[240px] rounded-3xl border bg-white shadow-lg transition ${
         selected
           ? 'border-sky-500 shadow-sky-900/20'
@@ -19,6 +25,7 @@ export function ActionNode({
     >
       <Handle
         className="h-3 w-3 border-2 border-white bg-sky-500"
+        data-testid={`${id}-target-handle`}
         position={Position.Top}
         type="target"
       />
@@ -48,6 +55,7 @@ export function ActionNode({
 
       <Handle
         className="h-3 w-3 border-2 border-white bg-sky-500"
+        data-testid={`${id}-source-handle`}
         position={Position.Bottom}
         type="source"
       />

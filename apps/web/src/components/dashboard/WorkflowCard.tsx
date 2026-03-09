@@ -1,6 +1,8 @@
 import type { WorkflowDto, WorkflowExecutionDto } from '@mini-zapier/shared';
 import { Link } from 'react-router-dom';
 
+import { Spinner } from '../ui/Spinner';
+
 export type WorkflowCardAction = 'run' | 'status' | 'delete';
 
 interface WorkflowCardProps {
@@ -80,7 +82,10 @@ export function WorkflowCard({
           <p className="muted-label">Last execution</p>
 
           {executionLoading && !lastExecution ? (
-            <p className="mt-3 text-sm text-slate-500">Loading latest execution...</p>
+            <div className="mt-3 flex items-center gap-3 text-sm text-slate-500">
+              <Spinner size="sm" />
+              <span>Loading latest execution...</span>
+            </div>
           ) : lastExecution ? (
             <div className="mt-3 space-y-3">
               <span
@@ -105,6 +110,7 @@ export function WorkflowCard({
             'rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700',
             isBusy ? 'pointer-events-none opacity-60' : '',
           ].join(' ')}
+          data-testid={`workflow-${workflow.id}-edit`}
           to={`/workflows/${workflow.id}/edit`}
         >
           Edit
@@ -112,6 +118,7 @@ export function WorkflowCard({
 
         <Link
           className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+          data-testid={`workflow-${workflow.id}-history`}
           to={`/workflows/${workflow.id}/history`}
         >
           History
@@ -119,6 +126,7 @@ export function WorkflowCard({
 
         <button
           className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-sky-400 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
+          data-testid={`workflow-${workflow.id}-run`}
           disabled={isBusy}
           onClick={() => onRun(workflow)}
           type="button"
@@ -128,6 +136,7 @@ export function WorkflowCard({
 
         <button
           className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
+          data-testid={`workflow-${workflow.id}-status`}
           disabled={isBusy}
           onClick={() => onToggleStatus(workflow)}
           type="button"
@@ -139,6 +148,7 @@ export function WorkflowCard({
 
         <button
           className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+          data-testid={`workflow-${workflow.id}-delete`}
           disabled={isBusy}
           onClick={() => onDelete(workflow)}
           type="button"

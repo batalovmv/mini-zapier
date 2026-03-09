@@ -58,6 +58,7 @@ export function DataTransformConfig({
       <label className="block">
         <span className="muted-label">Mode</span>
         <select
+          aria-label="Data transform mode"
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
           onChange={(event) =>
             onChange({
@@ -76,6 +77,7 @@ export function DataTransformConfig({
         <label className="block">
           <span className="muted-label">Template</span>
           <textarea
+            aria-label="Data transform template"
             className="mt-2 min-h-36 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
             onChange={(event) =>
               onChange({
@@ -117,6 +119,7 @@ export function DataTransformConfig({
                 className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2"
               >
                 <input
+                  aria-label={`Mapping key ${index + 1}`}
                   className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) =>
                     updateMapping(index, event.target.value, value)
@@ -126,6 +129,7 @@ export function DataTransformConfig({
                   value={key}
                 />
                 <input
+                  aria-label={`Mapping value ${index + 1}`}
                   className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) =>
                     updateMapping(index, key, event.target.value)

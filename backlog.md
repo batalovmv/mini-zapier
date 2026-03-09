@@ -437,7 +437,7 @@
   - Polling обновляет RUNNING executions
 
 ### TASK-017: UI polish + E2E test
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: loading states, toasts, empty states, полный E2E через UI
 - **Scope**:
   - Loading spinners на всех страницах

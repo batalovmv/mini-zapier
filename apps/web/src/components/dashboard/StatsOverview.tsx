@@ -1,4 +1,5 @@
 import { StatsResponse } from '../../lib/api/types';
+import { Spinner } from '../ui/Spinner';
 
 interface StatsOverviewProps {
   stats: StatsResponse | null;
@@ -8,7 +9,7 @@ interface StatsOverviewProps {
 
 interface StatCardDefinition {
   label: string;
-  value: string;
+  value: string | null;
   description: string;
   tone: string;
 }
@@ -29,25 +30,25 @@ export function StatsOverview({
   const cards: StatCardDefinition[] = [
     {
       label: 'Total Workflows',
-      value: loading ? 'Loading...' : formatValue(stats?.totalWorkflows ?? null),
+      value: loading ? null : formatValue(stats?.totalWorkflows ?? null),
       description: 'All workflow definitions currently stored in the system.',
       tone: 'bg-amber-50/80',
     },
     {
       label: 'Active Workflows',
-      value: loading ? 'Loading...' : formatValue(stats?.activeWorkflows ?? null),
+      value: loading ? null : formatValue(stats?.activeWorkflows ?? null),
       description: 'Workflows ready to receive webhook, cron or email triggers.',
       tone: 'bg-emerald-50/80',
     },
     {
       label: 'Total Executions',
-      value: loading ? 'Loading...' : formatValue(stats?.totalExecutions ?? null),
+      value: loading ? null : formatValue(stats?.totalExecutions ?? null),
       description: 'Manual and trigger-driven runs recorded by the backend.',
       tone: 'bg-sky-50/80',
     },
     {
       label: 'Success Rate',
-      value: loading ? 'Loading...' : formatValue(stats?.successRate ?? null, '%'),
+      value: loading ? null : formatValue(stats?.successRate ?? null, '%'),
       description: 'Calculated from successful versus failed completed executions.',
       tone: 'bg-white',
     },
@@ -77,9 +78,18 @@ export function StatsOverview({
             className={`rounded-2xl border border-slate-900/10 p-5 ${card.tone}`}
           >
             <p className="muted-label">{card.label}</p>
-            <p className="mt-3 text-3xl font-semibold text-slate-900">
-              {card.value}
-            </p>
+            <div className="mt-3 min-h-10">
+              {card.value === null ? (
+                <div className="flex items-center gap-3 text-slate-600">
+                  <Spinner size="sm" />
+                  <span className="text-sm font-medium">Loading...</span>
+                </div>
+              ) : (
+                <p className="text-3xl font-semibold text-slate-900">
+                  {card.value}
+                </p>
+              )}
+            </div>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               {card.description}
             </p>

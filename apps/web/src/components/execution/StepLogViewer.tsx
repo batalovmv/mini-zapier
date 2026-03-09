@@ -3,6 +3,9 @@ import type {
   WorkflowExecutionDto,
 } from '@mini-zapier/shared';
 
+import { EmptyState } from '../ui/EmptyState';
+import { LoadingState } from '../ui/LoadingState';
+
 interface StepLogViewerProps {
   execution: WorkflowExecutionDto | null;
   loading: boolean;
@@ -89,7 +92,10 @@ function JsonDisclosure(props: { label: string; value: unknown }) {
   const { label, value } = props;
 
   return (
-    <details className="rounded-2xl border border-slate-900/10 bg-slate-50/80 p-4">
+    <details
+      className="rounded-2xl border border-slate-900/10 bg-slate-50/80 p-4"
+      data-json-label={label}
+    >
       <summary className="cursor-pointer text-sm font-semibold text-slate-700">
         {label}
       </summary>
@@ -116,7 +122,11 @@ function StepLogItem(props: {
         {index + 1}
       </span>
 
-      <article className="rounded-3xl border border-slate-900/10 bg-white/80 p-5 shadow-panel">
+      <article
+        className="rounded-3xl border border-slate-900/10 bg-white/80 p-5 shadow-panel"
+        data-step-label={step.nodeLabel}
+        data-testid="step-log-item"
+      >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-3">
@@ -218,19 +228,19 @@ export function StepLogViewer({
       ) : null}
 
       {loading && !execution ? (
-        <div className="px-6 py-8 text-sm text-slate-600">
-          Loading execution detail...
+        <div className="px-6 py-6">
+          <LoadingState
+            compact
+            description="The selected execution detail is loading."
+            title="Loading step logs..."
+          />
         </div>
       ) : !execution ? (
         <div className="px-6 py-10">
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white/70 px-6 py-10 text-center">
-            <h3 className="text-lg font-semibold text-slate-900">
-              No execution selected
-            </h3>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Use the table on the left to open step logs for a specific run.
-            </p>
-          </div>
+          <EmptyState
+            description="Use the table on the left to open step logs for a specific run."
+            title="No execution selected"
+          />
         </div>
       ) : (
         <div className="space-y-6 px-6 py-6">
@@ -239,6 +249,7 @@ export function StepLogViewer({
               <div>
                 <div className="flex flex-wrap items-center gap-3">
                   <span
+                    data-testid="selected-execution-status"
                     className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${getExecutionStatusClasses(execution.status)}`}
                   >
                     {execution.status}
@@ -263,15 +274,10 @@ export function StepLogViewer({
           </div>
 
           {stepLogs.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-slate-300 bg-white/70 px-6 py-10 text-center">
-              <h3 className="text-lg font-semibold text-slate-900">
-                No step logs yet
-              </h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                Step logs will appear here once the worker records action input
-                and output for this execution.
-              </p>
-            </div>
+            <EmptyState
+              description="Step logs will appear here once the worker records action input and output for this execution."
+              title="No step logs yet"
+            />
           ) : (
             <ol className="space-y-5">
               {stepLogs.map((step, index) => (

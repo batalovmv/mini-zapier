@@ -33,6 +33,14 @@ interface DroppedNodePayload {
 
 const defaultViewport: Viewport = { x: 0, y: 0, zoom: 1 };
 
+declare global {
+  interface Window {
+    __MINI_ZAPIER_TEST__?: {
+      connectNodes: (sourceNodeId: string, targetNodeId: string) => void;
+    };
+  }
+}
+
 function FlowCanvasInner() {
   const workflowId = useWorkflowEditorStore((state) => state.workflowId);
   const workflowVersion = useWorkflowEditorStore((state) => state.workflowVersion);
@@ -67,6 +75,27 @@ function FlowCanvasInner() {
       window.cancelAnimationFrame(frameId);
     };
   }, [reactFlow, viewport, workflowId, workflowVersion]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) {
+      return;
+    }
+
+    window.__MINI_ZAPIER_TEST__ = {
+      connectNodes(sourceNodeId: string, targetNodeId: string) {
+        onConnect({
+          source: sourceNodeId,
+          target: targetNodeId,
+          sourceHandle: null,
+          targetHandle: null,
+        });
+      },
+    };
+
+    return () => {
+      delete window.__MINI_ZAPIER_TEST__;
+    };
+  }, [onConnect]);
 
   const canvasKey =
     workflowId && workflowVersion !== null
@@ -112,6 +141,7 @@ function FlowCanvasInner() {
       </div>
 
       <div
+        data-testid="workflow-canvas-dropzone"
         className="h-[calc(100%-89px)]"
         onDragOver={(event) => {
           event.preventDefault();

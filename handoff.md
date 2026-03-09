@@ -3,51 +3,68 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последняя задача**: TASK-016 (done)
-- **Статус проекта**: backend scope v1 остаётся закрытым до `TASK-012`, а для `apps/web` теперь закрыт `TASK-016`: dashboard, workflow editor и execution history работают поверх существующего API; по backlog из frontend scope остаётся `TASK-017`
+- **Последняя задача**: TASK-017 (done)
+- **Статус проекта**: backlog v1 закрыт целиком: backend scope остаётся закрытым до `TASK-012`, а frontend scope `TASK-013` → `TASK-017` завершён, включая UI polish и browser E2E smoke поверх существующего API/worker
 - **Что сделано**:
-  - `apps/web/src/pages/ExecutionHistoryPage.tsx` больше не placeholder:
-    - загрузка executions для конкретного workflow через `GET /api/workflows/:id/executions`
-    - выбор execution и загрузка detail через `GET /api/executions/:id`
-    - локальная пагинация по API-страницам
-    - polling каждые 5 секунд, если на текущей странице или в detail есть `RUNNING` execution
-  - Добавлены execution-компоненты в `apps/web/src/components/execution/`:
-    - `ExecutionTable.tsx` с колонками `ID`, `status`, `trigger`, `started`, `duration`, `actions`
-    - `StepLogViewer.tsx` с вертикальным timeline step logs, badge-статусами, duration, `retryAttempt`, error message и collapsible JSON viewer для `inputData` / `outputData`
-  - В dashboard добавлена ссылка `History` из `WorkflowCard.tsx` на `/workflows/:id/history`
-  - UI history/step logs реализован без изменения backend scope и без новых зависимостей:
-    - используется существующий execution API
-    - JSON viewer собран на нативном `<details>`
-    - отдельный Zustand store не добавлялся, состояние страницы локальное
-  - Smoke-проверка `TASK-016` прошла:
-    - `npm run build` в `apps/web` -> успешно
+  - В `apps/web` добавлен общий polish-слой без расширения product scope:
+    - глобальный `ErrorBoundary` в `src/main.tsx`
+    - toast-notifications через `react-hot-toast`
+    - переиспользуемые UI-компоненты `Spinner`, `LoadingState`, `EmptyState`, `ModalShell`, `ConfirmationDialog`
+  - Dashboard / Editor / History приведены к acceptance `TASK-017`:
+    - loading states на страницах и в таблицах теперь показывают spinners, а не только текст
+    - empty states для workflow/execution реализованы явно (`Нет workflows`, `Нет executions`)
+    - destructive actions подтверждаются модальными dialog-ами:
+      - delete workflow в `DashboardPage.tsx`
+      - delete node в `ConfigPanel.tsx`
+    - success/error toasts добавлены на workflow CRUD / run / status toggle / connection create
+  - В editor добавлена минимальная UI-точка создания connection внутри scope acceptance:
+    - новый `ConnectionCreateDialog.tsx` использует существующий `POST /api/connections`
+    - после создания connection автоматически подставляется в selected node
+    - это закрывает требование “полный flow от создания connection до просмотра результатов через UI”
+  - Для стабильного browser smoke в dev-only режиме добавлен test hook на линейное соединение нод в `FlowCanvas.tsx`; production build не меняется
+  - Добавлен полный E2E smoke через Playwright:
+    - `apps/web/playwright.config.ts`
+    - `apps/web/e2e/ui-smoke.spec.ts`
+    - `apps/web/package.json` scripts: `e2e`, `e2e:headed`
+    - сценарий покрывает:
+      - создание `WEBHOOK` connection через UI
+      - создание workflow `Webhook -> HTTP Request -> Data Transform`
+      - настройку нод через config panel
+      - save + activate
+      - POST webhook с `X-Webhook-Secret`
+      - переход в history и проверку step logs / output data
+      - cleanup workflow + connection после теста
+  - Smoke-проверка `TASK-017` прошла:
+    - `docker compose up -d`
+    - `npm run build` в `apps/web`
     - временный API: `node --env-file=..\\..\\.env dist/main.js` в `apps/api` на `PORT=3001`
-    - временный web: `node ./node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5178` в `apps/web` с `VITE_API_PROXY_TARGET=http://127.0.0.1:3001`
-    - `GET http://127.0.0.1:5178/workflows/cmmiadsou0001wyiwxecxv37r/history` -> `200`
-    - `GET http://127.0.0.1:5178/api/workflows/cmmiadsou0001wyiwxecxv37r/executions?page=1&limit=5` -> `200`
-    - `GET http://127.0.0.1:5178/api/executions/cmmiadspr0004wyiwjkw510af` -> `200`, detail содержит `stepLogs` с `inputData` / `outputData`
-    - `GET http://127.0.0.1:5178/api/executions/cmmiadyby000owyiwjkdff0pi` -> `200`, failure detail содержит `errorMessage` и `retryAttempt=2`
+    - временный web: `node ./node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5179` в `apps/web` с `VITE_API_PROXY_TARGET=http://127.0.0.1:3001`
+    - worker запущен на существующем dist и обработал UI smoke flow
+    - `npm run e2e` в `apps/web` -> `1 passed`
 - **Что сломано**:
-  - Критичных поломок по закрытому scope `TASK-016` не выявлено
+  - Критичных поломок по закрытому scope `TASK-017` не выявлено
 - **Частично сделано**:
-  - Полноценный browser click-through smoke для выбора execution в реальном DOM не запускался; подтверждены сборка, route, Vite proxy и реальные execution/detail payloads из API
+  - Частичных хвостов по backlog v1 не осталось
 - **Root scripts**:
   - `pnpm dev:api` работает, если порт `3000` свободен; для локального smoke можно временно запускать API на `3001`
   - `pnpm dev:worker` работает
   - `pnpm dev:web` работает, если порт `5173` свободен
   - `pnpm build:web` работает
+  - `npm run e2e` в `apps/web` запускает Playwright smoke для `TASK-017`
 
 ## Следующий шаг
-**TASK-017**: UI polish + E2E test
+**Следующий шаг по backlog отсутствует**: v1 scope из `backlog.md` закрыт. Дальше только новый явно поставленный TASK / post-v1 scope.
 
 ## Блокеры
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`), а порт `5173` — внешним Vite-процессом (`D:\TZ\Finance_tracker\client`). Для smoke-проверок использовались `3001`, `5174`, `5175`, `5176`, `5177`, `5178`.
 - В этом workspace `pnpm install` всё ещё зависает без вывода. Для `TASK-013` зависимости `apps/web` были установлены локально через `npm install --prefer-offline`, из-за чего `pnpm-lock.yaml` не обновлялся.
 - `apps/web/package.json` использует `"@mini-zapier/shared": "file:../../packages/shared"` как обход зависающего `pnpm install` и несовместимости `npm` с `workspace:*`.
+- Для smoke `TASK-017` worker в локальном окружении не стартовал “из коробки” из-за неполного install состояния (`apps/worker/node_modules` не содержал top-level `pg`, `nodemailer`, `axios`). Для этой сессии runtime был добран временно вне git. Если понадобится новый backend smoke, сначала проверь локальный install worker dependencies.
 
 ## Важные заметки
 - **Порты инфраструктуры**: PostgreSQL=**5434**, Redis=**6380**
 - Для `apps/web` Vite proxy по умолчанию шлёт `/api/*` на `http://localhost:3000`; для локального smoke можно переопределить target через `VITE_API_PROXY_TARGET`
+- `apps/web/playwright.config.ts` по умолчанию ждёт `MINI_ZAPIER_E2E_BASE_URL=http://127.0.0.1:5179`; если прогоняешь e2e на другом порту, передай env явно
 - В `ExecutionTable` колонка `trigger` сейчас показывает короткий preview из `triggerData`, потому что текущий `WorkflowExecutionDto` не содержит отдельного поля `source`; backend contract не менялся в рамках `TASK-016`
 - В `apps/web/package.json` scripts вызывают локальные бинарники через `node ./node_modules/...`, потому что Windows `.bin` shims в этом окружении срабатывали нестабильно
 - Для `ConnectionModule` и webhook secret-check нужен `APP_ENCRYPTION_KEY` в env процесса API; в smoke-проверке он передавался явно при запуске на `3001`
@@ -127,4 +144,5 @@
 | TASK-014 | done | см. `git log` (`TASK-014: Dashboard page`) | Zustand dashboard store, live stats cards, workflow cards with Edit/Run/Pause-Activate/Delete, Vite proxy + API smoke |
 | TASK-015 | done | см. `git log` (`TASK-015: Workflow Editor (React Flow)`) | React Flow workflow editor, Zustand editor store, drag-and-drop sidebar/canvas/config panel, load-save-status-run wiring, build + route/API smoke |
 | TASK-016 | done | см. `git log` (`TASK-016: Execution History + Step Log Viewer`) | execution history page, paginated execution table, step log timeline with JSON viewer, 5s polling for RUNNING executions, dashboard history link |
+| TASK-017 | done | см. `git log` (`TASK-017: UI polish + E2E test`) | toasts/loading-empty states/error boundary/confirm dialogs, inline connection create in editor, Playwright UI smoke with webhook -> history -> step logs |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |

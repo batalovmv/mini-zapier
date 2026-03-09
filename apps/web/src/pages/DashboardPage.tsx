@@ -1,7 +1,9 @@
 import type { WorkflowDto, WorkflowExecutionDto } from '@mini-zapier/shared';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 
+import { ConfirmationDialog } from '../components/ui/ConfirmationDialog';
 import { StatsOverview } from '../components/dashboard/StatsOverview';
 import { WorkflowCardAction } from '../components/dashboard/WorkflowCard';
 import { WorkflowList } from '../components/dashboard/WorkflowList';
@@ -12,11 +14,6 @@ import {
 } from '../lib/api/executions';
 import { updateWorkflowStatus } from '../lib/api/workflows';
 import { useDashboardStore } from '../stores/dashboard.store';
-
-interface DashboardNotice {
-  tone: 'success' | 'error';
-  message: string;
-}
 
 type LastExecutionsByWorkflowId = Record<string, WorkflowExecutionDto | undefined>;
 const ACTIVE_STATUS = 'ACTIVE' as WorkflowDto['status'];
@@ -63,7 +60,6 @@ export function DashboardPage() {
   const deleteWorkflow = useDashboardStore((state) => state.deleteWorkflow);
 
   const [dashboardError, setDashboardError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<DashboardNotice | null>(null);
   const [lastExecutions, setLastExecutions] =
     useState<LastExecutionsByWorkflowId>({});
   const [lastExecutionsLoading, setLastExecutionsLoading] = useState(false);
@@ -71,6 +67,8 @@ export function DashboardPage() {
     workflowId: string;
     action: WorkflowCardAction;
   } | null>(null);
+  const [workflowPendingDelete, setWorkflowPendingDelete] =
+    useState<WorkflowDto | null>(null);
 
   async function refreshDashboardData() {
     setDashboardError(null);
@@ -97,7 +95,6 @@ export function DashboardPage() {
   }, []);
 
   async function handleRun(workflow: WorkflowDto) {
-    setNotice(null);
     setPendingAction({
       workflowId: workflow.id,
       action: 'run',
@@ -108,22 +105,17 @@ export function DashboardPage() {
 
       await refreshDashboardData();
 
-      setNotice({
-        tone: 'success',
-        message: `Workflow "${workflow.name}" queued. Execution ${response.executionId} created.`,
-      });
+      toast.success(
+        `Workflow "${workflow.name}" queued. Execution ${response.executionId} created.`,
+      );
     } catch (error) {
-      setNotice({
-        tone: 'error',
-        message: getApiErrorMessage(error),
-      });
+      toast.error(getApiErrorMessage(error));
     } finally {
       setPendingAction(null);
     }
   }
 
   async function handleToggleStatus(workflow: WorkflowDto) {
-    setNotice(null);
     setPendingAction({
       workflowId: workflow.id,
       action: 'status',
@@ -139,30 +131,25 @@ export function DashboardPage() {
 
       await refreshDashboardData();
 
-      setNotice({
-        tone: 'success',
-        message: `Workflow "${workflow.name}" is now ${nextStatus}.`,
-      });
+      toast.success(`Workflow "${workflow.name}" is now ${nextStatus}.`);
     } catch (error) {
-      setNotice({
-        tone: 'error',
-        message: getApiErrorMessage(error),
-      });
+      toast.error(getApiErrorMessage(error));
     } finally {
       setPendingAction(null);
     }
   }
 
-  async function handleDelete(workflow: WorkflowDto) {
-    const confirmed = window.confirm(
-      `Delete workflow "${workflow.name}"? This action cannot be undone.`,
-    );
+  function handleDelete(workflow: WorkflowDto) {
+    setWorkflowPendingDelete(workflow);
+  }
 
-    if (!confirmed) {
+  async function confirmDelete(): Promise<void> {
+    if (!workflowPendingDelete) {
       return;
     }
 
-    setNotice(null);
+    const workflow = workflowPendingDelete;
+
     setPendingAction({
       workflowId: workflow.id,
       action: 'delete',
@@ -173,15 +160,10 @@ export function DashboardPage() {
 
       await refreshDashboardData();
 
-      setNotice({
-        tone: 'success',
-        message: `Workflow "${workflow.name}" deleted.`,
-      });
+      setWorkflowPendingDelete(null);
+      toast.success(`Workflow "${workflow.name}" deleted.`);
     } catch (error) {
-      setNotice({
-        tone: 'error',
-        message: getApiErrorMessage(error),
-      });
+      toast.error(getApiErrorMessage(error));
     } finally {
       setPendingAction(null);
     }
@@ -211,6 +193,7 @@ export function DashboardPage() {
 
             <Link
               className="inline-flex rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
+              data-testid="create-workflow-link"
               to="/workflows/new/edit"
             >
               Create Workflow
@@ -218,27 +201,13 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {(notice || dashboardError) && (
-          <div className="space-y-3 px-8 py-6">
-            {notice ? (
-              <div
-                className={`rounded-2xl border p-4 text-sm ${
-                  notice.tone === 'success'
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : 'border-rose-200 bg-rose-50 text-rose-700'
-                }`}
-              >
-                {notice.message}
-              </div>
-            ) : null}
-
-            {dashboardError ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-                {dashboardError}
-              </div>
-            ) : null}
+        {dashboardError ? (
+          <div className="px-8 py-6">
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+              {dashboardError}
+            </div>
           </div>
-        )}
+        ) : null}
       </section>
 
       <StatsOverview
@@ -257,6 +226,18 @@ export function DashboardPage() {
         refreshing={refreshing || lastExecutionsLoading}
         workflows={workflows}
       />
+
+      {workflowPendingDelete ? (
+        <ConfirmationDialog
+          confirmLabel="Delete workflow"
+          confirmTone="danger"
+          description={`Delete workflow "${workflowPendingDelete.name}"? This action cannot be undone.`}
+          onCancel={() => setWorkflowPendingDelete(null)}
+          onConfirm={() => void confirmDelete()}
+          pending={pendingAction?.action === 'delete'}
+          title="Delete workflow?"
+        />
+      ) : null}
     </div>
   );
 }

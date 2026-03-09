@@ -43,6 +43,7 @@ export function NodeSidebar() {
                 <button
                   key={item.id}
                   className="flex w-full cursor-grab items-start gap-3 rounded-2xl border border-slate-900/10 bg-white px-4 py-4 text-left transition hover:border-amber-500/40 hover:bg-amber-50 active:cursor-grabbing"
+                  data-testid={`palette-item-${item.id}`}
                   draggable
                   onDragStart={(event) => handleDragStart(event, item)}
                   type="button"

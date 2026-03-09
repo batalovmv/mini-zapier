@@ -53,6 +53,7 @@ export function HttpRequestConfig({
       <label className="block">
         <span className="muted-label">URL</span>
         <input
+          aria-label="HTTP request URL"
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
           onChange={(event) =>
             onChange({
@@ -69,6 +70,7 @@ export function HttpRequestConfig({
       <label className="block">
         <span className="muted-label">Method</span>
         <select
+          aria-label="HTTP request method"
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
           onChange={(event) =>
             onChange({
@@ -112,17 +114,19 @@ export function HttpRequestConfig({
               key={`${key}-${index}`}
               className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2"
             >
-              <input
-                className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-                onChange={(event) => updateHeader(index, event.target.value, value)}
-                placeholder="Header"
+                <input
+                  aria-label={`Header key ${index + 1}`}
+                  className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                  onChange={(event) => updateHeader(index, event.target.value, value)}
+                  placeholder="Header"
                 type="text"
                 value={key}
               />
-              <input
-                className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-                onChange={(event) => updateHeader(index, key, event.target.value)}
-                placeholder="Value"
+                <input
+                  aria-label={`Header value ${index + 1}`}
+                  className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                  onChange={(event) => updateHeader(index, key, event.target.value)}
+                  placeholder="Value"
                 type="text"
                 value={value}
               />
@@ -141,6 +145,7 @@ export function HttpRequestConfig({
       <label className="block">
         <span className="muted-label">Body</span>
         <textarea
+          aria-label="HTTP request body"
           className="mt-2 min-h-36 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
           onChange={(event) =>
             onChange({

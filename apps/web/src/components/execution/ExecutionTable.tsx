@@ -1,5 +1,8 @@
 import type { WorkflowExecutionDto } from '@mini-zapier/shared';
 
+import { EmptyState } from '../ui/EmptyState';
+import { LoadingState } from '../ui/LoadingState';
+
 interface ExecutionTableProps {
   executions: WorkflowExecutionDto[];
   selectedExecutionId: string | null;
@@ -198,19 +201,19 @@ export function ExecutionTable({
       </div>
 
       {loading && !hasExecutions ? (
-        <div className="px-6 py-8 text-sm text-slate-600">
-          Loading execution history...
+        <div className="px-6 py-6">
+          <LoadingState
+            compact
+            description="Execution history is loading from the API."
+            title="Loading executions..."
+          />
         </div>
       ) : !hasExecutions ? (
         <div className="px-6 py-10">
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white/70 px-6 py-10 text-center">
-            <h3 className="text-lg font-semibold text-slate-900">
-              No executions yet
-            </h3>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Trigger or run this workflow once to populate the history table.
-            </p>
-          </div>
+          <EmptyState
+            description="Trigger or run this workflow once to populate the history table."
+            title="Нет executions"
+          />
         </div>
       ) : (
         <>
@@ -233,6 +236,7 @@ export function ExecutionTable({
                   return (
                     <tr
                       key={execution.id}
+                      data-testid={`execution-row-${execution.id}`}
                       className={
                         isSelected ? 'bg-amber-50/60' : 'transition hover:bg-slate-50/80'
                       }
@@ -259,6 +263,7 @@ export function ExecutionTable({
                       <td className="px-6 py-4">
                         <button
                           className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+                          data-testid={`execution-view-${execution.id}`}
                           onClick={() => onSelectExecution(execution.id)}
                           type="button"
                         >

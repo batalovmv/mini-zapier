@@ -4,6 +4,7 @@ import { Handle, Position } from 'reactflow';
 import { getNodeDefinition, type WorkflowEditorNodeData } from '../editor-definitions';
 
 export function TriggerNode({
+  id,
   data,
   selected,
 }: NodeProps<WorkflowEditorNodeData>) {
@@ -11,6 +12,11 @@ export function TriggerNode({
 
   return (
     <div
+      data-node-id={id}
+      data-node-kind={data.nodeKind}
+      data-node-label={data.label}
+      data-node-type={data.nodeType}
+      data-testid="editor-node"
       className={`min-w-[220px] rounded-3xl border bg-white shadow-lg transition ${
         selected
           ? 'border-emerald-500 shadow-emerald-900/20'
@@ -42,6 +48,7 @@ export function TriggerNode({
 
       <Handle
         className="h-3 w-3 border-2 border-white bg-emerald-500"
+        data-testid={`${id}-source-handle`}
         position={Position.Bottom}
         type="source"
       />

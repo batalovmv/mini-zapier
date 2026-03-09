@@ -1,9 +1,17 @@
-import type { ConnectionDto } from '@mini-zapier/shared';
-import { useEffect, useMemo, useState } from 'react';
+import type { ConnectionDto, ConnectionType } from '@mini-zapier/shared';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
 
-import { listConnections } from '../../lib/api/connections';
+import {
+  createConnection,
+  listConnections,
+} from '../../lib/api/connections';
 import { getApiErrorMessage } from '../../lib/api/client';
 import { useWorkflowEditorStore } from '../../stores/workflow-editor.store';
+import { ConfirmationDialog } from '../ui/ConfirmationDialog';
+import { EmptyState } from '../ui/EmptyState';
+import { LoadingState } from '../ui/LoadingState';
+import { ConnectionCreateDialog } from './ConnectionCreateDialog';
 import { CronConfig } from './config-forms/CronConfig';
 import { DataTransformConfig } from './config-forms/DataTransformConfig';
 import { DbQueryConfig } from './config-forms/DbQueryConfig';
@@ -95,6 +103,9 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
   const [connections, setConnections] = useState<ConnectionDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [connectionsError, setConnectionsError] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [connectionCreating, setConnectionCreating] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const selectedNode = useMemo(
     () => nodes.find((node) => node.id === selectedNodeId) ?? null,
@@ -104,36 +115,76 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
     ? getNodeDefinition(selectedNode.data.nodeKind, selectedNode.data.nodeType)
     : undefined;
 
+  const loadConnections = useCallback(async () => {
+    setLoading(true);
+    setConnectionsError(null);
+
+    try {
+      const nextConnections = await listConnections();
+      setConnections(nextConnections);
+      return nextConnections;
+    } catch (error) {
+      const message = getApiErrorMessage(error);
+      setConnectionsError(message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
-    async function loadConnections() {
-      setLoading(true);
-      setConnectionsError(null);
-
-      try {
-        const nextConnections = await listConnections();
-
-        if (!cancelled) {
-          setConnections(nextConnections);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setConnectionsError(getApiErrorMessage(error));
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+    void loadConnections().catch(() => {
+      if (cancelled) {
+        return;
       }
-    }
-
-    void loadConnections();
+    });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadConnections]);
+
+  async function handleCreateConnection(payload: {
+    name: string;
+    credentials: Record<string, string>;
+  }): Promise<void> {
+    if (!selectedNode || !definition?.connectionType) {
+      return;
+    }
+
+    setConnectionCreating(true);
+
+    try {
+      const createdConnection = await createConnection({
+        name: payload.name,
+        type: definition.connectionType as ConnectionType,
+        credentials: payload.credentials,
+      });
+
+      await loadConnections();
+      updateNodeMeta(selectedNode.id, {
+        connectionId: createdConnection.id,
+      });
+      setCreateDialogOpen(false);
+      toast.success(`Connection "${createdConnection.name}" created.`);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    } finally {
+      setConnectionCreating(false);
+    }
+  }
+
+  function handleDeleteNode(): void {
+    if (!selectedNode) {
+      return;
+    }
+
+    removeNode(selectedNode.id);
+    setDeleteDialogOpen(false);
+    toast.success(`Node "${selectedNode.data.label}" deleted.`);
+  }
 
   if (!selectedNode) {
     return (
@@ -165,94 +216,149 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
         );
 
   return (
-    <aside className="app-panel flex h-full flex-col overflow-hidden">
-      <div className="border-b border-slate-900/10 px-5 py-5">
-        <p className="muted-label">Config Panel</p>
-        <div className="mt-2 flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
-              {selectedNode.data.label}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              {definition?.description ?? 'Configure the selected node.'}
-            </p>
-          </div>
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${
-              selectedNode.data.nodeKind === 'trigger'
-                ? 'bg-emerald-100 text-emerald-700'
-                : 'bg-sky-100 text-sky-700'
-            }`}
-          >
-            {selectedNode.data.nodeKind}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
-        {definition?.connectionType ? (
-          <label className="block">
-            <span className="muted-label">Connection</span>
-            <select
-              className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-              onChange={(event) =>
-                updateNodeMeta(selectedNode.id, {
-                  connectionId:
-                    event.target.value.length > 0 ? event.target.value : null,
-                })
-              }
-              value={selectedNode.data.connectionId ?? ''}
+    <>
+      <aside className="app-panel flex h-full flex-col overflow-hidden">
+        <div className="border-b border-slate-900/10 px-5 py-5">
+          <p className="muted-label">Config Panel</p>
+          <div className="mt-2 flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
+                {selectedNode.data.label}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {definition?.description ?? 'Configure the selected node.'}
+              </p>
+            </div>
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${
+                selectedNode.data.nodeKind === 'trigger'
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-sky-100 text-sky-700'
+              }`}
             >
-              <option value="">Select {definition.connectionType} connection</option>
-              {availableConnections.map((connection) => (
-                <option
-                  key={connection.id}
-                  value={connection.id}
-                >
-                  {connection.name}
-                </option>
-              ))}
-            </select>
-            <span className="mt-2 block text-xs leading-5 text-slate-500">
-              Required type: {definition.connectionType}.
+              {selectedNode.data.nodeKind}
             </span>
-          </label>
-        ) : (
-          <div className="rounded-2xl border border-slate-900/10 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            This node does not require a connection.
           </div>
-        )}
+        </div>
 
-        {renderConfigForm({
-          workflowId,
-          nodeKind: selectedNode.data.nodeKind,
-          nodeType: selectedNode.data.nodeType,
-          config: selectedNode.data.config,
-          onChange: (nextConfig) => updateNodeConfig(selectedNode.id, nextConfig),
-        })}
+        <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
+          {definition?.connectionType ? (
+            <div className="space-y-4">
+              <label className="block">
+                <span className="muted-label">Connection</span>
+                <select
+                  className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                  data-testid="connection-select"
+                  onChange={(event) =>
+                    updateNodeMeta(selectedNode.id, {
+                      connectionId:
+                        event.target.value.length > 0 ? event.target.value : null,
+                    })
+                  }
+                  value={selectedNode.data.connectionId ?? ''}
+                >
+                  <option value="">
+                    Select {definition.connectionType} connection
+                  </option>
+                  {availableConnections.map((connection) => (
+                    <option
+                      key={connection.id}
+                      value={connection.id}
+                    >
+                      {connection.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="mt-2 block text-xs leading-5 text-slate-500">
+                  Required type: {definition.connectionType}.
+                </span>
+              </label>
 
-        {connectionsError ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {connectionsError}
-          </div>
-        ) : null}
+              <div className="flex flex-wrap gap-3">
+                <button
+                  className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+                  data-testid="create-connection-button"
+                  onClick={() => setCreateDialogOpen(true)}
+                  type="button"
+                >
+                  Create connection
+                </button>
+                <button
+                  className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+                  onClick={() => void loadConnections().catch(() => undefined)}
+                  type="button"
+                >
+                  Refresh connections
+                </button>
+              </div>
 
-        {loading ? (
-          <div className="rounded-2xl border border-slate-900/10 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            Loading connections...
-          </div>
-        ) : null}
-      </div>
+              {!loading && availableConnections.length === 0 ? (
+                <EmptyState
+                  description={`No ${definition.connectionType} connection is available yet. Create one here to keep the workflow flow inside the UI.`}
+                  title={`No ${definition.connectionType} connections`}
+                />
+              ) : null}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-slate-900/10 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              This node does not require a connection.
+            </div>
+          )}
 
-      <div className="border-t border-slate-900/10 px-5 py-5">
-        <button
-          className="w-full rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
-          onClick={() => removeNode(selectedNode.id)}
-          type="button"
-        >
-          Delete Node
-        </button>
-      </div>
-    </aside>
+          {renderConfigForm({
+            workflowId,
+            nodeKind: selectedNode.data.nodeKind,
+            nodeType: selectedNode.data.nodeType,
+            config: selectedNode.data.config,
+            onChange: (nextConfig) => updateNodeConfig(selectedNode.id, nextConfig),
+          })}
+
+          {connectionsError ? (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {connectionsError}
+            </div>
+          ) : null}
+
+          {loading ? (
+            <LoadingState
+              compact
+              description="The connection list is loading."
+              title="Loading connections..."
+            />
+          ) : null}
+        </div>
+
+        <div className="border-t border-slate-900/10 px-5 py-5">
+          <button
+            className="w-full rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
+            data-testid="delete-node-button"
+            onClick={() => setDeleteDialogOpen(true)}
+            type="button"
+          >
+            Delete Node
+          </button>
+        </div>
+      </aside>
+
+      {createDialogOpen && definition?.connectionType ? (
+        <ConnectionCreateDialog
+          connectionType={definition.connectionType as ConnectionType}
+          onClose={() => setCreateDialogOpen(false)}
+          onSubmit={(payload) => void handleCreateConnection(payload)}
+          pending={connectionCreating}
+        />
+      ) : null}
+
+      {deleteDialogOpen ? (
+        <ConfirmationDialog
+          confirmLabel="Delete node"
+          confirmTone="danger"
+          description={`Remove "${selectedNode.data.label}" from the workflow canvas and delete connected edges.`}
+          onCancel={() => setDeleteDialogOpen(false)}
+          onConfirm={handleDeleteNode}
+          title="Delete selected node?"
+        />
+      ) : null}
+    </>
   );
 }

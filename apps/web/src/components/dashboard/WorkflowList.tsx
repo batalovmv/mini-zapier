@@ -2,6 +2,8 @@ import { WorkflowDto, WorkflowExecutionDto } from '@mini-zapier/shared';
 import { Link } from 'react-router-dom';
 
 import { WorkflowCard, WorkflowCardAction } from './WorkflowCard';
+import { EmptyState } from '../ui/EmptyState';
+import { LoadingState } from '../ui/LoadingState';
 
 interface WorkflowListProps {
   workflows: WorkflowDto[];
@@ -46,25 +48,24 @@ export function WorkflowList({
 
       <div className="mt-6">
         {loading ? (
-          <div className="rounded-2xl border border-slate-900/10 bg-white/80 p-6 text-sm text-slate-600">
-            Loading workflows from the API...
-          </div>
+          <LoadingState
+            compact
+            description="Loading workflows from the API."
+            title="Loading workflows..."
+          />
         ) : workflows.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white/70 px-6 py-10 text-center">
-            <h3 className="text-lg font-semibold text-slate-900">
-              No workflows yet
-            </h3>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Create the first workflow definition to start receiving triggers and
-              running actions.
-            </p>
-            <Link
-              className="mt-5 inline-flex rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
-              to="/workflows/new/edit"
-            >
-              Create Workflow
-            </Link>
-          </div>
+          <EmptyState
+            action={
+              <Link
+                className="inline-flex rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+                to="/workflows/new/edit"
+              >
+                Create Workflow
+              </Link>
+            }
+            description="Create the first workflow definition to start receiving triggers and running actions."
+            title="Нет workflows"
+          />
         ) : (
           <div className="space-y-4">
             {workflows.map((workflow) => (
