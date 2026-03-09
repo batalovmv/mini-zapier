@@ -325,7 +325,7 @@
 ## Срез 3-6: Frontend (День 2)
 
 ### TASK-013: Frontend scaffold + API client + layout
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: рабочий React app с routing, Tailwind, API client
 - **Scope**:
   - Vite + React + TypeScript в apps/web

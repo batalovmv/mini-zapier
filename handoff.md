@@ -3,43 +3,52 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последняя задача**: TASK-012 (done)
-- **Статус проекта**: backend scope v1 для `apps/api` закрыт до `TASK-012`: добавлены `GET /api/stats`, Swagger UI на `/api/docs`, глобальный `ValidationPipe`, CORS и единый exception filter; следующий шаг по backlog — `TASK-013` (frontend scaffold + API client + layout)
+- **Последняя задача**: TASK-013 (done)
+- **Статус проекта**: backend scope v1 остаётся закрытым до `TASK-012`, а для `apps/web` поднят frontend baseline из `TASK-013`: Vite + React + TypeScript + Tailwind + React Router + typed axios API client + layout с placeholder routes; следующий шаг по backlog — `TASK-014` (Dashboard page)
 - **Что сделано**:
-  - Добавлен `apps/api/src/stats/`:
-    - `stats.module.ts` — отдельный модуль статистики
-    - `stats.controller.ts` — `GET /api/stats` с агрегатами `totalWorkflows`, `activeWorkflows`, `pausedWorkflows`, `totalExecutions`, `successfulExecutions`, `failedExecutions`, `successRate` и `recentExecutions` (последние 10)
-  - `apps/api/src/main.ts` теперь поднимает Swagger UI через `SwaggerModule.setup('/api/docs', ...)`, включает `ValidationPipe({ transform: true, whitelist: true })`, `CORS` для `http://localhost:5173` и глобальный `HttpExceptionFilter`
-  - Добавлен `apps/api/src/common/filters/http-exception.filter.ts` для единообразных JSON-ошибок формата `{ statusCode, error, message, path, timestamp }`
-  - `apps/api/src/app.module.ts` подключает `StatsModule`
-  - Для реальной работы глобального `ValidationPipe`:
-    - `apps/api/package.json` дополнен зависимостями `class-validator` и `class-transformer`
-    - DTO для `connections`, `workflows`, `execution list query` получили минимальные validation decorators без расширения API scope
-  - Swagger-покрытие существующих контроллеров доведено для новых validation/error cases; `/api/docs-json` содержит все backend endpoints, включая `/api/stats`
-  - Smoke-проверка `TASK-012` прошла:
-    - `docker compose up -d`
-    - `pnpm --filter @mini-zapier/api run build`
-    - runtime smoke на `PORT=3001`: `GET /api/docs` → `200`, `GET /api/docs-json` содержит `/api/stats`, `GET /api/stats` возвращает агрегаты
-    - CORS smoke: ответ содержит `Access-Control-Allow-Origin: http://localhost:5173`
-    - validation/filter smoke: `POST /api/connections` с `{}` → `400` и единый JSON-формат ошибки
+  - Создан полноценный `apps/web` scaffold:
+    - `package.json`, `tsconfig.json`, `tsconfig.node.json`, `vite.config.ts`, `postcss.config.cjs`, `tailwind.config.ts`, `index.html`
+    - `src/main.tsx`, `src/App.tsx`, `src/index.css`, `src/vite-env.d.ts`
+  - Добавлен `AppLayout` с navbar и ссылками `Dashboard` / `Create Workflow`
+  - Зарегистрирован routing:
+    - `/` → `DashboardPage`
+    - `/workflows/:id/edit` → `WorkflowEditorPage`
+    - `/workflows/:id/history` → `ExecutionHistoryPage`
+    - `*` → `NotFoundPage`
+  - Добавлен typed API client в `apps/web/src/lib/api/`:
+    - `client.ts` — axios instance с `baseURL='/api'` и helper для API errors
+    - `workflows.ts`, `connections.ts`, `executions.ts`, `stats.ts`
+    - `types.ts` — frontend-local typed responses/inputs поверх `@mini-zapier/shared`
+  - Placeholder pages оставлены строго в scope `TASK-013`:
+    - Dashboard делает `GET /api/stats` и `GET /api/workflows`, чтобы показать wiring API client + Vite proxy
+    - Editor/History — только route placeholders для следующих задач
+  - Smoke-проверка `TASK-013` прошла:
+    - `npm install --package-lock=false --prefer-offline --fetch-timeout=600000 --fetch-retries=5` в `apps/web`
+    - `npm run build` в `apps/web` → успешно
+    - `npm run dev -- --port 5174 --host 127.0.0.1` → frontend отвечает `200`
+    - proxy smoke: временный API на `PORT=3001` + `VITE_API_PROXY_TARGET=http://127.0.0.1:3001`, затем `GET http://127.0.0.1:5175/api/workflows?page=1&limit=1` → `200`
 - **Что сломано**:
-  - Критичных поломок по закрытому backend scope не выявлено
+  - Критичных поломок по закрытому scope `TASK-013` не выявлено
 - **Частично сделано**:
-  - `apps/web` всё ещё placeholder
+  - `apps/web` теперь поднят, но Dashboard/Editor/History пока намеренно placeholder-only до `TASK-014` / `TASK-015` / `TASK-016`
 - **Root scripts**:
-  - `pnpm dev:api` работает
+  - `pnpm dev:api` работает, если порт `3000` свободен; для локального smoke можно временно запускать API на `3001`
   - `pnpm dev:worker` работает
-  - `pnpm dev:web` заработает после TASK-013
+  - `pnpm dev:web` работает, если порт `5173` свободен
+  - `pnpm build:web` работает
 
 ## Следующий шаг
-**TASK-013**: Frontend scaffold + API client + layout
+**TASK-014**: Dashboard page
 
 ## Блокеры
-- На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`). API по умолчанию слушает `3000`, но для локальной smoke-проверки можно временно запускать с `PORT=3001`.
-- В этом workspace `pnpm add` / `pnpm install --lockfile-only` всё ещё зависают без вывода. Для `TASK-012` runtime зависимости `class-validator` и `class-transformer` были добраны локально через `npm install --no-save`, а `apps/api/package.json` и `pnpm-lock.yaml` синхронизированы вручную по зафиксированным версиям; сборка API и runtime smoke после этого прошли
+- На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`), а порт `5173` — внешним Vite-процессом (`D:\TZ\Finance_tracker\client`). Для smoke-проверок использовались `3001`, `5174`, `5175`.
+- В этом workspace `pnpm install` всё ещё зависает без вывода. Для `TASK-013` зависимости `apps/web` были установлены локально через `npm install --prefer-offline`, из-за чего `pnpm-lock.yaml` не обновлялся.
+- `apps/web/package.json` использует `"@mini-zapier/shared": "file:../../packages/shared"` как обход зависающего `pnpm install` и несовместимости `npm` с `workspace:*`.
 
 ## Важные заметки
 - **Порты инфраструктуры**: PostgreSQL=**5434**, Redis=**6380**
+- Для `apps/web` Vite proxy по умолчанию шлёт `/api/*` на `http://localhost:3000`; для локального smoke можно переопределить target через `VITE_API_PROXY_TARGET`
+- В `apps/web/package.json` scripts вызывают локальные бинарники через `node ./node_modules/...`, потому что Windows `.bin` shims в этом окружении срабатывали нестабильно
 - Для `ConnectionModule` и webhook secret-check нужен `APP_ENCRYPTION_KEY` в env процесса API; в smoke-проверке он передавался явно при запуске на `3001`
 - Для `QueueModule` используются `REDIS_HOST`/`REDIS_PORT`; при отсутствии env в коде выставлен fallback на `localhost:6380`
 - Для cron scheduling в API используется отдельная BullMQ queue `workflow-cron-trigger`; `workflow-execution` по-прежнему остаётся очередью для standalone worker
@@ -113,4 +122,5 @@
 | TASK-010 | done | см. `git log` (`TASK-010: Email inbound trigger`) | inbound email endpoint, rawBody HMAC verification, ACTIVE/type guards, provider event dedupe, smoke-checked and cleaned up |
 | TASK-011 | done | см. `git log` (`TASK-011: Remaining action strategies (Email, Telegram, DB, Transform)`) | real EMAIL/TELEGRAM/DB_QUERY/DATA_TRANSFORM strategies, registry wiring, worker deps/lock update, build + smoke-checked |
 | TASK-012 | done | см. `git log` (`TASK-012: StatsController + Swagger + global middleware`) | `/api/stats`, Swagger UI `/api/docs`, global ValidationPipe/CORS/exception filter, DTO validation + runtime smoke |
+| TASK-013 | done | см. `git log` (`TASK-013: Frontend scaffold + API client + layout`) | apps/web scaffold, Tailwind, router, AppLayout, typed axios client, build + dev/proxy smoke |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |

@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --color-bg: #f5efe3;
+  --color-surface: rgba(255, 255, 255, 0.78);
+  --color-surface-strong: rgba(255, 255, 255, 0.92);
+  --color-border: rgba(15, 23, 42, 0.12);
+  --color-text: #172033;
+  --color-muted: #5b6475;
+  --color-accent: #c66a1b;
+  --color-accent-strong: #8b4513;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--color-text);
+  background:
+    radial-gradient(circle at top left, rgba(198, 106, 27, 0.16), transparent 32%),
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 28%),
+    linear-gradient(180deg, #fcfaf6 0%, #f5efe3 54%, #eee5d7 100%);
+  font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+::selection {
+  background: rgba(198, 106, 27, 0.18);
+}
+
+@layer components {
+  .app-panel {
+    @apply rounded-3xl border border-slate-900/10 bg-white/80 shadow-panel backdrop-blur;
+  }
+
+  .status-pill {
+    @apply inline-flex items-center rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-slate-600;
+  }
+
+  .muted-label {
+    @apply text-xs font-semibold uppercase tracking-[0.24em] text-slate-500;
+  }
+}
