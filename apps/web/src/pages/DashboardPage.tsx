@@ -1,223 +1,262 @@
-import { WorkflowDto } from '@mini-zapier/shared';
+import type { WorkflowDto, WorkflowExecutionDto } from '@mini-zapier/shared';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { StatsOverview } from '../components/dashboard/StatsOverview';
+import { WorkflowCardAction } from '../components/dashboard/WorkflowCard';
+import { WorkflowList } from '../components/dashboard/WorkflowList';
 import { getApiErrorMessage } from '../lib/api/client';
-import { listWorkflows } from '../lib/api/workflows';
-import { getStats } from '../lib/api/stats';
-import { PaginatedResponse, StatsResponse } from '../lib/api/types';
+import {
+  executeWorkflow,
+  listWorkflowExecutions,
+} from '../lib/api/executions';
+import { updateWorkflowStatus } from '../lib/api/workflows';
+import { useDashboardStore } from '../stores/dashboard.store';
 
-interface DashboardState {
-  stats: StatsResponse | null;
-  workflows: PaginatedResponse<WorkflowDto> | null;
-  error: string | null;
+interface DashboardNotice {
+  tone: 'success' | 'error';
+  message: string;
+}
+
+type LastExecutionsByWorkflowId = Record<string, WorkflowExecutionDto | undefined>;
+const ACTIVE_STATUS = 'ACTIVE' as WorkflowDto['status'];
+const PAUSED_STATUS = 'PAUSED' as WorkflowDto['status'];
+
+async function fetchLastExecutions(
+  workflows: WorkflowDto[],
+): Promise<LastExecutionsByWorkflowId> {
+  if (workflows.length === 0) {
+    return {};
+  }
+
+  const results = await Promise.allSettled(
+    workflows.map(async (workflow) => {
+      const response = await listWorkflowExecutions(workflow.id, {
+        page: 1,
+        limit: 1,
+      });
+
+      return [workflow.id, response.items[0]] as const;
+    }),
+  );
+
+  const lastExecutions: LastExecutionsByWorkflowId = {};
+
+  for (const result of results) {
+    if (result.status !== 'fulfilled') {
+      continue;
+    }
+
+    const [workflowId, execution] = result.value;
+    lastExecutions[workflowId] = execution;
+  }
+
+  return lastExecutions;
 }
 
 export function DashboardPage() {
-  const [state, setState] = useState<DashboardState>({
-    stats: null,
-    workflows: null,
-    error: null,
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const workflows = useDashboardStore((state) => state.workflows);
+  const stats = useDashboardStore((state) => state.stats);
+  const loading = useDashboardStore((state) => state.loading);
+  const fetchWorkflows = useDashboardStore((state) => state.fetchWorkflows);
+  const fetchStats = useDashboardStore((state) => state.fetchStats);
+  const deleteWorkflow = useDashboardStore((state) => state.deleteWorkflow);
+
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<DashboardNotice | null>(null);
+  const [lastExecutions, setLastExecutions] =
+    useState<LastExecutionsByWorkflowId>({});
+  const [lastExecutionsLoading, setLastExecutionsLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    workflowId: string;
+    action: WorkflowCardAction;
+  } | null>(null);
+
+  async function refreshDashboardData() {
+    setDashboardError(null);
+    setLastExecutionsLoading(true);
+
+    try {
+      const [loadedWorkflows] = await Promise.all([
+        fetchWorkflows(),
+        fetchStats(),
+      ]);
+      const nextLastExecutions = await fetchLastExecutions(loadedWorkflows);
+
+      setLastExecutions(nextLastExecutions);
+    } catch (error) {
+      setDashboardError(getApiErrorMessage(error));
+      setLastExecutions({});
+    } finally {
+      setLastExecutionsLoading(false);
+    }
+  }
 
   useEffect(() => {
-    let isActive = true;
+    void refreshDashboardData();
+  }, []);
 
-    async function loadDashboard() {
-      try {
-        const [stats, workflows] = await Promise.all([
-          getStats(),
-          listWorkflows({ page: 1, limit: 5 }),
-        ]);
+  async function handleRun(workflow: WorkflowDto) {
+    setNotice(null);
+    setPendingAction({
+      workflowId: workflow.id,
+      action: 'run',
+    });
 
-        if (!isActive) {
-          return;
-        }
+    try {
+      const response = await executeWorkflow(workflow.id, {});
 
-        setState({
-          stats,
-          workflows,
-          error: null,
-        });
-      } catch (error) {
-        if (!isActive) {
-          return;
-        }
+      await refreshDashboardData();
 
-        setState((currentState) => ({
-          ...currentState,
-          error: getApiErrorMessage(error),
-        }));
-      } finally {
-        if (isActive) {
-          setIsLoading(false);
-        }
-      }
+      setNotice({
+        tone: 'success',
+        message: `Workflow "${workflow.name}" queued. Execution ${response.executionId} created.`,
+      });
+    } catch (error) {
+      setNotice({
+        tone: 'error',
+        message: getApiErrorMessage(error),
+      });
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function handleToggleStatus(workflow: WorkflowDto) {
+    setNotice(null);
+    setPendingAction({
+      workflowId: workflow.id,
+      action: 'status',
+    });
+
+    const nextStatus =
+      workflow.status === ACTIVE_STATUS ? PAUSED_STATUS : ACTIVE_STATUS;
+
+    try {
+      await updateWorkflowStatus(workflow.id, {
+        status: nextStatus,
+      });
+
+      await refreshDashboardData();
+
+      setNotice({
+        tone: 'success',
+        message: `Workflow "${workflow.name}" is now ${nextStatus}.`,
+      });
+    } catch (error) {
+      setNotice({
+        tone: 'error',
+        message: getApiErrorMessage(error),
+      });
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function handleDelete(workflow: WorkflowDto) {
+    const confirmed = window.confirm(
+      `Delete workflow "${workflow.name}"? This action cannot be undone.`,
+    );
+
+    if (!confirmed) {
+      return;
     }
 
-    void loadDashboard();
+    setNotice(null);
+    setPendingAction({
+      workflowId: workflow.id,
+      action: 'delete',
+    });
 
-    return () => {
-      isActive = false;
-    };
-  }, []);
+    try {
+      await deleteWorkflow(workflow.id);
+
+      await refreshDashboardData();
+
+      setNotice({
+        tone: 'success',
+        message: `Workflow "${workflow.name}" deleted.`,
+      });
+    } catch (error) {
+      setNotice({
+        tone: 'error',
+        message: getApiErrorMessage(error),
+      });
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  const statsLoading = stats === null && (loading || lastExecutionsLoading);
+  const workflowsLoading =
+    workflows.length === 0 && (loading || lastExecutionsLoading);
+  const refreshing =
+    (loading || lastExecutionsLoading) && !(statsLoading || workflowsLoading);
 
   return (
     <div className="space-y-8">
-      <section className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-        <div className="app-panel overflow-hidden">
-          <div className="border-b border-slate-900/10 px-8 py-8">
-            <p className="muted-label">Dashboard</p>
-            <h1 className="mt-3 max-w-2xl text-4xl font-semibold tracking-tight text-slate-900">
-              React frontend scaffold is wired to the existing API.
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-              This placeholder page stays inside TASK-013 scope: routing,
-              layout, Tailwind and the API client are ready for the next
-              frontend slices.
-            </p>
-          </div>
-
-          <div className="grid gap-4 p-8 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-slate-900/10 bg-amber-50/80 p-5">
-              <p className="muted-label">API</p>
-              <p className="mt-3 text-2xl font-semibold text-slate-900">
-                {isLoading ? 'Checking...' : state.error ? 'Unavailable' : 'Connected'}
-              </p>
-              <p className="mt-2 text-sm text-slate-600">
-                GET /api/workflows and GET /api/stats go through the Vite proxy.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-900/10 bg-white p-5">
-              <p className="muted-label">Workflows</p>
-              <p className="mt-3 text-2xl font-semibold text-slate-900">
-                {state.stats?.totalWorkflows ?? '—'}
-              </p>
-              <p className="mt-2 text-sm text-slate-600">
-                Total workflows reported by `/api/stats`.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-900/10 bg-white p-5">
-              <p className="muted-label">Active</p>
-              <p className="mt-3 text-2xl font-semibold text-slate-900">
-                {state.stats?.activeWorkflows ?? '—'}
-              </p>
-              <p className="mt-2 text-sm text-slate-600">
-                Ready for TASK-014 dashboard actions.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-900/10 bg-white p-5">
-              <p className="muted-label">Success Rate</p>
-              <p className="mt-3 text-2xl font-semibold text-slate-900">
-                {state.stats ? `${state.stats.successRate}%` : '—'}
-              </p>
-              <p className="mt-2 text-sm text-slate-600">
-                Stats endpoint is already typed in the client layer.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <aside className="app-panel p-8">
-          <p className="muted-label">Routes</p>
-          <h2 className="mt-3 text-2xl font-semibold text-slate-900">
-            Frontend skeleton routes
-          </h2>
-          <div className="mt-6 space-y-3 text-sm text-slate-600">
-            <Link
-              className="flex items-center justify-between rounded-2xl border border-slate-900/10 bg-white/90 px-4 py-3 transition hover:border-amber-500/50 hover:bg-amber-50"
-              to="/"
-            >
-              <span>Dashboard</span>
-              <span className="status-pill">/</span>
-            </Link>
-            <Link
-              className="flex items-center justify-between rounded-2xl border border-slate-900/10 bg-white/90 px-4 py-3 transition hover:border-amber-500/50 hover:bg-amber-50"
-              to="/workflows/new/edit"
-            >
-              <span>Workflow Editor</span>
-              <span className="status-pill">/workflows/:id/edit</span>
-            </Link>
-            <Link
-              className="flex items-center justify-between rounded-2xl border border-slate-900/10 bg-white/90 px-4 py-3 transition hover:border-amber-500/50 hover:bg-amber-50"
-              to="/workflows/new/history"
-            >
-              <span>Execution History</span>
-              <span className="status-pill">/workflows/:id/history</span>
-            </Link>
-          </div>
-        </aside>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
-        <div className="app-panel p-8">
-          <div className="flex items-center justify-between gap-4">
+      <section className="app-panel overflow-hidden">
+        <div className="border-b border-slate-900/10 px-8 py-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="muted-label">Workflow API</p>
-              <h2 className="mt-3 text-2xl font-semibold text-slate-900">
-                Latest workflows
-              </h2>
+              <p className="muted-label">Dashboard</p>
+              <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-slate-900">
+                Operate workflows, monitor execution health and launch manual runs.
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+                The dashboard stays within TASK-014 scope: real stats, workflow
+                cards and CRUD actions backed by the existing API.
+              </p>
             </div>
+
             <Link
-              className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+              className="inline-flex rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
               to="/workflows/new/edit"
             >
-              Create workflow
+              Create Workflow
             </Link>
           </div>
+        </div>
 
-          <div className="mt-6">
-            {isLoading ? (
-              <p className="text-sm text-slate-600">
-                Loading API data through the shared axios client...
-              </p>
-            ) : state.error ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-                {state.error}
+        {(notice || dashboardError) && (
+          <div className="space-y-3 px-8 py-6">
+            {notice ? (
+              <div
+                className={`rounded-2xl border p-4 text-sm ${
+                  notice.tone === 'success'
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-rose-200 bg-rose-50 text-rose-700'
+                }`}
+              >
+                {notice.message}
               </div>
-            ) : state.workflows && state.workflows.items.length > 0 ? (
-              <ul className="space-y-3">
-                {state.workflows.items.map((workflow) => (
-                  <li
-                    key={workflow.id}
-                    className="flex items-center justify-between rounded-2xl border border-slate-900/10 bg-white px-4 py-4"
-                  >
-                    <div>
-                      <p className="font-semibold text-slate-900">
-                        {workflow.name}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">
-                        Version {workflow.version} · {workflow.timezone}
-                      </p>
-                    </div>
-                    <span className="status-pill">{workflow.status}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-slate-600">
-                API request succeeded, but no workflows exist yet.
-              </p>
-            )}
-          </div>
-        </div>
+            ) : null}
 
-        <div className="app-panel p-8">
-          <p className="muted-label">Next slices</p>
-          <h2 className="mt-3 text-2xl font-semibold text-slate-900">
-            What TASK-013 leaves for later
-          </h2>
-          <ul className="mt-6 space-y-4 text-sm leading-7 text-slate-600">
-            <li>Dashboard widgets and actions move to TASK-014.</li>
-            <li>React Flow editor and node forms move to TASK-015.</li>
-            <li>Execution list, step logs and polling move to TASK-016.</li>
-          </ul>
-        </div>
+            {dashboardError ? (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                {dashboardError}
+              </div>
+            ) : null}
+          </div>
+        )}
       </section>
+
+      <StatsOverview
+        loading={statsLoading}
+        refreshing={refreshing}
+        stats={stats}
+      />
+
+      <WorkflowList
+        lastExecutionsByWorkflowId={lastExecutions}
+        loading={workflowsLoading}
+        onDelete={handleDelete}
+        onRun={handleRun}
+        onToggleStatus={handleToggleStatus}
+        pendingAction={pendingAction}
+        refreshing={refreshing || lastExecutionsLoading}
+        workflows={workflows}
+      />
     </div>
   );
 }

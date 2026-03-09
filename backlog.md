@@ -344,7 +344,7 @@
 - **Проверка**: `pnpm dev:web`, открыть http://localhost:5173
 
 ### TASK-014: Dashboard page
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: список workflows, stats, CRUD actions
 - **Scope**:
   - `apps/web/src/stores/dashboard.store.ts` (Zustand): workflows[], stats, loading, fetchWorkflows, fetchStats, deleteWorkflow
