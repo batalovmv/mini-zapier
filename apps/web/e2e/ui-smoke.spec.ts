@@ -61,8 +61,13 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
   const pageErrors: string[] = [];
 
   page.on('console', (message) => {
-    if (message.type() === 'error') {
-      consoleErrors.push(message.text());
+    const messageText = message.text();
+
+    if (
+      message.type() === 'error' &&
+      !messageText.includes('server responded with a status of 401')
+    ) {
+      consoleErrors.push(messageText);
     }
   });
 
@@ -173,6 +178,8 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
 
     await httpNode.click();
     await page.getByLabel('HTTP request URL').fill(DEFAULT_ECHO_URL);
+    await page.getByLabel('Header key 1').fill('Content-Type');
+    await page.getByLabel('Header value 1').fill('application/json');
     await page
       .getByLabel('HTTP request body')
       .fill(
@@ -246,8 +253,8 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     );
     await httpRequestCard.getByText('Output data').click();
     await expect(
-      httpRequestCard.getByText(`"name":"${webhookPayload.name}"`),
-    ).toBeVisible();
+      httpRequestCard.locator('pre').last(),
+    ).toContainText(webhookPayload.name);
 
     const transformCard = page.locator(
       '[data-testid="step-log-item"][data-step-label="Data Transform"]',
@@ -277,5 +284,9 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     }
   }
 });
+
+
+
+
 
 

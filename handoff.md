@@ -39,6 +39,7 @@
   - **Проверки прошли**:
     - `pnpm install --frozen-lockfile`
     - `pnpm build` (shared + api + worker + web)
+    - `pnpm --filter @mini-zapier/web run e2e` против `https://mini-zapier-web-silk.vercel.app` (auth + live browser smoke)
 - **Что сломано**:
   - Критичных известных поломок не выявлено
 - **Фактический deploy status**:
@@ -64,12 +65,14 @@
   - `pnpm --filter @mini-zapier/web run e2e` запускает Playwright smoke
 
 ## Следующий шаг
-**Browser smoke product flow**: deploy уже живой. Осталось вручную прогнать UI-сценарий в браузере:
+**Manual UX smoke via Opus**: automated live browser smoke уже прошёл. Осталась ручная проверка UX в браузере:
 1. `login`
-2. `create workflow`
-3. `trigger webhook`
-4. `check execution history`
-5. `open step logs`
+2. `create workflow (cron -> email или webhook -> http -> transform)`
+3. `activate workflow`
+4. `trigger workflow`
+5. `check execution history + step logs`
+6. `verify config panel usability and canvas workspace`
+
 
 ## Блокеры
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`), а порт `5173` — внешним Vite-процессом (`D:\TZ\Finance_tracker\client`). Для smoke-проверок использовались `3001`, `5174`, `5175`, `5176`, `5177`, `5178`.
@@ -164,6 +167,7 @@
 | post-v1-fix | done | см. `git log` (`fix: server-generated node IDs + lockfile sync`) | workflow nodes now get server-generated ids with edge remap; lockfile synced via pnpm; `frozen-lockfile`, root build and Playwright smoke pass again |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |
 | TASK-018 | done | см. `git log` (`TASK-018: deployment config + minimal admin login`) | deploy config (Docker + public VPS API + Vercel), auth module (signed cookie HMAC), health endpoint, frontend login/logout/protected routes |
+
 
 
 
