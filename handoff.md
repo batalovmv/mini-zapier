@@ -92,8 +92,8 @@
 - **Public endpoints** (не требуют auth): `POST /api/auth/login`, `GET /api/health`, `POST /api/webhooks/:workflowId`, `POST /api/inbound-email/:workflowId`, `GET /api/auth/me` (auth-aware: 200/401)
 - **Swagger** отключен при `NODE_ENV=production`; доступен только в dev
 - **CORS**: origin из `CORS_ORIGIN` env (comma-separated), fallback `http://localhost:5173`; `credentials: true`
-- **Docker**: `deploy/docker-compose.prod.yml` использует `build.context: ..`, поэтому на VPS нужен весь репозиторий, а не только папка `deploy`; reverse proxy на этом VPS обслуживает host `nginx`, а mini-zapier встраивается под path-prefix `/mini-zapier/` на `api.memelab.ru`
-- **Vercel**: `vercel.json` rewrite `/api/*` уже направлен на `https://api.memelab.ru/mini-zapier/api/:path*`; после первого Vercel deploy проверь итоговый project domain и при необходимости синхронизируй `CORS_ORIGIN` на VPS
+- **Docker**: `deploy/docker-compose.prod.yml` использует `build.context: ..`, поэтому на VPS нужен весь репозиторий, а не только папка `deploy`; текущая схема публикует `api` наружу на `:3000` прямо с VPS
+- **Vercel**: `vercel.json` rewrite `/api/*` направлен на `http://155.212.172.136:3000/api/:path*`; frontend URL сейчас `https://mini-zapier-web-silk.vercel.app`
 
 ---
 
@@ -156,7 +156,8 @@
 | TASK-017 | done | см. `git log` (`TASK-017: UI polish + E2E test`) | toasts/loading-empty states/error boundary/confirm dialogs, inline connection create in editor, Playwright UI smoke with webhook -> history -> step logs |
 | post-v1-fix | done | см. `git log` (`fix: server-generated node IDs + lockfile sync`) | workflow nodes now get server-generated ids with edge remap; lockfile synced via pnpm; `frozen-lockfile`, root build and Playwright smoke pass again |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |
-| TASK-018 | done | см. `git log` (`TASK-018: deployment config + minimal admin login`) | deploy config (Docker + host nginx path-prefix + Vercel), auth module (signed cookie HMAC), health endpoint, frontend login/logout/protected routes |
+| TASK-018 | done | см. `git log` (`TASK-018: deployment config + minimal admin login`) | deploy config (Docker + public VPS API + Vercel), auth module (signed cookie HMAC), health endpoint, frontend login/logout/protected routes |
+
 
 
 
