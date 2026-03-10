@@ -41,8 +41,14 @@
     - `pnpm build` (shared + api + worker + web)
 - **Что сломано**:
   - Критичных известных поломок не выявлено
-- **Частично сделано**:
-  - Docker образы ещё не собирались (`docker compose build`) — требуется VPS с Docker
+- **Фактический deploy status**:
+  - GitHub repo создан: `batalovmv/mini-zapier`
+  - VPS checkout: `/opt/mini-zapier`
+  - production env создан на VPS: `/opt/mini-zapier/deploy/.env`
+  - Stack на VPS поднят: `postgres`, `redis`, `api`, `worker`
+  - Public backend path: `https://api.memelab.ru/mini-zapier/api/*`
+  - Host nginx route добавлен внутрь существующего `api.memelab.ru` под `location ^~ /mini-zapier/`
+  - Smoke на VPS прошёл: `/api/health` -> `200`, `/api/workflows` -> `401` без cookie, `login` -> `200` + `Set-Cookie`, `/api/auth/me` -> `200` с cookie, `/api/workflows` -> `200` с cookie
 - **Root scripts**:
   - `pnpm install --frozen-lockfile` работает
   - `pnpm build` работает
@@ -52,10 +58,11 @@
   - `pnpm --filter @mini-zapier/web run e2e` запускает Playwright smoke
 
 ## Следующий шаг
-**Деплой на VPS + Vercel**: deploy-конфигурация адаптирована под реальный VPS. Нужно:
-1. Настроить VPS: клонировать весь репозиторий в `/opt/mini-zapier`, создать `deploy/.env`, добавить `location ^~ /mini-zapier/` в существующий host nginx `api.memelab.ru`, затем запустить `deploy/deploy.sh`
-2. Настроить Vercel: импортировать GitHub repo `batalovmv/mini-zapier`; `vercel.json` уже указывает на `https://api.memelab.ru/mini-zapier`
-3. Smoke-тест: `POST /api/auth/login` через Vercel URL, проверить `Set-Cookie` проходит через rewrite
+**Vercel import + browser smoke**: VPS-часть уже поднята. Нужно:
+1. Импортировать GitHub repo `batalovmv/mini-zapier` в Vercel
+2. Проверить итоговый Vercel domain; если это не `https://mini-zapier.vercel.app`, обновить `CORS_ORIGIN` в `/opt/mini-zapier/deploy/.env` и перезапустить `api` (`docker compose -f docker-compose.prod.yml up -d api`)
+3. Smoke-тест через Vercel URL: `POST /api/auth/login`, проверить `Set-Cookie` проходит через rewrite
+4. Browser flow: `login -> create workflow -> webhook -> execution -> history`
 
 ## Блокеры
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`), а порт `5173` — внешним Vite-процессом (`D:\TZ\Finance_tracker\client`). Для smoke-проверок использовались `3001`, `5174`, `5175`, `5176`, `5177`, `5178`.
@@ -86,7 +93,7 @@
 - **Swagger** отключен при `NODE_ENV=production`; доступен только в dev
 - **CORS**: origin из `CORS_ORIGIN` env (comma-separated), fallback `http://localhost:5173`; `credentials: true`
 - **Docker**: `deploy/docker-compose.prod.yml` использует `build.context: ..`, поэтому на VPS нужен весь репозиторий, а не только папка `deploy`; reverse proxy на этом VPS обслуживает host `nginx`, а mini-zapier встраивается под path-prefix `/mini-zapier/` на `api.memelab.ru`
-- **Vercel**: `vercel.json` rewrite `/api/*` уже направлен на `https://api.memelab.ru/mini-zapier/api/:path*`
+- **Vercel**: `vercel.json` rewrite `/api/*` уже направлен на `https://api.memelab.ru/mini-zapier/api/:path*`; после первого Vercel deploy проверь итоговый project domain и при необходимости синхронизируй `CORS_ORIGIN` на VPS
 
 ---
 
@@ -150,6 +157,8 @@
 | post-v1-fix | done | см. `git log` (`fix: server-generated node IDs + lockfile sync`) | workflow nodes now get server-generated ids with edge remap; lockfile synced via pnpm; `frozen-lockfile`, root build and Playwright smoke pass again |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |
 | TASK-018 | done | см. `git log` (`TASK-018: deployment config + minimal admin login`) | deploy config (Docker + host nginx path-prefix + Vercel), auth module (signed cookie HMAC), health endpoint, frontend login/logout/protected routes |
+
+
 
 
 
