@@ -77,7 +77,9 @@ function FlowCanvasInner() {
   }, [reactFlow, viewport, workflowId, workflowVersion]);
 
   useEffect(() => {
-    if (!import.meta.env.DEV) {
+    const isAutomatedBrowser = window.navigator.webdriver;
+
+    if (!import.meta.env.DEV && !isAutomatedBrowser) {
       return;
     }
 
@@ -125,7 +127,7 @@ function FlowCanvasInner() {
   }
 
   return (
-    <div className="app-panel relative h-[720px] overflow-hidden">
+    <div className="app-panel relative h-[780px] overflow-hidden 2xl:h-[820px]">
       <div className="border-b border-slate-900/10 px-5 py-4">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -202,3 +204,6 @@ export function FlowCanvas() {
     </ReactFlowProvider>
   );
 }
+
+
+

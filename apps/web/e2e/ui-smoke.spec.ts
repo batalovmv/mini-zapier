@@ -1,67 +1,23 @@
 import { expect, test, type Page } from '@playwright/test';
-import type { AddressInfo } from 'node:net';
-import { createServer } from 'node:http';
 
-let echoServer: ReturnType<typeof createServer>;
-let echoUrl = '';
+const DEFAULT_ECHO_URL =
+  process.env.MINI_ZAPIER_E2E_ECHO_URL ?? 'https://postman-echo.com/post';
+const E2E_USERNAME = process.env.MINI_ZAPIER_E2E_USERNAME ?? 'admin';
+const E2E_PASSWORD = process.env.MINI_ZAPIER_E2E_PASSWORD;
 
-async function startEchoServer(): Promise<string> {
-  echoServer = createServer((request, response) => {
-    if (request.method !== 'POST' || request.url !== '/echo') {
-      response.writeHead(404, {
-        'content-type': 'application/json',
-      });
-      response.end(JSON.stringify({ error: 'Not found' }));
-      return;
-    }
-
-    let rawBody = '';
-
-    request.on('data', (chunk) => {
-      rawBody += chunk.toString();
-    });
-
-    request.on('end', () => {
-      const parsedBody =
-        rawBody.trim().length > 0
-          ? (JSON.parse(rawBody) as Record<string, unknown>)
-          : {};
-
-      response.writeHead(200, {
-        'content-type': 'application/json',
-      });
-      response.end(
-        JSON.stringify({
-          receivedName: parsedBody.name ?? null,
-          eventId: parsedBody.eventId ?? null,
-        }),
-      );
-    });
-  });
-
-  await new Promise<void>((resolve) => {
-    echoServer.listen(0, '127.0.0.1', () => resolve());
-  });
-
-  const address = echoServer.address() as AddressInfo;
-  return `http://127.0.0.1:${address.port}/echo`;
-}
-
-async function stopEchoServer(): Promise<void> {
-  if (!echoServer) {
-    return;
+async function signIn(page: Page): Promise<void> {
+  if (!E2E_PASSWORD) {
+    throw new Error('MINI_ZAPIER_E2E_PASSWORD is required for the UI smoke test.');
   }
 
-  await new Promise<void>((resolve, reject) => {
-    echoServer.close((error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
+  await page.goto('/login');
+  await expect(page.getByRole('heading', { name: 'Mini-Zapier' })).toBeVisible();
 
-      resolve();
-    });
-  });
+  await page.getByLabel('Username').fill(E2E_USERNAME);
+  await page.getByLabel('Password').fill(E2E_PASSWORD);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+
+  await expect(page.getByText('Operate workflows, monitor execution health and launch manual runs.')).toBeVisible();
 }
 
 async function dropPaletteItem(options: {
@@ -93,17 +49,8 @@ async function dropPaletteItem(options: {
   });
 }
 
-test.beforeAll(async () => {
-  echoUrl = await startEchoServer();
-});
-
-test.afterAll(async () => {
-  await stopEchoServer();
-});
-
 test('creates a webhook workflow via UI and verifies step logs', async ({
   page,
-  request,
   baseURL,
 }) => {
   if (!baseURL) {
@@ -135,6 +82,8 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
   let connectionId: string | null = null;
 
   try {
+    await signIn(page);
+
     await page.goto('/workflows/new/edit');
     await expect(page.getByText('Visual React Flow editor for linear workflows.')).toBeVisible();
 
@@ -223,7 +172,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     connectionId = await page.getByTestId('connection-select').inputValue();
 
     await httpNode.click();
-    await page.getByLabel('HTTP request URL').fill(echoUrl);
+    await page.getByLabel('HTTP request URL').fill(DEFAULT_ECHO_URL);
     await page
       .getByLabel('HTTP request body')
       .fill(
@@ -236,7 +185,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     await transformNode.click();
     await page
       .getByLabel('Data transform template')
-      .fill('Processed {{input.data.receivedName}} / {{input.data.eventId}}');
+      .fill('Processed {{input.data.json.name}} / {{input.data.json.eventId}}');
 
     await page.getByTestId('save-workflow-button').click();
     await expect
@@ -257,7 +206,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible();
 
-    const webhookResponse = await request.post(
+    const webhookResponse = await page.request.post(
       `${baseURL}/api/webhooks/${workflowId}`,
       {
         data: webhookPayload,
@@ -297,7 +246,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     );
     await httpRequestCard.getByText('Output data').click();
     await expect(
-      httpRequestCard.getByText(`"receivedName": "${webhookPayload.name}"`),
+      httpRequestCard.getByText(`"name":"${webhookPayload.name}"`),
     ).toBeVisible();
 
     const transformCard = page.locator(
@@ -320,11 +269,13 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     ).toEqual([]);
   } finally {
     if (workflowId) {
-      await request.delete(`${baseURL}/api/workflows/${workflowId}`);
+      await page.request.delete(`${baseURL}/api/workflows/${workflowId}`);
     }
 
     if (connectionId) {
-      await request.delete(`${baseURL}/api/connections/${connectionId}`);
+      await page.request.delete(`${baseURL}/api/connections/${connectionId}`);
     }
   }
 });
+
+

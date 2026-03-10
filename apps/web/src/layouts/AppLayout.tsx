@@ -40,7 +40,7 @@ export function AppLayout() {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-slate-900/10 bg-[#fcfaf6]/80 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4">
+        <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-4 py-4 xl:px-6">
           <NavLink
             className="flex items-center gap-3"
             to="/"
@@ -81,9 +81,10 @@ export function AppLayout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-10">
+      <main className="mx-auto max-w-[1680px] px-4 py-8 xl:px-6 xl:py-10">
         <Outlet />
       </main>
     </div>
   );
 }
+

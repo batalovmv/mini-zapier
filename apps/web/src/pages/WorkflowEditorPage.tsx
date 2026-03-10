@@ -257,12 +257,12 @@ export function WorkflowEditorPage() {
         ) : null}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)_360px]">
-        <div className="min-h-[720px]">
+      <section className="grid gap-5 xl:grid-cols-[240px_minmax(0,1fr)_320px] 2xl:grid-cols-[260px_minmax(0,1fr)_340px]">
+        <div className="min-h-[780px]">
           <NodeSidebar />
         </div>
 
-        <div className="min-h-[720px]">
+        <div className="min-h-[780px]">
           {loading ? (
             <LoadingState
               description="The saved workflow graph is loading into the editor."
@@ -273,10 +273,11 @@ export function WorkflowEditorPage() {
           )}
         </div>
 
-        <div className="min-h-[720px]">
+        <div className="min-h-[780px]">
           <ConfigPanel workflowId={workflowId} />
         </div>
       </section>
     </div>
   );
 }
+
