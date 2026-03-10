@@ -11,7 +11,8 @@ RUN pnpm --filter @mini-zapier/shared run build && \
     pnpm --filter @mini-zapier/server-utils run build && \
     pnpm --filter @mini-zapier/api run build
 
-RUN pnpm deploy --legacy --filter @mini-zapier/api --prod /out/api
+RUN pnpm deploy --legacy --filter @mini-zapier/api --prod /out/api && \
+    node -e "const fs=require('node:fs'); const path=require('node:path'); const srcClient=fs.realpathSync('/build/apps/api/node_modules/@prisma/client'); const srcNodeModules=path.dirname(path.dirname(srcClient)); const srcGenerated=path.join(srcNodeModules,'.prisma'); const destClient=fs.realpathSync('/out/api/node_modules/@prisma/client'); const destNodeModules=path.dirname(path.dirname(destClient)); fs.cpSync(srcGenerated, path.join(destNodeModules,'.prisma'), {recursive:true, force:true}); fs.mkdirSync(path.join(destClient,'node_modules'), {recursive:true}); fs.cpSync(srcGenerated, path.join(destClient,'node_modules','.prisma'), {recursive:true, force:true});"
 
 # Copy build artifacts into the deployed directory
 RUN cp -r /build/apps/api/dist /out/api/dist && \
