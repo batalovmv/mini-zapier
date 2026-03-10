@@ -9,9 +9,9 @@
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
     - `deploy/Dockerfile.worker` — multi-stage build с `pnpm deploy --legacy`
-    - `deploy/docker-compose.prod.yml` — Caddy + PostgreSQL + Redis + API + Worker, healthchecks, depends_on
+    - `deploy/docker-compose.prod.yml` — PostgreSQL + Redis + API + Worker, healthchecks, depends_on (reverse proxy вынесен в host nginx на VPS)
     - `deploy/api-entrypoint.sh` — pg_isready wait + prisma migrate deploy + start
-    - `deploy/Caddyfile` — reverse_proxy to api:3000
+    - `deploy/nginx.mini-zapier-api.conf.example` — пример host nginx vhost для `api.memelab.ru` -> `127.0.0.1:3000`
     - `deploy/deploy.sh` — build + up + health check
     - `deploy/.env.production.example` — all required env vars
     - `vercel.json` — buildCommand, outputDirectory, `/api/*` rewrite to VPS
@@ -52,10 +52,10 @@
   - `pnpm --filter @mini-zapier/web run e2e` запускает Playwright smoke
 
 ## Следующий шаг
-**Деплой на VPS + Vercel**: deploy-конфигурация готова. Нужно:
-1. Настроить VPS: клонировать весь репозиторий в `/opt/mini-zapier`, перейти в `deploy/`, создать `.env` из `.env.production.example`, запустить `deploy/deploy.sh`
-2. Настроить Vercel: обновить `vercel.json` rewrite destination с реальным доменом VPS
-3. Smoke-тест: POST /api/auth/login через Vercel URL, проверить Set-Cookie проходит через rewrite
+**Деплой на VPS + Vercel**: deploy-конфигурация адаптирована под реальный VPS. Нужно:
+1. Настроить VPS: клонировать весь репозиторий в `/opt/mini-zapier`, создать `deploy/.env`, включить host nginx vhost `api.memelab.ru`, затем запустить `deploy/deploy.sh`
+2. Настроить Vercel: импортировать GitHub repo `batalovmv/mini-zapier`; `vercel.json` уже указывает на `https://api.memelab.ru`
+3. Smoke-тест: `POST /api/auth/login` через Vercel URL, проверить `Set-Cookie` проходит через rewrite
 
 ## Блокеры
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`), а порт `5173` — внешним Vite-процессом (`D:\TZ\Finance_tracker\client`). Для smoke-проверок использовались `3001`, `5174`, `5175`, `5176`, `5177`, `5178`.
@@ -85,8 +85,8 @@
 - **Public endpoints** (не требуют auth): `POST /api/auth/login`, `GET /api/health`, `POST /api/webhooks/:workflowId`, `POST /api/inbound-email/:workflowId`, `GET /api/auth/me` (auth-aware: 200/401)
 - **Swagger** отключен при `NODE_ENV=production`; доступен только в dev
 - **CORS**: origin из `CORS_ORIGIN` env (comma-separated), fallback `http://localhost:5173`; `credentials: true`
-- **Docker**: `deploy/docker-compose.prod.yml` использует `build.context: ..`, поэтому на VPS нужен весь репозиторий, а не только папка `deploy`; запускать через `deploy/deploy.sh`, Caddy обеспечивает auto-TLS
-- **Vercel**: `vercel.json` rewrite `/api/*` → VPS; нужно заменить `api.example.com` на реальный домен
+- **Docker**: `deploy/docker-compose.prod.yml` использует `build.context: ..`, поэтому на VPS нужен весь репозиторий, а не только папка `deploy`; reverse proxy на этом VPS обслуживает host `nginx`, а не compose-`Caddy`
+- **Vercel**: `vercel.json` rewrite `/api/*` уже направлен на `https://api.memelab.ru/api/:path*`
 
 ---
 
@@ -149,5 +149,6 @@
 | TASK-017 | done | см. `git log` (`TASK-017: UI polish + E2E test`) | toasts/loading-empty states/error boundary/confirm dialogs, inline connection create in editor, Playwright UI smoke with webhook -> history -> step logs |
 | post-v1-fix | done | см. `git log` (`fix: server-generated node IDs + lockfile sync`) | workflow nodes now get server-generated ids with edge remap; lockfile synced via pnpm; `frozen-lockfile`, root build and Playwright smoke pass again |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |
-| TASK-018 | done | см. `git log` (`TASK-018: deployment config + minimal admin login`) | deploy config (Docker, Caddy, Vercel), auth module (signed cookie HMAC), health endpoint, frontend login/logout/protected routes |
+| TASK-018 | done | см. `git log` (`TASK-018: deployment config + minimal admin login`) | deploy config (Docker + host nginx + Vercel), auth module (signed cookie HMAC), health endpoint, frontend login/logout/protected routes |
+
 
