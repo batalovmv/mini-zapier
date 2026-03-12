@@ -67,6 +67,12 @@ jobs:
         if: env.SKIP_E2E != 'true'
         run: pnpm --filter @mini-zapier/web exec playwright install chromium
 
+      - name: Wait for Vercel deployment
+        if: env.SKIP_E2E != 'true'
+        run: |
+          echo "Waiting 120s for Vercel to deploy commit ${GITHUB_SHA::7}..."
+          sleep 120
+
       - name: Run E2E smoke tests
         if: env.SKIP_E2E != 'true'
         working-directory: apps/web
