@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const DEFAULT_ECHO_URL =
-  process.env.MINI_ZAPIER_E2E_ECHO_URL ?? 'https://postman-echo.com/post';
+  process.env.MINI_ZAPIER_E2E_ECHO_URL || 'https://postman-echo.com/post';
 const E2E_USERNAME = process.env.MINI_ZAPIER_E2E_USERNAME ?? 'admin';
 const E2E_PASSWORD = process.env.MINI_ZAPIER_E2E_PASSWORD;
 
