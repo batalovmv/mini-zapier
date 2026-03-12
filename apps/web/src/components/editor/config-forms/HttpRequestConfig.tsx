@@ -28,26 +28,38 @@ export function HttpRequestConfig({
       : [['', '']];
 
   function updateHeader(index: number, key: string, value: string) {
-    const nextEntries = [...headerEntries];
-    nextEntries[index] = [key, value];
-
-    onChange((prev) => ({
-      ...prev,
-      headers: Object.fromEntries(
-        nextEntries.filter(([entryKey]) => entryKey.trim().length > 0),
-      ),
-    }));
+    onChange((prev) => {
+      const currentHeaders = toStringRecord(prev.headers);
+      const entries =
+        Object.entries(currentHeaders).length > 0
+          ? Object.entries(currentHeaders)
+          : [['', '']];
+      const nextEntries = [...entries];
+      nextEntries[index] = [key, value];
+      return {
+        ...prev,
+        headers: Object.fromEntries(
+          nextEntries.filter(([k]) => k.trim().length > 0),
+        ),
+      };
+    });
   }
 
   function removeHeader(index: number) {
-    const nextEntries = headerEntries.filter((_, entryIndex) => entryIndex !== index);
-
-    onChange((prev) => ({
-      ...prev,
-      headers: Object.fromEntries(
-        nextEntries.filter(([entryKey]) => entryKey.trim().length > 0),
-      ),
-    }));
+    onChange((prev) => {
+      const currentHeaders = toStringRecord(prev.headers);
+      const entries =
+        Object.entries(currentHeaders).length > 0
+          ? Object.entries(currentHeaders)
+          : [['', '']];
+      const nextEntries = entries.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        headers: Object.fromEntries(
+          nextEntries.filter(([k]) => k.trim().length > 0),
+        ),
+      };
+    });
   }
 
   return (

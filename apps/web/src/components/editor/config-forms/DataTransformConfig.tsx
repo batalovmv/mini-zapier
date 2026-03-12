@@ -29,30 +29,40 @@ export function DataTransformConfig({
       : [['', '']];
 
   function updateMapping(index: number, key: string, value: string) {
-    const nextEntries = [...mappingEntries];
-    nextEntries[index] = [key, value];
-
-    onChange((prev) => ({
-      ...prev,
-      mode: 'mapping',
-      mapping: Object.fromEntries(
-        nextEntries.filter(([entryKey]) => entryKey.trim().length > 0),
-      ),
-    }));
+    onChange((prev) => {
+      const currentMapping = toStringRecord(prev.mapping);
+      const entries =
+        Object.entries(currentMapping).length > 0
+          ? Object.entries(currentMapping)
+          : [['', '']];
+      const nextEntries = [...entries];
+      nextEntries[index] = [key, value];
+      return {
+        ...prev,
+        mode: 'mapping',
+        mapping: Object.fromEntries(
+          nextEntries.filter(([k]) => k.trim().length > 0),
+        ),
+      };
+    });
   }
 
   function removeMapping(index: number) {
-    const nextEntries = mappingEntries.filter(
-      (_, entryIndex) => entryIndex !== index,
-    );
-
-    onChange((prev) => ({
-      ...prev,
-      mode: 'mapping',
-      mapping: Object.fromEntries(
-        nextEntries.filter(([entryKey]) => entryKey.trim().length > 0),
-      ),
-    }));
+    onChange((prev) => {
+      const currentMapping = toStringRecord(prev.mapping);
+      const entries =
+        Object.entries(currentMapping).length > 0
+          ? Object.entries(currentMapping)
+          : [['', '']];
+      const nextEntries = entries.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        mode: 'mapping',
+        mapping: Object.fromEntries(
+          nextEntries.filter(([k]) => k.trim().length > 0),
+        ),
+      };
+    });
   }
 
   return (
