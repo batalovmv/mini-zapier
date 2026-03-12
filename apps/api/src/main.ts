@@ -7,6 +7,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { validateApiEnv } from './common/validate-env';
 import { PrismaService } from './prisma/prisma.service';
 
 declare const process: {
@@ -14,6 +15,8 @@ declare const process: {
 };
 
 async function bootstrap(): Promise<void> {
+  validateApiEnv();
+
   const app = await NestFactory.create(AppModule, {
     rawBody: true,
   });
