@@ -74,7 +74,7 @@ async function connectNodesWithTestHelper(
 test('blocks adding a second trigger to the canvas', async ({ page }) => {
   await signIn(page);
   await page.goto('/workflows/new/edit');
-  await expect(page.getByText('Visual React Flow editor for linear workflows.')).toBeVisible();
+  await expect(page.getByTestId('workflow-name-input')).toBeVisible();
 
   await dropPaletteItem({
     page,
@@ -104,7 +104,7 @@ test('blocks adding a second trigger to the canvas', async ({ page }) => {
 test('blocks saving a workflow that only contains a trigger', async ({ page }) => {
   await signIn(page);
   await page.goto('/workflows/new/edit');
-  await expect(page.getByText('Visual React Flow editor for linear workflows.')).toBeVisible();
+  await expect(page.getByTestId('workflow-name-input')).toBeVisible();
 
   await dropPaletteItem({
     page,
@@ -141,7 +141,7 @@ test('blocks saving disconnected node chains before the API request', async ({
 
   await signIn(page);
   await page.goto('/workflows/new/edit');
-  await expect(page.getByText('Visual React Flow editor for linear workflows.')).toBeVisible();
+  await expect(page.getByTestId('workflow-name-input')).toBeVisible();
 
   await dropPaletteItem({
     page,
@@ -247,7 +247,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     await signIn(page);
 
     await page.goto('/workflows/new/edit');
-    await expect(page.getByText('Visual React Flow editor for linear workflows.')).toBeVisible();
+    await expect(page.getByTestId('workflow-name-input')).toBeVisible();
 
     await page.getByTestId('workflow-name-input').fill(workflowName);
 
@@ -383,7 +383,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
 
     expect(webhookResponse.status()).toBe(202);
 
-    await page.getByRole('link', { name: 'Back to dashboard' }).click();
+    await page.getByRole('link', { name: '← Back' }).click();
     await expect(page.getByText('Operate workflows, monitor execution health and launch manual runs.')).toBeVisible();
 
     await page.getByTestId(`workflow-${workflowId}-history`).click();
