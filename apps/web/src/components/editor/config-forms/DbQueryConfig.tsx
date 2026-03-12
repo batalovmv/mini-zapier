@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import type { ConfigUpdater } from '../ConfigPanel';
+
 function serializeParams(params: unknown): string {
   if (!Array.isArray(params)) {
     return '[]';
@@ -10,7 +12,7 @@ function serializeParams(params: unknown): string {
 
 interface DbQueryConfigProps {
   config: Record<string, unknown>;
-  onChange: (nextConfig: Record<string, unknown>) => void;
+  onChange: ConfigUpdater;
 }
 
 export function DbQueryConfig({ config, onChange }: DbQueryConfigProps) {
@@ -32,10 +34,7 @@ export function DbQueryConfig({ config, onChange }: DbQueryConfigProps) {
         return;
       }
 
-      onChange({
-        ...config,
-        params: parsed,
-      });
+      onChange((prev) => ({ ...prev, params: parsed }));
       setParamsError(null);
     } catch {
       setParamsError('Params must be valid JSON.');
@@ -48,12 +47,10 @@ export function DbQueryConfig({ config, onChange }: DbQueryConfigProps) {
         <span className="muted-label">SQL query</span>
         <textarea
           className="mt-2 min-h-40 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-          onChange={(event) =>
-            onChange({
-              ...config,
-              query: event.target.value,
-            })
-          }
+          onChange={(event) => {
+            const value = event.target.value;
+            onChange((prev) => ({ ...prev, query: value }));
+          }}
           placeholder="select * from orders where id = $1"
           value={typeof config.query === 'string' ? config.query : ''}
         />

@@ -1,3 +1,5 @@
+import type { ConfigUpdater } from '../ConfigPanel';
+
 function toStringRecord(value: unknown): Record<string, string> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return {};
@@ -12,7 +14,7 @@ function toStringRecord(value: unknown): Record<string, string> {
 
 interface DataTransformConfigProps {
   config: Record<string, unknown>;
-  onChange: (nextConfig: Record<string, unknown>) => void;
+  onChange: ConfigUpdater;
 }
 
 export function DataTransformConfig({
@@ -30,13 +32,13 @@ export function DataTransformConfig({
     const nextEntries = [...mappingEntries];
     nextEntries[index] = [key, value];
 
-    onChange({
-      ...config,
+    onChange((prev) => ({
+      ...prev,
       mode: 'mapping',
       mapping: Object.fromEntries(
         nextEntries.filter(([entryKey]) => entryKey.trim().length > 0),
       ),
-    });
+    }));
   }
 
   function removeMapping(index: number) {
@@ -44,13 +46,13 @@ export function DataTransformConfig({
       (_, entryIndex) => entryIndex !== index,
     );
 
-    onChange({
-      ...config,
+    onChange((prev) => ({
+      ...prev,
       mode: 'mapping',
       mapping: Object.fromEntries(
         nextEntries.filter(([entryKey]) => entryKey.trim().length > 0),
       ),
-    });
+    }));
   }
 
   return (
@@ -60,12 +62,10 @@ export function DataTransformConfig({
         <select
           aria-label="Data transform mode"
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-          onChange={(event) =>
-            onChange({
-              ...config,
-              mode: event.target.value,
-            })
-          }
+          onChange={(event) => {
+            const value = event.target.value;
+            onChange((prev) => ({ ...prev, mode: value }));
+          }}
           value={mode}
         >
           <option value="template">Template</option>
@@ -79,13 +79,14 @@ export function DataTransformConfig({
           <textarea
             aria-label="Data transform template"
             className="mt-2 min-h-36 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-            onChange={(event) =>
-              onChange({
-                ...config,
+            onChange={(event) => {
+              const value = event.target.value;
+              onChange((prev) => ({
+                ...prev,
                 mode: 'template',
-                template: event.target.value,
-              })
-            }
+                template: value,
+              }));
+            }}
             placeholder='{"name":"{{input.name}}"}'
             value={typeof config.template === 'string' ? config.template : ''}
           />
@@ -97,14 +98,14 @@ export function DataTransformConfig({
             <button
               className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
               onClick={() =>
-                onChange({
-                  ...config,
+                onChange((prev) => ({
+                  ...prev,
                   mode: 'mapping',
                   mapping: {
-                    ...mapping,
+                    ...toStringRecord(prev.mapping),
                     '': '',
                   },
-                })
+                }))
               }
               type="button"
             >

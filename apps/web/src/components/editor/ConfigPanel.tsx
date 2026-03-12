@@ -26,12 +26,16 @@ interface ConfigPanelProps {
   workflowId: string | null;
 }
 
+export type ConfigUpdater = (
+  updater: (prev: Record<string, unknown>) => Record<string, unknown>,
+) => void;
+
 function renderConfigForm(options: {
   workflowId: string | null;
   nodeKind: string;
   nodeType: string;
   config: Record<string, unknown>;
-  onChange: (nextConfig: Record<string, unknown>) => void;
+  onChange: ConfigUpdater;
 }) {
   const definitionKey = `${options.nodeKind}:${options.nodeType}`;
 
@@ -304,7 +308,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
             nodeKind: selectedNode.data.nodeKind,
             nodeType: selectedNode.data.nodeType,
             config: selectedNode.data.config,
-            onChange: (nextConfig) => updateNodeConfig(selectedNode.id, nextConfig),
+            onChange: (updater) => updateNodeConfig(selectedNode.id, updater),
           })}
 
           {connectionsError ? (

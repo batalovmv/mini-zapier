@@ -1,6 +1,8 @@
+import type { ConfigUpdater } from '../ConfigPanel';
+
 interface CronConfigProps {
   config: Record<string, unknown>;
-  onChange: (nextConfig: Record<string, unknown>) => void;
+  onChange: ConfigUpdater;
 }
 
 export function CronConfig({ config, onChange }: CronConfigProps) {
@@ -9,12 +11,10 @@ export function CronConfig({ config, onChange }: CronConfigProps) {
       <span className="muted-label">Cron expression</span>
       <input
         className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-        onChange={(event) =>
-          onChange({
-            ...config,
-            cronExpression: event.target.value,
-          })
-        }
+        onChange={(event) => {
+          const value = event.target.value;
+          onChange((prev) => ({ ...prev, cronExpression: value }));
+        }}
         placeholder="*/5 * * * *"
         type="text"
         value={typeof config.cronExpression === 'string' ? config.cronExpression : ''}

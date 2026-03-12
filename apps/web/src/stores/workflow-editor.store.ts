@@ -319,7 +319,12 @@ interface WorkflowEditorStore {
     nodeType: EditorNodeType;
     position: { x: number; y: number };
   }) => 'DUPLICATE_TRIGGER' | null;
-  updateNodeConfig: (nodeId: string, config: Record<string, unknown>) => void;
+  updateNodeConfig: (
+    nodeId: string,
+    configOrUpdater:
+      | Record<string, unknown>
+      | ((prev: Record<string, unknown>) => Record<string, unknown>),
+  ) => void;
   updateNodeMeta: (nodeId: string, updates: NodeMetaUpdates) => void;
   removeNode: (nodeId: string) => void;
   validateWorkflow: () => WorkflowValidationError[];
@@ -426,19 +431,22 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
     return null;
   },
 
-  updateNodeConfig(nodeId, config) {
+  updateNodeConfig(nodeId, configOrUpdater) {
     set((state) => ({
-      nodes: state.nodes.map((node) =>
-        node.id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                config,
-              },
-            }
-          : node,
-      ),
+      nodes: state.nodes.map((node) => {
+        if (node.id !== nodeId) return node;
+        const nextConfig =
+          typeof configOrUpdater === 'function'
+            ? configOrUpdater(node.data.config)
+            : configOrUpdater;
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            config: nextConfig,
+          },
+        };
+      }),
     }));
   },
 

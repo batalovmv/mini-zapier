@@ -1,3 +1,5 @@
+import type { ConfigUpdater } from '../ConfigPanel';
+
 function toStringRecord(value: unknown): Record<string, string> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return {};
@@ -12,7 +14,7 @@ function toStringRecord(value: unknown): Record<string, string> {
 
 interface HttpRequestConfigProps {
   config: Record<string, unknown>;
-  onChange: (nextConfig: Record<string, unknown>) => void;
+  onChange: ConfigUpdater;
 }
 
 export function HttpRequestConfig({
@@ -29,23 +31,23 @@ export function HttpRequestConfig({
     const nextEntries = [...headerEntries];
     nextEntries[index] = [key, value];
 
-    onChange({
-      ...config,
+    onChange((prev) => ({
+      ...prev,
       headers: Object.fromEntries(
         nextEntries.filter(([entryKey]) => entryKey.trim().length > 0),
       ),
-    });
+    }));
   }
 
   function removeHeader(index: number) {
     const nextEntries = headerEntries.filter((_, entryIndex) => entryIndex !== index);
 
-    onChange({
-      ...config,
+    onChange((prev) => ({
+      ...prev,
       headers: Object.fromEntries(
         nextEntries.filter(([entryKey]) => entryKey.trim().length > 0),
       ),
-    });
+    }));
   }
 
   return (
@@ -55,12 +57,10 @@ export function HttpRequestConfig({
         <input
           aria-label="HTTP request URL"
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-          onChange={(event) =>
-            onChange({
-              ...config,
-              url: event.target.value,
-            })
-          }
+          onChange={(event) => {
+            const value = event.target.value;
+            onChange((prev) => ({ ...prev, url: value }));
+          }}
           placeholder="https://example.com/orders/{{input.id}}"
           type="text"
           value={typeof config.url === 'string' ? config.url : ''}
@@ -72,12 +72,10 @@ export function HttpRequestConfig({
         <select
           aria-label="HTTP request method"
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-          onChange={(event) =>
-            onChange({
-              ...config,
-              method: event.target.value,
-            })
-          }
+          onChange={(event) => {
+            const value = event.target.value;
+            onChange((prev) => ({ ...prev, method: value }));
+          }}
           value={typeof config.method === 'string' ? config.method : 'POST'}
         >
           <option value="GET">GET</option>
@@ -94,13 +92,13 @@ export function HttpRequestConfig({
           <button
             className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
             onClick={() =>
-              onChange({
-                ...config,
+              onChange((prev) => ({
+                ...prev,
                 headers: {
-                  ...headers,
+                  ...toStringRecord(prev.headers),
                   '': '',
                 },
-              })
+              }))
             }
             type="button"
           >
@@ -147,12 +145,10 @@ export function HttpRequestConfig({
         <textarea
           aria-label="HTTP request body"
           className="mt-2 min-h-36 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-          onChange={(event) =>
-            onChange({
-              ...config,
-              body: event.target.value,
-            })
-          }
+          onChange={(event) => {
+            const value = event.target.value;
+            onChange((prev) => ({ ...prev, body: value }));
+          }}
           placeholder='{"orderId":"{{input.id}}"}'
           value={typeof config.body === 'string' ? config.body : ''}
         />
