@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://155.212.172.136:3000/api/:path*"
+      "destination": "https://api.memelab.ru/mini-zapier/api/:path*"
     },
     {
       "source": "/(.*)",

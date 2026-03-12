@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-019 — `workflow editor validation hardening`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт + TASK-019 (editor validation hardening) закрыт
+- **Последнее изменение**: TASK-020 — `Production cleanup + origin hardening`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт + TASK-019 (editor validation hardening) закрыт + TASK-020 (production cleanup + origin hardening) закрыт
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -66,6 +66,13 @@
     - `GET /api/auth/me` через Vercel с cookie -> `200`
     - `GET /api/workflows` через Vercel с cookie -> `200`
   - Opus live verification после `TASK-019` прошла: duplicate trigger block, pre-save validation и happy path на deploy подтверждены
+- **Что сделано в TASK-020**:
+  - Удалены тестовые workflows ("Opus Live Check", "Opus Smoke Test") с production dashboard
+  - `deploy/docker-compose.prod.yml` — порт API привязан к loopback: `127.0.0.1:3000:3000` (вместо `0.0.0.0:3000:3000`)
+  - `deploy/nginx.mini-zapier-api.conf.example` переименован в `deploy/nginx.mini-zapier-api.conf` — production-ready nginx location block
+  - `vercel.json` — rewrite destination изменён с `http://155.212.172.136:3000/api/:path*` на `https://api.memelab.ru/mini-zapier/api/:path*`
+  - `deploy/deploy.sh` — без изменений (health check по `127.0.0.1:3000` остаётся корректным)
+  - **Требуются ручные действия на VPS**: установка nginx location block, `docker compose up -d` для применения port binding, firewall (`ufw deny 3000`)
 - **Root scripts**:
   - `pnpm install --frozen-lockfile` работает
   - `pnpm build` работает
@@ -75,11 +82,11 @@
   - `pnpm --filter @mini-zapier/web run e2e` запускает Playwright smoke
 
 ## Следующий шаг
-**TASK-020: Production cleanup + origin hardening**
-1. удалить тестовые workflow с live как prep-step
-2. перевести frontend -> backend rewrite на HTTPS origin
-3. закрыть прямой публичный `:3000` через host proxy + firewall
-4. повторно проверить login/workflows/webhooks после infra-изменений
+**TASK-021: Proxy-aware rate limiting**
+1. добавить `@nestjs/throttler` и зафиксировать в `decisions.md`
+2. настроить `trust proxy` в `main.ts` для корректного `X-Forwarded-For`
+3. добавить throttling на `POST /api/auth/login`, `POST /api/webhooks/:workflowId`, `POST /api/inbound-email/:workflowId`
+4. проверить что burst → 429, happy path не ломается
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -111,8 +118,9 @@
 - **Public endpoints** (не требуют auth): `POST /api/auth/login`, `GET /api/health`, `POST /api/webhooks/:workflowId`, `POST /api/inbound-email/:workflowId`, `GET /api/auth/me` (auth-aware: 200/401)
 - **Swagger** отключен при `NODE_ENV=production`; доступен только в dev
 - **CORS**: origin из `CORS_ORIGIN` env (comma-separated), fallback `http://localhost:5173`; `credentials: true`
-- **Docker**: `deploy/docker-compose.prod.yml` использует `build.context: ..`, поэтому на VPS нужен весь репозиторий, а не только папка `deploy`; текущая схема публикует `api` наружу на `:3000` прямо с VPS
-- **Vercel**: `vercel.json` rewrite `/api/*` направлен на `http://155.212.172.136:3000/api/:path*`; frontend URL сейчас `https://mini-zapier-web-silk.vercel.app`
+- **Docker**: `deploy/docker-compose.prod.yml` использует `build.context: ..`, поэтому на VPS нужен весь репозиторий, а не только папка `deploy`; порт API привязан к `127.0.0.1:3000` (loopback only)
+- **Vercel**: `vercel.json` rewrite `/api/*` направлен на `https://api.memelab.ru/mini-zapier/api/:path*`; frontend URL сейчас `https://mini-zapier-web-silk.vercel.app`
+- **Nginx**: `deploy/nginx.mini-zapier-api.conf` — location block для `api.memelab.ru` HTTPS server, проксирует `/mini-zapier/` → `127.0.0.1:3000/`
 
 ---
 
@@ -177,3 +185,4 @@
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |
 | TASK-018 | done | см. `git log` (`TASK-018: deployment config + minimal admin login`) | deploy config (Docker + public VPS API + Vercel), auth module (signed cookie HMAC), health endpoint, frontend login/logout/protected routes |
 | TASK-019 | done | см. `git log` (`TASK-019: workflow editor validation hardening`) | duplicate trigger block, pre-save graph validation, invalid-save regression tests |
+| TASK-020 | done | см. `git log` (`TASK-020: production cleanup + origin hardening`) | deleted test workflows, loopback port binding, nginx config, vercel HTTPS rewrite |

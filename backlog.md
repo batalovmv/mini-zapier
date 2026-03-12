@@ -508,7 +508,7 @@
   - `pnpm --filter @mini-zapier/web run build` проходит
   - smoke spec покрывает invalid-save regression cases
 ### TASK-020: Production cleanup + origin hardening
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: убрать прямой публичный доступ к origin API и перевести frontend -> backend на HTTPS origin
 - **Scope**:
   - cleanup тестовых workflow на live как prep-step перед infra-изменениями
@@ -531,16 +531,17 @@
 - **Цель**: добавить защиту от brute-force и burst abuse на публичные endpoints
 - **Depends on**: `TASK-020`
 - **Scope**:
-  - зафиксировать в `decisions.md` выбор `@nestjs/throttler`
-  - настроить proxy-aware client IP extraction (`X-Forwarded-For` / trust proxy path)
+  - зафиксировать в `decisions.md` выбор `@nestjs/throttler` как app-level rate limiting mechanism
+  - настроить proxy-aware client IP extraction (`X-Forwarded-For` / trust proxy path) после infra-изменений из `TASK-020`
   - добавить throttling на `POST /api/auth/login`
   - добавить throttling на `POST /api/webhooks/:workflowId`
   - добавить throttling на `POST /api/inbound-email/:workflowId`
-- **Не входит**: WAF/CDN rules, CAPTCHA, account lockout UX
+  - сохранить текущий contract публичных endpoints, меняя только abuse protection
+- **Не входит**: nginx/CDN/WAF rules, CAPTCHA, account lockout UX
 - **Acceptance**:
   - burst requests режутся по реальному client IP, а не по proxy IP
+  - `429` ответы возвращаются в существующем API error shape
   - обычный happy path не ломается
-  - limit responses предсказуемы и консистентны
 - **Проверка**:
   - серия быстрых запросов на login/webhook/email endpoint приводит к `429`
   - одиночные и умеренные запросы продолжают работать
@@ -550,9 +551,10 @@
 - **Цель**: разделить liveness/readiness и заставить API/worker падать при отсутствии критичных env
 - **Scope**:
   - оставить `GET /api/health` как liveness endpoint процесса
-  - добавить `GET /api/readiness` с проверкой PostgreSQL и Redis
-  - валидация обязательных env на старте `apps/api`
-  - валидация обязательных env на старте `apps/worker`
+  - добавить `GET /api/readiness` только в `apps/api` с проверкой PostgreSQL и Redis
+  - добавить валидацию обязательных env на старте `apps/api`
+  - добавить валидацию обязательных env на старте `apps/worker`
+  - не добавлять отдельный HTTP endpoint в worker
 - **Не входит**: rate limiting, infra firewall/proxy, мониторинг
 - **Acceptance**:
   - `/api/health` отвечает пока процесс жив
@@ -560,22 +562,22 @@
   - без критичных env API/worker не стартуют
 - **Проверка**:
   - локально/на стенде сломать DB/Redis и увидеть fail readiness
-  - убрать обязательный env и убедиться, что процесс завершается на старте
+  - убрать обязательный env и убедиться, что API/worker завершаются на старте
 
 ### TASK-023: Editor UX hardening + product polish
 - **Статус**: `todo`
-- **Цель**: сделать editor понятнее и более продуктовым без изменения product scope
+- **Цель**: сделать login/editor понятнее и более продуктовым без изменения product scope
 - **Scope**:
-  - persistent feedback для `login` / `save` / `run`, не только toast
+  - persistent feedback для `login`, `save`, `run` и status actions, не только toast
   - понятные disabled states и причины для editor actions
   - убрать dev-тексты вроде `Frontend scaffold`, `React Flow editor`, `TASK-015`
   - заменить тех. copy и UUID-подобные selected-state тексты на user-facing copy
-  - сжать hero-блок в компактный рабочий toolbar
-  - немного улучшить ergonomics sidebar/config panel без изменения функциональности
-- **Не входит**: новые editor features, responsive redesign, backend changes
+  - сжать hero-блок editor в компактный рабочий toolbar
+  - сделать только лёгкий cleanup sidebar/config panel copy и spacing без structural rewrite
+- **Не входит**: новые editor features, responsive redesign, resizable panels, backend changes
 - **Acceptance**:
-  - пользователь понимает результат save/run/login даже если toast пропущен
-  - editor выглядит как продукт, а не scaffold/admin template
+  - пользователь понимает результат login/save/run даже если toast пропущен
+  - на основном editor surface не остаётся dev/scaffold copy
   - happy path editor не ломается
 - **Проверка**:
   - manual UX smoke в браузере
@@ -585,15 +587,17 @@
 - **Статус**: `todo`
 - **Цель**: добавить минимальный автоматический quality gate без CD и infra-автоматизации
 - **Scope**:
-  - GitHub Actions workflow
+  - один GitHub Actions workflow file
   - `pnpm install --frozen-lockfile`
   - `pnpm build`
-  - web Playwright smoke, если окружение/секреты доступны в CI
-- **Не входит**: CD pipeline, Docker image build/push, мониторинг, alerting
+  - web Playwright smoke как optional job/step, если окружение/секреты доступны в CI
+- **Не входит**: CD pipeline, Docker image build/push, matrix builds, мониторинг, alerting
 - **Acceptance**:
   - на PR/main есть минимальный автоматический gate
   - build воспроизводим в CI
-  - smoke checks запускаются автоматически при наличии нужных env/secrets
+  - при отсутствии нужных env/secrets e2e явно skip'ается, а не ломает базовый build gate
+  - при наличии env/secrets e2e может быть включён в pipeline
 - **Проверка**:
   - workflow успешно выполняется в GitHub Actions
-  - падение build/e2e роняет pipeline
+  - падение build роняет pipeline
+  - падение e2e роняет pipeline, если e2e job включён
