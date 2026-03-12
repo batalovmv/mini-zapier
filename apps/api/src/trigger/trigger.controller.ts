@@ -14,7 +14,9 @@ import {
   Res,
   UnauthorizedException,
   UnprocessableEntityException,
+  UseGuards,
 } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import {
   ApiAcceptedResponse,
   ApiBadRequestResponse,
@@ -73,6 +75,8 @@ export class TriggerController {
   ) {}
 
   @Post('webhooks/:workflowId')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ trigger: { limit: 30, ttl: 60_000 } })
   @ApiOperation({ summary: 'Handle incoming webhook trigger' })
   @ApiParam({ name: 'workflowId', description: 'Workflow id' })
   @ApiAcceptedResponse({
@@ -148,6 +152,8 @@ export class TriggerController {
   }
 
   @Post('inbound-email/:workflowId')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ trigger: { limit: 30, ttl: 60_000 } })
   @ApiOperation({ summary: 'Handle incoming email trigger' })
   @ApiParam({ name: 'workflowId', description: 'Workflow id' })
   @ApiAcceptedResponse({

@@ -20,6 +20,10 @@ async function bootstrap(): Promise<void> {
   const port = Number(process.env.PORT ?? '3000');
   const isProduction = process.env.NODE_ENV === 'production';
 
+  // Trust first proxy (nginx) for correct client IP via X-Forwarded-For
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.set('trust proxy', 1);
+
   app.use(cookieParser());
 
   app.useGlobalPipes(

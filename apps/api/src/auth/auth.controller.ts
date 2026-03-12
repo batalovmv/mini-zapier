@@ -8,8 +8,10 @@ import {
   Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 import { AuthService } from './auth.service';
 import { Public } from './public.decorator';
@@ -44,6 +46,8 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ login: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'Admin login' })
   login(
     @Body() body: LoginBody,

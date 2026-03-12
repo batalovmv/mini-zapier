@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 import { AuthModule } from './auth/auth.module';
 import { ConnectionModule } from './connection/connection.module';
@@ -12,6 +13,18 @@ import { WorkflowModule } from './workflow/workflow.module';
 @Module({
   imports: [
     PrismaModule,
+    ThrottlerModule.forRoot([
+      {
+        name: 'login',
+        ttl: 60_000,
+        limit: 5,
+      },
+      {
+        name: 'trigger',
+        ttl: 60_000,
+        limit: 30,
+      },
+    ]),
     AuthModule,
     ConnectionModule,
     WorkflowModule,
