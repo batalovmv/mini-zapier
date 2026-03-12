@@ -115,7 +115,7 @@ export function WorkflowEditorPage() {
       loadWorkflow(workflow);
       toast.success(
         workflowId === null
-          ? `Workflow created: ${workflow.id}.`
+          ? 'Workflow created successfully.'
           : `Workflow saved. Version ${workflow.version}.`,
       );
 
@@ -167,7 +167,7 @@ export function WorkflowEditorPage() {
     try {
       const response = await executeWorkflow(workflowId, {});
 
-      toast.success(`Execution queued: ${response.executionId}.`);
+      toast.success('Execution started.');
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     } finally {
@@ -178,42 +178,18 @@ export function WorkflowEditorPage() {
   return (
     <div className="space-y-8">
       <section className="app-panel overflow-hidden">
-        <div className="border-b border-slate-900/10 px-8 py-8">
-          <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-            <div>
-              <p className="muted-label">Workflow Editor</p>
-              <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-900">
-                Visual React Flow editor for linear workflows.
-              </h1>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">
-                Drag nodes from the sidebar, connect them in a single chain and
-                configure each step from the right panel.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <span className={`status-pill ${getStatusClasses(workflowStatus)}`}>
-                {workflowStatus}
-              </span>
-              <span className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
-                {workflowVersion === null ? 'Unsaved' : `v${workflowVersion}`}
-              </span>
-              <Link
-                className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
-                to="/"
-              >
-                Back to dashboard
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-4 px-8 py-6 xl:flex-row xl:items-end xl:justify-between">
-          <div className="min-w-0 flex-1">
-            <label className="block">
+        <div className="flex flex-col gap-4 px-6 py-5 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex items-center gap-4">
+            <Link
+              className="rounded-full border border-slate-900/10 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+              to="/"
+            >
+              &larr; Back
+            </Link>
+            <label className="block min-w-0 flex-1">
               <span className="muted-label">Workflow name</span>
               <input
-                className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-lg font-semibold text-slate-900 outline-none transition focus:border-amber-500"
+                className="mt-1 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-2.5 text-base font-semibold text-slate-900 outline-none transition focus:border-amber-500"
                 data-testid="workflow-name-input"
                 onChange={(event) => setWorkflowName(event.target.value)}
                 placeholder="Untitled workflow"
@@ -223,9 +199,16 @@ export function WorkflowEditorPage() {
             </label>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className={`status-pill ${getStatusClasses(workflowStatus)}`}>
+              {workflowStatus ?? 'DRAFT'}
+            </span>
+            <span className="rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700">
+              {workflowVersion === null ? 'Unsaved' : `v${workflowVersion}`}
+            </span>
+
             <button
-              className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
               data-testid="save-workflow-button"
               disabled={saving}
               onClick={() => void handleSave()}
@@ -234,10 +217,11 @@ export function WorkflowEditorPage() {
               {saving ? 'Saving...' : 'Save'}
             </button>
             <button
-              className="rounded-full border border-slate-900/10 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+              className="rounded-full border border-slate-900/10 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
               data-testid="toggle-workflow-status-button"
               disabled={!workflowId || statusUpdating}
               onClick={() => void handleToggleStatus()}
+              title={!workflowId ? 'Save the workflow first' : undefined}
               type="button"
             >
               {statusUpdating
@@ -247,10 +231,11 @@ export function WorkflowEditorPage() {
                   : 'Activate'}
             </button>
             <button
-              className="rounded-full border border-slate-900/10 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+              className="rounded-full border border-slate-900/10 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
               data-testid="run-workflow-button"
               disabled={!workflowId || running}
               onClick={() => void handleRun()}
+              title={!workflowId ? 'Save the workflow first' : undefined}
               type="button"
             >
               {running ? 'Running...' : 'Run'}
@@ -259,7 +244,7 @@ export function WorkflowEditorPage() {
         </div>
 
         {pageError ? (
-          <div className="px-8 pb-8">
+          <div className="px-6 pb-5">
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
               {pageError}
             </div>

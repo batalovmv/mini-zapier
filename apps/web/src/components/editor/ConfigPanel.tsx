@@ -195,14 +195,8 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
             Select a node
           </h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            Click a node on the canvas to configure it. Each node renders the
-            form defined in `TASK-015`.
+            Select a node on the canvas to configure it.
           </p>
-        </div>
-
-        <div className="border-t border-slate-900/10 bg-slate-50 px-5 py-4 text-sm text-slate-600">
-          Supported forms: Webhook, Cron, Email Trigger, HTTP Request, Email,
-          Telegram, DB Query, Data Transform.
         </div>
       </aside>
     );

@@ -11,6 +11,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -22,11 +23,14 @@ export function LoginPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setLoginError(null);
     try {
       await login(username, password);
       navigate('/', { replace: true });
     } catch (err) {
-      toast.error(getApiErrorMessage(err));
+      const message = getApiErrorMessage(err);
+      setLoginError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -61,7 +65,7 @@ export function LoginPage() {
               type="text"
               required
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => { setUsername(e.target.value); setLoginError(null); }}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
               autoFocus
             />
@@ -76,10 +80,16 @@ export function LoginPage() {
               type="password"
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); setLoginError(null); }}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
             />
           </div>
+
+          {loginError ? (
+            <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              {loginError}
+            </div>
+          ) : null}
 
           <button
             type="submit"

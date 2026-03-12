@@ -30,7 +30,7 @@ export function NodeSidebar() {
           Drag into canvas
         </h2>
         <p className="mt-3 text-sm leading-6 text-slate-600">
-          TASK-015 scope stays linear: one trigger, then a single action chain.
+          Drag a node onto the canvas to add it.
         </p>
       </div>
 

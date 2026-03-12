@@ -135,14 +135,11 @@ function FlowCanvasInner() {
     <div className="app-panel relative h-[780px] overflow-hidden 2xl:h-[820px]">
       <div className="border-b border-slate-900/10 px-5 py-4">
         <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="muted-label">Workflow Canvas</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
-              React Flow editor
-            </h2>
-          </div>
+          <p className="muted-label">Workflow Canvas</p>
           <div className="text-sm text-slate-500">
-            {selectedNodeId ? `Selected: ${selectedNodeId}` : 'Select a node to edit'}
+            {selectedNodeId
+              ? `Editing: ${nodes.find((n) => n.id === selectedNodeId)?.data?.label ?? 'Node'}`
+              : 'Select a node to edit'}
           </div>
         </div>
       </div>

@@ -106,7 +106,7 @@ export function DashboardPage() {
       await refreshDashboardData();
 
       toast.success(
-        `Workflow "${workflow.name}" queued. Execution ${response.executionId} created.`,
+        `Workflow "${workflow.name}" execution started.`,
       );
     } catch (error) {
       toast.error(getApiErrorMessage(error));
@@ -186,8 +186,7 @@ export function DashboardPage() {
                 Operate workflows, monitor execution health and launch manual runs.
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-                The dashboard stays within TASK-014 scope: real stats, workflow
-                cards and CRUD actions backed by the existing API.
+                Monitor workflow health, launch manual runs and manage your automations.
               </p>
             </div>
 

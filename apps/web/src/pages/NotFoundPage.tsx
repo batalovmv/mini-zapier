@@ -8,8 +8,7 @@ export function NotFoundPage() {
         Route not found
       </h1>
       <p className="mt-4 max-w-xl text-base leading-7 text-slate-600">
-        This frontend slice only registers the dashboard, editor placeholder and
-        history placeholder routes.
+        The page you're looking for doesn't exist.
       </p>
       <Link
         className="mt-8 inline-flex rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"

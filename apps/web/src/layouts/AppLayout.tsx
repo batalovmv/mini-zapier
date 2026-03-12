@@ -53,7 +53,7 @@ export function AppLayout() {
                 Mini-Zapier
               </span>
               <span className="block text-sm text-slate-500">
-                Frontend scaffold
+                Workflow Automation
               </span>
             </span>
           </NavLink>

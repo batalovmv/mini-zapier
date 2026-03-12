@@ -228,26 +228,8 @@ export function ExecutionHistoryPage() {
             <div>
               <p className="muted-label">Execution History</p>
               <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-900">
-                Review workflow runs and inspect step-by-step payloads.
+                Execution History
               </h1>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">
-                This page stays within TASK-016 scope: execution table, step log
-                timeline and polling every 5 seconds while a run is still active.
-              </p>
-            </div>
-
-            <div className="space-y-3 rounded-3xl border border-slate-900/10 bg-white/80 px-5 py-4 shadow-panel">
-              <div>
-                <p className="muted-label">Workflow id</p>
-                <p className="mt-2 break-all text-sm font-semibold text-slate-900">
-                  {workflowId}
-                </p>
-              </div>
-              <p className="text-sm text-slate-500">
-                {hasRunningExecutions
-                  ? 'Polling every 5 seconds while executions are RUNNING.'
-                  : 'Polling stays idle until a RUNNING execution appears.'}
-              </p>
             </div>
           </div>
         </div>
