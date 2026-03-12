@@ -36,7 +36,8 @@ jobs:
     needs: build
     if: >-
       github.event_name == 'push' &&
-      vars.MINI_ZAPIER_E2E_BASE_URL != ''
+      vars.MINI_ZAPIER_E2E_BASE_URL != '' &&
+      secrets.MINI_ZAPIER_E2E_PASSWORD != ''
     steps:
       - uses: actions/checkout@v4
 

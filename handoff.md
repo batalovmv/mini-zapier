@@ -228,5 +228,5 @@
 | TASK-021 follow-up | done | см. `git log` (`TASK-021: sync throttler version spec`) | package.json + pnpm-lock specifier synced to `@nestjs/throttler@^6.5.0` |
 | TASK-022 | done | 1c19f92 | liveness/readiness endpoints, env fail-fast for api+worker, ioredis readiness check, deployed+verified |
 | TASK-023 | done | 2a624c1 | remove dev copy, compact toolbar, toast cleanup, inline login error, node label in canvas |
-| TASK-024 | done | — | GitHub Actions CI: build gate + optional e2e smoke |
+| TASK-024 | done | 9c01091, 2ce1a17 | GitHub Actions CI: build gate + optional e2e smoke |
 
