@@ -28,7 +28,7 @@ export function DataTransformConfig({
       ? Object.entries(mapping)
       : [['', '']];
 
-  function updateMapping(index: number, key: string, value: string) {
+  function updateMappingKey(index: number, newKey: string) {
     onChange((prev) => {
       const currentMapping = toStringRecord(prev.mapping);
       const entries =
@@ -36,7 +36,26 @@ export function DataTransformConfig({
           ? Object.entries(currentMapping)
           : [['', '']];
       const nextEntries = [...entries];
-      nextEntries[index] = [key, value];
+      nextEntries[index] = [newKey, entries[index]?.[1] ?? ''];
+      return {
+        ...prev,
+        mode: 'mapping',
+        mapping: Object.fromEntries(
+          nextEntries.filter(([k]) => k.trim().length > 0),
+        ),
+      };
+    });
+  }
+
+  function updateMappingValue(index: number, newValue: string) {
+    onChange((prev) => {
+      const currentMapping = toStringRecord(prev.mapping);
+      const entries =
+        Object.entries(currentMapping).length > 0
+          ? Object.entries(currentMapping)
+          : [['', '']];
+      const nextEntries = [...entries];
+      nextEntries[index] = [entries[index]?.[0] ?? '', newValue];
       return {
         ...prev,
         mode: 'mapping',
@@ -133,7 +152,7 @@ export function DataTransformConfig({
                   aria-label={`Mapping key ${index + 1}`}
                   className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) =>
-                    updateMapping(index, event.target.value, value)
+                    updateMappingKey(index, event.target.value)
                   }
                   placeholder="Field"
                   type="text"
@@ -143,7 +162,7 @@ export function DataTransformConfig({
                   aria-label={`Mapping value ${index + 1}`}
                   className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) =>
-                    updateMapping(index, key, event.target.value)
+                    updateMappingValue(index, event.target.value)
                   }
                   placeholder="{{input.field}}"
                   type="text"

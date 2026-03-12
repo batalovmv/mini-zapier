@@ -27,7 +27,7 @@ export function HttpRequestConfig({
       ? Object.entries(headers)
       : [['', '']];
 
-  function updateHeader(index: number, key: string, value: string) {
+  function updateHeaderKey(index: number, newKey: string) {
     onChange((prev) => {
       const currentHeaders = toStringRecord(prev.headers);
       const entries =
@@ -35,7 +35,25 @@ export function HttpRequestConfig({
           ? Object.entries(currentHeaders)
           : [['', '']];
       const nextEntries = [...entries];
-      nextEntries[index] = [key, value];
+      nextEntries[index] = [newKey, entries[index]?.[1] ?? ''];
+      return {
+        ...prev,
+        headers: Object.fromEntries(
+          nextEntries.filter(([k]) => k.trim().length > 0),
+        ),
+      };
+    });
+  }
+
+  function updateHeaderValue(index: number, newValue: string) {
+    onChange((prev) => {
+      const currentHeaders = toStringRecord(prev.headers);
+      const entries =
+        Object.entries(currentHeaders).length > 0
+          ? Object.entries(currentHeaders)
+          : [['', '']];
+      const nextEntries = [...entries];
+      nextEntries[index] = [entries[index]?.[0] ?? '', newValue];
       return {
         ...prev,
         headers: Object.fromEntries(
@@ -127,7 +145,7 @@ export function HttpRequestConfig({
                 <input
                   aria-label={`Header key ${index + 1}`}
                   className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-                  onChange={(event) => updateHeader(index, event.target.value, value)}
+                  onChange={(event) => updateHeaderKey(index, event.target.value)}
                   placeholder="Header"
                 type="text"
                 value={key}
@@ -135,7 +153,7 @@ export function HttpRequestConfig({
                 <input
                   aria-label={`Header value ${index + 1}`}
                   className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-                  onChange={(event) => updateHeader(index, key, event.target.value)}
+                  onChange={(event) => updateHeaderValue(index, event.target.value)}
                   placeholder="Value"
                 type="text"
                 value={value}
