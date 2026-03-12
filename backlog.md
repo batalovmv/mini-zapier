@@ -547,7 +547,7 @@
   - одиночные и умеренные запросы продолжают работать
 
 ### TASK-022: Liveness, readiness, env fail-fast
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: разделить liveness/readiness и заставить API/worker падать при отсутствии критичных env
 - **Scope**:
   - оставить `GET /api/health` как liveness endpoint процесса

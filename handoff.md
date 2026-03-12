@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-021 follow-up — `throttler spec sync`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт + TASK-019 (editor validation hardening) закрыт + TASK-020 (production cleanup + origin hardening) закрыт + TASK-021 (proxy-aware rate limiting) закрыт
+- **Последнее изменение**: TASK-022 — `liveness, readiness, env fail-fast`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт + TASK-019 (editor validation hardening) закрыт + TASK-020 (production cleanup + origin hardening) закрыт + TASK-021 (proxy-aware rate limiting) закрыт + TASK-022 (liveness, readiness, env fail-fast) закрыт
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -78,6 +78,17 @@
     - raw `:3000` извне недоступен
     - login через Vercel работает, cookie выставляется
     - dashboard в браузере загружается, production dashboard чистый (`0 workflows`)
+- **Что сделано в TASK-022**:
+  - `apps/api/src/common/validate-env.ts` — fail-fast валидация env (`DATABASE_URL`, `APP_ENCRYPTION_KEY`, `AUTH_PASSWORD`, `AUTH_SESSION_SECRET`) до `NestFactory.create()`
+  - `apps/worker/src/common/validate-env.ts` — fail-fast валидация env (`DATABASE_URL`, `APP_ENCRYPTION_KEY`) до `NestFactory.createApplicationContext()`
+  - `apps/api/src/main.ts` — вызов `validateApiEnv()` перед bootstrap
+  - `apps/worker/src/main.ts` — вызов `validateWorkerEnv()` перед bootstrap
+  - `apps/api/src/health/health.controller.ts` — `GET /api/readiness` с проверкой PostgreSQL (Prisma `SELECT 1`) и Redis (ioredis one-shot client, 3s timeout)
+  - `apps/api/package.json` — добавлен `ioredis@^5.9.0` как прямая зависимость
+  - Задеплоено и проверено на VPS:
+    - `GET /api/health` → `200 {"status":"ok"}`
+    - `GET /api/readiness` → `200 {"status":"ready","checks":{"postgres":"ok","redis":"ok"}}`
+    - Worker стартует с env validation
 - **Что сделано в TASK-021**:
   - `@nestjs/throttler@^6.5.0` добавлен в `apps/api/package.json`
   - follow-up: specifier в `apps/api/package.json` и `pnpm-lock.yaml` синхронизирован и зафиксирован как `^6.5.0`
@@ -96,10 +107,7 @@
   - `pnpm --filter @mini-zapier/web run e2e` запускает Playwright smoke
 
 ## Следующий шаг
-**TASK-022: Liveness, readiness, env fail-fast**
-1. оставить `GET /api/health` как liveness
-2. добавить `GET /api/readiness` с проверкой PostgreSQL и Redis
-3. добавить валидацию обязательных env на старте `apps/api` и `apps/worker`
+**TASK-023: Editor UX hardening + product polish**
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -128,7 +136,7 @@
 - После `pnpm install --prefer-offline` `pnpm-lock.yaml` снова является источником истины для workspace; отдельный npm-installed state для `apps/web` больше не нужен
 - После следующего изменения `apps/api/prisma/schema.prisma` запускай `pnpm --filter @mini-zapier/api run prisma:migrate -- --name <migration_name>`
 - **Auth**: signed cookie HMAC-SHA256, env vars: `AUTH_USERNAME`, `AUTH_PASSWORD`, `AUTH_SESSION_SECRET`; cookie name `mz_session`, Max-Age 7 дней
-- **Public endpoints** (не требуют auth): `POST /api/auth/login`, `GET /api/health`, `POST /api/webhooks/:workflowId`, `POST /api/inbound-email/:workflowId`, `GET /api/auth/me` (auth-aware: 200/401)
+- **Public endpoints** (не требуют auth): `POST /api/auth/login`, `GET /api/health`, `GET /api/readiness`, `POST /api/webhooks/:workflowId`, `POST /api/inbound-email/:workflowId`, `GET /api/auth/me` (auth-aware: 200/401)
 - **Swagger** отключен при `NODE_ENV=production`; доступен только в dev
 - **CORS**: origin из `CORS_ORIGIN` env (comma-separated), fallback `http://localhost:5173`; `credentials: true`
 - **Docker**: `deploy/docker-compose.prod.yml` использует `build.context: ..`, поэтому на VPS нужен весь репозиторий, а не только папка `deploy`; порт API привязан к `127.0.0.1:3000` (loopback only) и не доступен извне
@@ -201,4 +209,5 @@
 | TASK-020 | done | см. `git log` (`TASK-020: production cleanup + origin hardening`) | deleted test workflows, loopback port binding, nginx config, vercel HTTPS rewrite |
 | TASK-021 | done | см. `git log` (`TASK-021: proxy-aware rate limiting`) | @nestjs/throttler, trust proxy, login 5/60s, trigger 30/60s, deployed+verified |
 | TASK-021 follow-up | done | см. `git log` (`TASK-021: sync throttler version spec`) | package.json + pnpm-lock specifier synced to `@nestjs/throttler@^6.5.0` |
+| TASK-022 | done | 1c19f92 | liveness/readiness endpoints, env fail-fast for api+worker, ioredis readiness check, deployed+verified |
 
