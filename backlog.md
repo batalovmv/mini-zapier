@@ -565,7 +565,7 @@
   - убрать обязательный env и убедиться, что API/worker завершаются на старте
 
 ### TASK-023: Editor UX hardening + product polish
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: сделать login/editor понятнее и более продуктовым без изменения product scope
 - **Scope**:
   - persistent feedback для `login`, `save`, `run` и status actions, не только toast

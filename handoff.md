@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-022 — `liveness, readiness, env fail-fast`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт + TASK-019 (editor validation hardening) закрыт + TASK-020 (production cleanup + origin hardening) закрыт + TASK-021 (proxy-aware rate limiting) закрыт + TASK-022 (liveness, readiness, env fail-fast) закрыт
+- **Последнее изменение**: TASK-023 — `editor UX hardening + product polish`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт + TASK-019 (editor validation hardening) закрыт + TASK-020 (production cleanup + origin hardening) закрыт + TASK-021 (proxy-aware rate limiting) закрыт + TASK-022 (liveness, readiness, env fail-fast) закрыт + TASK-023 (editor UX hardening) закрыт
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -78,6 +78,16 @@
     - raw `:3000` извне недоступен
     - login через Vercel работает, cookie выставляется
     - dashboard в браузере загружается, production dashboard чистый (`0 workflows`)
+- **Что сделано в TASK-023**:
+  - Удалён dev/scaffold copy из 9 файлов: `"Frontend scaffold"`, `"React Flow editor"`, `"TASK-014/015/016"` references, raw UUID в selected-state
+  - `WorkflowEditorPage.tsx` — compact toolbar: single row (← Back | name input | status pill + version | Save/Activate/Run)
+  - `WorkflowEditorPage.tsx` — toast cleanup: `"Workflow created successfully."` вместо raw ID, `"Execution started."` вместо raw executionId
+  - `DashboardPage.tsx` — toast cleanup: `"execution started"` вместо raw executionId
+  - `FlowCanvas.tsx` — `"Editing: HTTP Request"` вместо raw UUID selectedNodeId
+  - `LoginPage.tsx` — inline error с очисткой при изменении полей
+  - Disabled Activate/Run кнопки получили `title="Save the workflow first"`
+  - `NotFoundPage.tsx` — user-facing 404 copy
+  - `NodeSidebar.tsx`, `ConfigPanel.tsx` — user-facing описания вместо TASK refs
 - **Что сделано в TASK-022**:
   - `apps/api/src/common/validate-env.ts` — fail-fast валидация env (`DATABASE_URL`, `APP_ENCRYPTION_KEY`, `AUTH_PASSWORD`, `AUTH_SESSION_SECRET`) до `NestFactory.create()`
   - `apps/worker/src/common/validate-env.ts` — fail-fast валидация env (`DATABASE_URL`, `APP_ENCRYPTION_KEY`) до `NestFactory.createApplicationContext()`
@@ -107,7 +117,7 @@
   - `pnpm --filter @mini-zapier/web run e2e` запускает Playwright smoke
 
 ## Следующий шаг
-**TASK-023: Editor UX hardening + product polish**
+**TASK-024: CI quality gate**
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -210,4 +220,5 @@
 | TASK-021 | done | см. `git log` (`TASK-021: proxy-aware rate limiting`) | @nestjs/throttler, trust proxy, login 5/60s, trigger 30/60s, deployed+verified |
 | TASK-021 follow-up | done | см. `git log` (`TASK-021: sync throttler version spec`) | package.json + pnpm-lock specifier synced to `@nestjs/throttler@^6.5.0` |
 | TASK-022 | done | 1c19f92 | liveness/readiness endpoints, env fail-fast for api+worker, ioredis readiness check, deployed+verified |
+| TASK-023 | done | 2a624c1 | remove dev copy, compact toolbar, toast cleanup, inline login error, node label in canvas |
 
