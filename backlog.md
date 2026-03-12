@@ -507,3 +507,93 @@
   - save с disconnected chain блокируется до API request
   - `pnpm --filter @mini-zapier/web run build` проходит
   - smoke spec покрывает invalid-save regression cases
+### TASK-020: Production cleanup + origin hardening
+- **Статус**: `todo`
+- **Цель**: убрать прямой публичный доступ к origin API и перевести frontend -> backend на HTTPS origin
+- **Scope**:
+  - cleanup тестовых workflow на live как prep-step перед infra-изменениями
+  - настроить HTTPS origin через host reverse proxy (`nginx`/`caddy`) на VPS
+  - перевести `vercel.json` rewrite `/api/*` на `https://` origin
+  - закрыть наружный `:3000` firewall'ом / host-level policy
+  - убедиться, что login/workflows/webhooks продолжают работать через frontend URL
+- **Не входит**: rate limiting, readiness/env validation, UI changes
+- **Acceptance**:
+  - прямой `http://<ip>:3000/api/health` недоступен извне
+  - `https://<frontend>/api/health` работает через rewrite
+  - login/workflows/webhooks не ломаются после смены origin
+- **Проверка**:
+  - curl прямого `:3000` с внешней машины -> fail/timeout
+  - curl `https://mini-zapier-web-silk.vercel.app/api/health` -> `200`
+  - smoke login + GET `/api/workflows` через frontend origin
+
+### TASK-021: Proxy-aware rate limiting
+- **Статус**: `todo`
+- **Цель**: добавить защиту от brute-force и burst abuse на публичные endpoints
+- **Depends on**: `TASK-020`
+- **Scope**:
+  - зафиксировать в `decisions.md` выбор `@nestjs/throttler`
+  - настроить proxy-aware client IP extraction (`X-Forwarded-For` / trust proxy path)
+  - добавить throttling на `POST /api/auth/login`
+  - добавить throttling на `POST /api/webhooks/:workflowId`
+  - добавить throttling на `POST /api/inbound-email/:workflowId`
+- **Не входит**: WAF/CDN rules, CAPTCHA, account lockout UX
+- **Acceptance**:
+  - burst requests режутся по реальному client IP, а не по proxy IP
+  - обычный happy path не ломается
+  - limit responses предсказуемы и консистентны
+- **Проверка**:
+  - серия быстрых запросов на login/webhook/email endpoint приводит к `429`
+  - одиночные и умеренные запросы продолжают работать
+
+### TASK-022: Liveness, readiness, env fail-fast
+- **Статус**: `todo`
+- **Цель**: разделить liveness/readiness и заставить API/worker падать при отсутствии критичных env
+- **Scope**:
+  - оставить `GET /api/health` как liveness endpoint процесса
+  - добавить `GET /api/readiness` с проверкой PostgreSQL и Redis
+  - валидация обязательных env на старте `apps/api`
+  - валидация обязательных env на старте `apps/worker`
+- **Не входит**: rate limiting, infra firewall/proxy, мониторинг
+- **Acceptance**:
+  - `/api/health` отвечает пока процесс жив
+  - `/api/readiness` падает при недоступной DB или Redis
+  - без критичных env API/worker не стартуют
+- **Проверка**:
+  - локально/на стенде сломать DB/Redis и увидеть fail readiness
+  - убрать обязательный env и убедиться, что процесс завершается на старте
+
+### TASK-023: Editor UX hardening + product polish
+- **Статус**: `todo`
+- **Цель**: сделать editor понятнее и более продуктовым без изменения product scope
+- **Scope**:
+  - persistent feedback для `login` / `save` / `run`, не только toast
+  - понятные disabled states и причины для editor actions
+  - убрать dev-тексты вроде `Frontend scaffold`, `React Flow editor`, `TASK-015`
+  - заменить тех. copy и UUID-подобные selected-state тексты на user-facing copy
+  - сжать hero-блок в компактный рабочий toolbar
+  - немного улучшить ergonomics sidebar/config panel без изменения функциональности
+- **Не входит**: новые editor features, responsive redesign, backend changes
+- **Acceptance**:
+  - пользователь понимает результат save/run/login даже если toast пропущен
+  - editor выглядит как продукт, а не scaffold/admin template
+  - happy path editor не ломается
+- **Проверка**:
+  - manual UX smoke в браузере
+  - `pnpm --filter @mini-zapier/web run build`
+
+### TASK-024: CI quality gate
+- **Статус**: `todo`
+- **Цель**: добавить минимальный автоматический quality gate без CD и infra-автоматизации
+- **Scope**:
+  - GitHub Actions workflow
+  - `pnpm install --frozen-lockfile`
+  - `pnpm build`
+  - web Playwright smoke, если окружение/секреты доступны в CI
+- **Не входит**: CD pipeline, Docker image build/push, мониторинг, alerting
+- **Acceptance**:
+  - на PR/main есть минимальный автоматический gate
+  - build воспроизводим в CI
+  - smoke checks запускаются автоматически при наличии нужных env/secrets
+- **Проверка**:
+  - workflow успешно выполняется в GitHub Actions
+  - падение build/e2e роняет pipeline

@@ -48,6 +48,7 @@
   - **Проверки TASK-019**:
     - `pnpm --filter @mini-zapier/web run build`
     - `pnpm --filter @mini-zapier/web run e2e` — не прошёл запуск на этой машине, потому что отсутствует env `MINI_ZAPIER_E2E_PASSWORD`
+    - live verification на `https://mini-zapier-web-silk.vercel.app` — `PASS` по сценариям: duplicate trigger block, lone trigger pre-save validation, disconnected nodes pre-save validation, happy path save
 - **Что сломано**:
   - Критичных известных поломок не выявлено
 - **Фактический deploy status**:
@@ -64,6 +65,7 @@
     - `POST /api/auth/login` через Vercel -> `200` + `Set-Cookie`
     - `GET /api/auth/me` через Vercel с cookie -> `200`
     - `GET /api/workflows` через Vercel с cookie -> `200`
+  - Opus live verification после `TASK-019` прошла: duplicate trigger block, pre-save validation и happy path на deploy подтверждены
 - **Root scripts**:
   - `pnpm install --frozen-lockfile` работает
   - `pnpm build` работает
@@ -73,13 +75,14 @@
   - `pnpm --filter @mini-zapier/web run e2e` запускает Playwright smoke
 
 ## Следующий шаг
-**Deploy + live verification для TASK-019**: после выката повторно проверить редактор на живом стенде и только затем возвращаться к UX-polish:
-1. duplicate trigger block
-2. pre-save validation для lone trigger и disconnected chains
-3. повторный manual UX smoke config panel / canvas
+**TASK-020: Production cleanup + origin hardening**
+1. удалить тестовые workflow с live как prep-step
+2. перевести frontend -> backend rewrite на HTTPS origin
+3. закрыть прямой публичный `:3000` через host proxy + firewall
+4. повторно проверить login/workflows/webhooks после infra-изменений
 
 ## Блокеры
-- На текущей машине не задан env MINI_ZAPIER_E2E_PASSWORD, поэтому Playwright smoke после TASK-019 не удалось прогнать до логина.
+- На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
 
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`), а порт `5173` — внешним Vite-процессом (`D:\TZ\Finance_tracker\client`). Для smoke-проверок использовались `3001`, `5174`, `5175`, `5176`, `5177`, `5178`.
 - `apps/web/package.json` использует `"@mini-zapier/shared": "file:../../packages/shared"` как обход зависающего `pnpm install` и несовместимости `npm` с `workspace:*`.
