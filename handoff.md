@@ -57,10 +57,11 @@
   - VPS checkout: `/opt/mini-zapier`
   - production env создан на VPS: `/opt/mini-zapier/deploy/.env`
   - Stack на VPS поднят: `postgres`, `redis`, `api`, `worker`
-  - Public backend path: `http://155.212.172.136:3000/api/*`
+  - Public backend path: `https://api.memelab.ru/mini-zapier/api/*`
   - Smoke прошёл:
-    - `http://155.212.172.136:3000/api/health` -> `200`
-    - `https://mini-zapier-web-silk.vercel.app/api/health` -> `200`
+    - `http://155.212.172.136:3000/api/health` -> timeout from external network
+    - `https://api.memelab.ru/mini-zapier/api/health` -> `200` `{"status":"ok"}`
+    - `https://mini-zapier-web-silk.vercel.app/api/health` -> `200` `{"status":"ok"}`
     - `GET /api/workflows` через Vercel без cookie -> `401`
     - `POST /api/auth/login` через Vercel -> `200` + `Set-Cookie`
     - `GET /api/auth/me` через Vercel с cookie -> `200`
@@ -72,7 +73,11 @@
   - `deploy/nginx.mini-zapier-api.conf.example` переименован в `deploy/nginx.mini-zapier-api.conf` — production-ready nginx location block
   - `vercel.json` — rewrite destination изменён с `http://155.212.172.136:3000/api/:path*` на `https://api.memelab.ru/mini-zapier/api/:path*`
   - `deploy/deploy.sh` — без изменений (health check по `127.0.0.1:3000` остаётся корректным)
-  - **Требуются ручные действия на VPS**: установка nginx location block, `docker compose up -d` для применения port binding, firewall (`ufw deny 3000`)
+  - VPS rollout завершён: nginx config применён, stack перезапущен, loopback binding активен, внешний доступ к `:3000` закрыт
+  - Итог проверок:
+    - raw `:3000` извне недоступен
+    - login через Vercel работает, cookie выставляется
+    - dashboard в браузере загружается, production dashboard чистый (`0 workflows`)
 - **Root scripts**:
   - `pnpm install --frozen-lockfile` работает
   - `pnpm build` работает
@@ -118,7 +123,7 @@
 - **Public endpoints** (не требуют auth): `POST /api/auth/login`, `GET /api/health`, `POST /api/webhooks/:workflowId`, `POST /api/inbound-email/:workflowId`, `GET /api/auth/me` (auth-aware: 200/401)
 - **Swagger** отключен при `NODE_ENV=production`; доступен только в dev
 - **CORS**: origin из `CORS_ORIGIN` env (comma-separated), fallback `http://localhost:5173`; `credentials: true`
-- **Docker**: `deploy/docker-compose.prod.yml` использует `build.context: ..`, поэтому на VPS нужен весь репозиторий, а не только папка `deploy`; порт API привязан к `127.0.0.1:3000` (loopback only)
+- **Docker**: `deploy/docker-compose.prod.yml` использует `build.context: ..`, поэтому на VPS нужен весь репозиторий, а не только папка `deploy`; порт API привязан к `127.0.0.1:3000` (loopback only) и не доступен извне
 - **Vercel**: `vercel.json` rewrite `/api/*` направлен на `https://api.memelab.ru/mini-zapier/api/:path*`; frontend URL сейчас `https://mini-zapier-web-silk.vercel.app`
 - **Nginx**: `deploy/nginx.mini-zapier-api.conf` — location block для `api.memelab.ru` HTTPS server, проксирует `/mini-zapier/` → `127.0.0.1:3000/`
 
