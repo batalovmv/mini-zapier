@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-023 — `editor UX hardening + product polish`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт + TASK-019 (editor validation hardening) закрыт + TASK-020 (production cleanup + origin hardening) закрыт + TASK-021 (proxy-aware rate limiting) закрыт + TASK-022 (liveness, readiness, env fail-fast) закрыт + TASK-023 (editor UX hardening) закрыт
+- **Последнее изменение**: TASK-024 — `CI quality gate`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт + TASK-019 (editor validation hardening) закрыт + TASK-020 (production cleanup + origin hardening) закрыт + TASK-021 (proxy-aware rate limiting) закрыт + TASK-022 (liveness, readiness, env fail-fast) закрыт + TASK-023 (editor UX hardening) закрыт + TASK-024 (CI quality gate) закрыт
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -116,8 +116,15 @@
   - `pnpm dev:web` работает, если порт `5173` свободен
   - `pnpm --filter @mini-zapier/web run e2e` запускает Playwright smoke
 
+- **Что сделано в TASK-024**:
+  - `.github/workflows/ci.yml` — GitHub Actions CI pipeline
+  - **`build` job** (обязательный gate): checkout → pnpm setup → Node 22 + pnpm cache → `pnpm install --frozen-lockfile` → `pnpm build`
+  - **`e2e` job** (optional, после build): запускается только на `push` в main И если задана `vars.MINI_ZAPIER_E2E_BASE_URL`; устанавливает Playwright Chromium, прогоняет smoke против deploy URL
+  - E2E env: `MINI_ZAPIER_E2E_BASE_URL` и `MINI_ZAPIER_E2E_USERNAME` из repository variables, `MINI_ZAPIER_E2E_PASSWORD` из secrets, `MINI_ZAPIER_E2E_ECHO_URL` из variables
+  - Concurrency group `ci-${{ github.ref }}` с `cancel-in-progress: true`
+
 ## Следующий шаг
-**TASK-024: CI quality gate**
+**TASK-025** (следующий по backlog)
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -221,4 +228,5 @@
 | TASK-021 follow-up | done | см. `git log` (`TASK-021: sync throttler version spec`) | package.json + pnpm-lock specifier synced to `@nestjs/throttler@^6.5.0` |
 | TASK-022 | done | 1c19f92 | liveness/readiness endpoints, env fail-fast for api+worker, ioredis readiness check, deployed+verified |
 | TASK-023 | done | 2a624c1 | remove dev copy, compact toolbar, toast cleanup, inline login error, node label in canvas |
+| TASK-024 | done | — | GitHub Actions CI: build gate + optional e2e smoke |
 

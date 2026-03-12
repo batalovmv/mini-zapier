@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm build
+
+  e2e:
+    name: E2E Smoke
+    runs-on: ubuntu-latest
+    needs: build
+    if: >-
+      github.event_name == 'push' &&
+      vars.MINI_ZAPIER_E2E_BASE_URL != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @mini-zapier/web exec playwright install chromium
+
+      - name: Run E2E smoke tests
+        working-directory: apps/web
+        run: pnpm e2e
+        env:
+          MINI_ZAPIER_E2E_BASE_URL: ${{ vars.MINI_ZAPIER_E2E_BASE_URL }}
+          MINI_ZAPIER_E2E_PASSWORD: ${{ secrets.MINI_ZAPIER_E2E_PASSWORD }}
+          MINI_ZAPIER_E2E_USERNAME: ${{ vars.MINI_ZAPIER_E2E_USERNAME }}
+          MINI_ZAPIER_E2E_ECHO_URL: ${{ vars.MINI_ZAPIER_E2E_ECHO_URL }}

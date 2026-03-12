@@ -584,20 +584,27 @@
   - `pnpm --filter @mini-zapier/web run build`
 
 ### TASK-024: CI quality gate
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: добавить минимальный автоматический quality gate без CD и infra-автоматизации
 - **Scope**:
-  - один GitHub Actions workflow file
+  - один GitHub Actions workflow file: `.github/workflows/ci.yml`
+  - triggers: `pull_request` и `push` в `main`
+  - обязательный `build` job как минимальный gate
   - `pnpm install --frozen-lockfile`
   - `pnpm build`
-  - web Playwright smoke как optional job/step, если окружение/секреты доступны в CI
+  - optional `e2e` job только для `apps/web` smoke
+  - `e2e` запускается только если в CI заданы `MINI_ZAPIER_E2E_BASE_URL` и `MINI_ZAPIER_E2E_PASSWORD`
+  - `e2e` проверяет уже задеплоенный frontend/backend по `MINI_ZAPIER_E2E_BASE_URL`, без поднятия локального API/web/worker/DB/Redis внутри CI
+  - в optional `e2e` job установить Playwright Chromium перед запуском smoke
 - **Не входит**: CD pipeline, Docker image build/push, matrix builds, мониторинг, alerting
 - **Acceptance**:
-  - на PR/main есть минимальный автоматический gate
+  - на `pull_request` и `push` в `main` есть минимальный автоматический gate
   - build воспроизводим в CI
+  - `build` job является обязательным базовым gate
   - при отсутствии нужных env/secrets e2e явно skip'ается, а не ломает базовый build gate
-  - при наличии env/secrets e2e может быть включён в pipeline
+  - при наличии env/secrets optional `e2e` job запускается против deploy URL и проходит без локального orchestration
 - **Проверка**:
   - workflow успешно выполняется в GitHub Actions
   - падение build роняет pipeline
+  - при наличии env/secrets optional `e2e` job стартует после установки Playwright browser
   - падение e2e роняет pipeline, если e2e job включён
