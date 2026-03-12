@@ -527,7 +527,7 @@
   - smoke login + GET `/api/workflows` через frontend origin
 
 ### TASK-021: Proxy-aware rate limiting
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: добавить защиту от brute-force и burst abuse на публичные endpoints
 - **Depends on**: `TASK-020`
 - **Scope**:

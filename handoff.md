@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-020 — `Production cleanup + origin hardening`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт + TASK-019 (editor validation hardening) закрыт + TASK-020 (production cleanup + origin hardening) закрыт
+- **Последнее изменение**: TASK-021 — `Proxy-aware rate limiting`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт + TASK-019 (editor validation hardening) закрыт + TASK-020 (production cleanup + origin hardening) закрыт + TASK-021 (proxy-aware rate limiting) закрыт
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -78,6 +78,14 @@
     - raw `:3000` извне недоступен
     - login через Vercel работает, cookie выставляется
     - dashboard в браузере загружается, production dashboard чистый (`0 workflows`)
+- **Что сделано в TASK-021**:
+  - `@nestjs/throttler@^6.5.0` добавлен в `apps/api/package.json`
+  - `apps/api/src/main.ts` — `trust proxy: 1` для корректного извлечения client IP за nginx
+  - `apps/api/src/app.module.ts` — `ThrottlerModule.forRoot()` с двумя named throttlers: `login` (5/60s), `trigger` (30/60s)
+  - `apps/api/src/auth/auth.controller.ts` — `@UseGuards(ThrottlerGuard)` + `@Throttle({ login: ... })` на `POST /api/auth/login`
+  - `apps/api/src/trigger/trigger.controller.ts` — `@UseGuards(ThrottlerGuard)` + `@Throttle({ trigger: ... })` на webhook и inbound-email
+  - `decisions.md` — DEC-013 зафиксирован
+  - Задеплоено и проверено: 6-й login request → 429, health/valid login через Vercel работает
 - **Root scripts**:
   - `pnpm install --frozen-lockfile` работает
   - `pnpm build` работает
@@ -87,11 +95,10 @@
   - `pnpm --filter @mini-zapier/web run e2e` запускает Playwright smoke
 
 ## Следующий шаг
-**TASK-021: Proxy-aware rate limiting**
-1. добавить `@nestjs/throttler` и зафиксировать в `decisions.md`
-2. настроить `trust proxy` в `main.ts` для корректного `X-Forwarded-For`
-3. добавить throttling на `POST /api/auth/login`, `POST /api/webhooks/:workflowId`, `POST /api/inbound-email/:workflowId`
-4. проверить что burst → 429, happy path не ломается
+**TASK-022: Liveness, readiness, env fail-fast**
+1. оставить `GET /api/health` как liveness
+2. добавить `GET /api/readiness` с проверкой PostgreSQL и Redis
+3. добавить валидацию обязательных env на старте `apps/api` и `apps/worker`
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -191,3 +198,4 @@
 | TASK-018 | done | см. `git log` (`TASK-018: deployment config + minimal admin login`) | deploy config (Docker + public VPS API + Vercel), auth module (signed cookie HMAC), health endpoint, frontend login/logout/protected routes |
 | TASK-019 | done | см. `git log` (`TASK-019: workflow editor validation hardening`) | duplicate trigger block, pre-save graph validation, invalid-save regression tests |
 | TASK-020 | done | см. `git log` (`TASK-020: production cleanup + origin hardening`) | deleted test workflows, loopback port binding, nginx config, vercel HTTPS rewrite |
+| TASK-021 | done | см. `git log` (`TASK-021: proxy-aware rate limiting`) | @nestjs/throttler, trust proxy, login 5/60s, trigger 30/60s, deployed+verified |
