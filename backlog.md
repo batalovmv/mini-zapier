@@ -491,3 +491,19 @@
   - POST /api/webhooks/:id → работает без login (public)
   - Swagger отключен при NODE_ENV=production
 
+
+### TASK-019: Workflow editor validation hardening
+- **Статус**: `done`
+- **Цель**: запретить невалидные linear-графы на frontend до запроса в API и закрыть duplicate trigger в editor
+- **Scope**:
+  - `apps/web/src/stores/workflow-editor.store.ts` — duplicate trigger guard в `addNode`, graph validation перед save, `validateWorkflow()` для Zustand store
+  - `apps/web/src/pages/WorkflowEditorPage.tsx` — client-side pre-save validation с existing error banner
+  - `apps/web/src/components/editor/FlowCanvas.tsx` — user feedback при попытке добавить второй trigger
+  - `apps/web/e2e/ui-smoke.spec.ts` — regression tests на duplicate trigger и invalid save paths
+- **Не входит**: layout polish, новые editor features, infra/auth changes
+- **Acceptance**:
+  - второй trigger не добавляется на canvas
+  - save с lone trigger блокируется до API request
+  - save с disconnected chain блокируется до API request
+  - `pnpm --filter @mini-zapier/web run build` проходит
+  - smoke spec покрывает invalid-save regression cases

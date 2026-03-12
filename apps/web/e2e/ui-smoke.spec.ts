@@ -49,6 +49,163 @@ async function dropPaletteItem(options: {
   });
 }
 
+async function connectNodesWithTestHelper(
+  page: Page,
+  sourceNodeId: string,
+  targetNodeId: string,
+): Promise<void> {
+  await page.evaluate(
+    ({ sourceNodeId, targetNodeId }) => {
+      (
+        window as typeof window & {
+          __MINI_ZAPIER_TEST__?: {
+            connectNodes: (sourceNodeId: string, targetNodeId: string) => void;
+          };
+        }
+      ).__MINI_ZAPIER_TEST__?.connectNodes(sourceNodeId, targetNodeId);
+    },
+    {
+      sourceNodeId,
+      targetNodeId,
+    },
+  );
+}
+
+test('blocks adding a second trigger to the canvas', async ({ page }) => {
+  await signIn(page);
+  await page.goto('/workflows/new/edit');
+  await expect(page.getByText('Visual React Flow editor for linear workflows.')).toBeVisible();
+
+  await dropPaletteItem({
+    page,
+    paletteTestId: 'palette-item-trigger:WEBHOOK',
+    x: 220,
+    y: 160,
+  });
+
+  const firstTrigger = page.locator(
+    '[data-testid="editor-node"][data-node-label="Webhook"]',
+  );
+  await expect(firstTrigger).toHaveCount(1);
+
+  await dropPaletteItem({
+    page,
+    paletteTestId: 'palette-item-trigger:CRON',
+    x: 220,
+    y: 320,
+  });
+
+  await expect(page.getByText('Only one trigger is allowed per workflow.')).toBeVisible();
+
+  const allTriggers = page.locator('[data-testid="editor-node"]');
+  await expect(allTriggers).toHaveCount(1);
+});
+
+test('blocks saving a workflow that only contains a trigger', async ({ page }) => {
+  await signIn(page);
+  await page.goto('/workflows/new/edit');
+  await expect(page.getByText('Visual React Flow editor for linear workflows.')).toBeVisible();
+
+  await dropPaletteItem({
+    page,
+    paletteTestId: 'palette-item-trigger:WEBHOOK',
+    x: 220,
+    y: 160,
+  });
+
+  await page.getByTestId('save-workflow-button').click();
+
+  await expect(
+    page.getByText('Trigger node must have exactly one outgoing edge.'),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      'Workflow must contain at least one action node connected to the trigger.',
+    ),
+  ).toBeVisible();
+});
+
+test('blocks saving disconnected node chains before the API request', async ({
+  page,
+}) => {
+  let createWorkflowRequests = 0;
+
+  page.on('request', (request) => {
+    if (
+      request.method() === 'POST' &&
+      request.url().includes('/api/workflows')
+    ) {
+      createWorkflowRequests += 1;
+    }
+  });
+
+  await signIn(page);
+  await page.goto('/workflows/new/edit');
+  await expect(page.getByText('Visual React Flow editor for linear workflows.')).toBeVisible();
+
+  await dropPaletteItem({
+    page,
+    paletteTestId: 'palette-item-trigger:WEBHOOK',
+    x: 220,
+    y: 160,
+  });
+  await dropPaletteItem({
+    page,
+    paletteTestId: 'palette-item-action:HTTP_REQUEST',
+    x: 520,
+    y: 230,
+  });
+  await dropPaletteItem({
+    page,
+    paletteTestId: 'palette-item-action:EMAIL',
+    x: 420,
+    y: 380,
+  });
+  await dropPaletteItem({
+    page,
+    paletteTestId: 'palette-item-action:DATA_TRANSFORM',
+    x: 820,
+    y: 380,
+  });
+
+  const webhookNode = page.locator(
+    '[data-testid="editor-node"][data-node-label="Webhook"]',
+  );
+  const httpNode = page.locator(
+    '[data-testid="editor-node"][data-node-label="HTTP Request"]',
+  );
+  const emailNode = page.locator(
+    '[data-testid="editor-node"][data-node-label="Email"]',
+  );
+  const transformNode = page.locator(
+    '[data-testid="editor-node"][data-node-label="Data Transform"]',
+  );
+
+  const webhookNodeId = await webhookNode.getAttribute('data-node-id');
+  const httpNodeId = await httpNode.getAttribute('data-node-id');
+  const emailNodeId = await emailNode.getAttribute('data-node-id');
+  const transformNodeId = await transformNode.getAttribute('data-node-id');
+
+  if (!webhookNodeId || !httpNodeId || !emailNodeId || !transformNodeId) {
+    throw new Error('One or more editor node ids were missing.');
+  }
+
+  await connectNodesWithTestHelper(page, webhookNodeId, httpNodeId);
+  await connectNodesWithTestHelper(page, emailNodeId, transformNodeId);
+
+  await expect(page.locator('.react-flow__edge')).toHaveCount(2);
+
+  await page.getByTestId('save-workflow-button').click();
+
+  await expect(
+    page.getByText('Workflow must contain exactly one terminal action node.'),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Connect all nodes into a single chain starting from the trigger.'),
+  ).toBeVisible();
+  await expect.poll(() => createWorkflowRequests).toBe(0);
+});
+
 test('creates a webhook workflow via UI and verifies step logs', async ({
   page,
   baseURL,
@@ -284,9 +441,3 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     }
   }
 });
-
-
-
-
-
-

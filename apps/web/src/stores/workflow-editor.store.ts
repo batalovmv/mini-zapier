@@ -133,6 +133,161 @@ function canConnectLinear(
   return !hasPath(connection.target, connection.source, edges);
 }
 
+export interface WorkflowValidationError {
+  code: string;
+  message: string;
+}
+
+function validateWorkflowGraph(
+  nodes: WorkflowEditorNode[],
+  edges: WorkflowEditorEdge[],
+): WorkflowValidationError[] {
+  const errors: WorkflowValidationError[] = [];
+
+  function pushError(code: string, message: string) {
+    if (!errors.some((error) => error.code === code)) {
+      errors.push({ code, message });
+    }
+  }
+
+  const triggers = nodes.filter((node) => node.data.nodeKind === 'trigger');
+  const actionNodes = nodes.filter((node) => node.data.nodeKind === 'action');
+  const nodeIds = new Set(nodes.map((node) => node.id));
+  const outgoingEdgeMap = new Map<string, WorkflowEditorEdge[]>();
+  const incomingEdgeMap = new Map<string, WorkflowEditorEdge[]>();
+  const uniqueEdgePairs = new Set<string>();
+
+  for (const node of nodes) {
+    outgoingEdgeMap.set(node.id, []);
+    incomingEdgeMap.set(node.id, []);
+  }
+
+  for (const edge of edges) {
+    if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) {
+      pushError(
+        'MISSING_NODE_REFERENCE',
+        'Workflow contains edges that reference missing nodes.',
+      );
+      continue;
+    }
+
+    if (edge.source === edge.target) {
+      pushError(
+        'SELF_REFERENCING_EDGE',
+        'Workflow must not contain self-referencing edges.',
+      );
+      continue;
+    }
+
+    const edgeKey = `${edge.source}->${edge.target}`;
+
+    if (uniqueEdgePairs.has(edgeKey)) {
+      pushError(
+        'DUPLICATE_EDGES',
+        'Workflow must not contain duplicate edges.',
+      );
+      continue;
+    }
+
+    uniqueEdgePairs.add(edgeKey);
+    outgoingEdgeMap.get(edge.source)?.push(edge);
+    incomingEdgeMap.get(edge.target)?.push(edge);
+  }
+
+  if (triggers.length === 0) {
+    pushError('NO_TRIGGER', 'Workflow must have a trigger node.');
+  } else if (triggers.length > 1) {
+    pushError(
+      'MULTIPLE_TRIGGERS',
+      'Workflow must have exactly one trigger.',
+    );
+  }
+
+  const triggerNode = triggers[0];
+
+  if (triggerNode) {
+    const triggerOutgoingEdges = outgoingEdgeMap.get(triggerNode.id) ?? [];
+
+    if (triggerOutgoingEdges.length !== 1) {
+      pushError(
+        'INVALID_TRIGGER_OUTGOING',
+        'Trigger node must have exactly one outgoing edge.',
+      );
+    }
+  }
+
+  if (nodes.length > 1 && edges.length === 0) {
+    pushError(
+      'NO_EDGES',
+      'Nodes are not connected. Drag from one handle to another to create edges.',
+    );
+  }
+
+  for (const actionNode of actionNodes) {
+    const incomingCount = incomingEdgeMap.get(actionNode.id)?.length ?? 0;
+    const outgoingCount = outgoingEdgeMap.get(actionNode.id)?.length ?? 0;
+
+    if (incomingCount > 1 || outgoingCount > 1) {
+      pushError(
+        'INVALID_ACTION_DEGREE',
+        'Each action node must have at most one incoming edge and at most one outgoing edge.',
+      );
+      break;
+    }
+  }
+
+  if (actionNodes.length === 0) {
+    pushError(
+      'NO_ACTIONS',
+      'Workflow must contain at least one action node connected to the trigger.',
+    );
+  } else {
+    const terminalActions = actionNodes.filter(
+      (node) => (outgoingEdgeMap.get(node.id)?.length ?? 0) === 0,
+    );
+
+    if (terminalActions.length !== 1) {
+      pushError(
+        'INVALID_TERMINAL_ACTIONS',
+        'Workflow must contain exactly one terminal action node.',
+      );
+    }
+  }
+
+  if (triggerNode) {
+    const reachableNodeIds = new Set<string>();
+    let currentNodeId: string | undefined = triggerNode.id;
+
+    while (currentNodeId !== undefined) {
+      if (reachableNodeIds.has(currentNodeId)) {
+        pushError('CYCLE', 'Workflow must not contain cycles.');
+        break;
+      }
+
+      reachableNodeIds.add(currentNodeId);
+
+      const outgoingEdges: WorkflowEditorEdge[] =
+        outgoingEdgeMap.get(currentNodeId) ?? [];
+
+      if (outgoingEdges.length === 0) {
+        currentNodeId = undefined;
+        continue;
+      }
+
+      currentNodeId = outgoingEdges[0]?.target;
+    }
+
+    if (reachableNodeIds.size !== nodes.length) {
+      pushError(
+        'DISCONNECTED_NODES',
+        'Connect all nodes into a single chain starting from the trigger.',
+      );
+    }
+  }
+
+  return errors;
+}
+
 interface NodeMetaUpdates {
   label?: string;
   connectionId?: string | null;
@@ -163,10 +318,11 @@ interface WorkflowEditorStore {
     nodeKind: EditorNodeKind;
     nodeType: EditorNodeType;
     position: { x: number; y: number };
-  }) => void;
+  }) => 'DUPLICATE_TRIGGER' | null;
   updateNodeConfig: (nodeId: string, config: Record<string, unknown>) => void;
   updateNodeMeta: (nodeId: string, updates: NodeMetaUpdates) => void;
   removeNode: (nodeId: string) => void;
+  validateWorkflow: () => WorkflowValidationError[];
   resetEditor: () => void;
   loadWorkflow: (workflow: WorkflowDto) => void;
   saveWorkflow: () => WorkflowMutationInput;
@@ -248,7 +404,16 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
     const definition = getNodeDefinition(nodeKind, nodeType);
 
     if (!definition) {
-      return;
+      return null;
+    }
+
+    if (nodeKind === 'trigger') {
+      const { nodes } = get();
+      const existingTrigger = nodes.find((n) => n.data.nodeKind === 'trigger');
+
+      if (existingTrigger) {
+        return 'DUPLICATE_TRIGGER' as const;
+      }
     }
 
     const nextNode = createEditorNode(definition, position);
@@ -257,6 +422,8 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
       nodes: [...state.nodes, nextNode],
       selectedNodeId: nextNode.id,
     }));
+
+    return null;
   },
 
   updateNodeConfig(nodeId, config) {
@@ -299,6 +466,11 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
       ),
       selectedNodeId: state.selectedNodeId === nodeId ? null : state.selectedNodeId,
     }));
+  },
+
+  validateWorkflow() {
+    const { nodes, edges } = get();
+    return validateWorkflowGraph(nodes, edges);
   },
 
   resetEditor() {

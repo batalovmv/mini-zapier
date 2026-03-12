@@ -42,6 +42,9 @@ export function WorkflowEditorPage() {
   const setWorkflowName = useWorkflowEditorStore((state) => state.setWorkflowName);
   const resetEditor = useWorkflowEditorStore((state) => state.resetEditor);
   const loadWorkflow = useWorkflowEditorStore((state) => state.loadWorkflow);
+  const validateWorkflow = useWorkflowEditorStore(
+    (state) => state.validateWorkflow,
+  );
   const saveWorkflowPayload = useWorkflowEditorStore(
     (state) => state.saveWorkflow,
   );
@@ -92,6 +95,13 @@ export function WorkflowEditorPage() {
   }, [id, loadWorkflow, resetEditor]);
 
   async function handleSave() {
+    const validationErrors = validateWorkflow();
+
+    if (validationErrors.length > 0) {
+      setPageError(validationErrors.map((e) => e.message).join(' '));
+      return;
+    }
+
     setSaving(true);
     setPageError(null);
 

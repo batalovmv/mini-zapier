@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import toast from 'react-hot-toast';
 import ReactFlow, {
   Background,
   ConnectionMode,
@@ -119,11 +120,15 @@ function FlowCanvasInner() {
       y: event.clientY,
     });
 
-    addNode({
+    const result = addNode({
       nodeKind: payload.nodeKind,
       nodeType: payload.nodeType,
       position,
     });
+
+    if (result === 'DUPLICATE_TRIGGER') {
+      toast.error('Only one trigger is allowed per workflow.');
+    }
   }
 
   return (

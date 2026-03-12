@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-018 — `deployment config + minimal admin login`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт
+- **Последнее изменение**: TASK-019 — `workflow editor validation hardening`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт + TASK-019 (editor validation hardening) закрыт
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -40,6 +40,14 @@
     - `pnpm install --frozen-lockfile`
     - `pnpm build` (shared + api + worker + web)
     - `pnpm --filter @mini-zapier/web run e2e` против `https://mini-zapier-web-silk.vercel.app` (auth + live browser smoke)
+- **Что сделано в TASK-019**:
+  - `apps/web/src/stores/workflow-editor.store.ts` — `validateWorkflowGraph()` доведён до backend-инвариантов: missing node refs, self-referencing edges, duplicate edges, ровно 1 trigger, ровно 1 outgoing у trigger, max 1 in/out у action, ровно 1 terminal action, cycle/disconnected chain check
+  - `apps/web/src/pages/WorkflowEditorPage.tsx` — `handleSave()` сначала запускает client-side validation и показывает ошибки в existing page error banner без запроса в API
+  - `apps/web/src/components/editor/FlowCanvas.tsx` — попытка добавить второй trigger блокируется на UI и показывает `Only one trigger is allowed per workflow.`
+  - `apps/web/e2e/ui-smoke.spec.ts` — добавлены regression tests на duplicate trigger, save с lone trigger и save с disconnected chains
+  - **Проверки TASK-019**:
+    - `pnpm --filter @mini-zapier/web run build`
+    - `pnpm --filter @mini-zapier/web run e2e` — не прошёл запуск на этой машине, потому что отсутствует env `MINI_ZAPIER_E2E_PASSWORD`
 - **Что сломано**:
   - Критичных известных поломок не выявлено
 - **Фактический deploy status**:
@@ -65,16 +73,14 @@
   - `pnpm --filter @mini-zapier/web run e2e` запускает Playwright smoke
 
 ## Следующий шаг
-**Manual UX smoke via Opus**: automated live browser smoke уже прошёл. Осталась ручная проверка UX в браузере:
-1. `login`
-2. `create workflow (cron -> email или webhook -> http -> transform)`
-3. `activate workflow`
-4. `trigger workflow`
-5. `check execution history + step logs`
-6. `verify config panel usability and canvas workspace`
-
+**Deploy + live verification для TASK-019**: после выката повторно проверить редактор на живом стенде и только затем возвращаться к UX-polish:
+1. duplicate trigger block
+2. pre-save validation для lone trigger и disconnected chains
+3. повторный manual UX smoke config panel / canvas
 
 ## Блокеры
+- На текущей машине не задан env MINI_ZAPIER_E2E_PASSWORD, поэтому Playwright smoke после TASK-019 не удалось прогнать до логина.
+
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`), а порт `5173` — внешним Vite-процессом (`D:\TZ\Finance_tracker\client`). Для smoke-проверок использовались `3001`, `5174`, `5175`, `5176`, `5177`, `5178`.
 - `apps/web/package.json` использует `"@mini-zapier/shared": "file:../../packages/shared"` как обход зависающего `pnpm install` и несовместимости `npm` с `workspace:*`.
 
@@ -167,11 +173,4 @@
 | post-v1-fix | done | см. `git log` (`fix: server-generated node IDs + lockfile sync`) | workflow nodes now get server-generated ids with edge remap; lockfile synced via pnpm; `frozen-lockfile`, root build and Playwright smoke pass again |
 | docs | done | — | spec-v1, backlog, decisions, test-checklist, CLAUDE.md — согласованы (см. git log) |
 | TASK-018 | done | см. `git log` (`TASK-018: deployment config + minimal admin login`) | deploy config (Docker + public VPS API + Vercel), auth module (signed cookie HMAC), health endpoint, frontend login/logout/protected routes |
-
-
-
-
-
-
-
-
+| TASK-019 | done | см. `git log` (`TASK-019: workflow editor validation hardening`) | duplicate trigger block, pre-save graph validation, invalid-save regression tests |
