@@ -8,8 +8,9 @@
     "build:shared": "pnpm --filter @mini-zapier/shared run build",
     "build:api": "pnpm --filter @mini-zapier/api run build",
     "build:worker": "pnpm --filter @mini-zapier/worker run build",
+    "build:server-utils": "pnpm --filter @mini-zapier/server-utils run build",
     "build:web": "pnpm --filter @mini-zapier/web run build",
-    "build": "pnpm build:shared && pnpm build:api && pnpm build:worker && pnpm build:web",
+    "build": "pnpm build:shared && pnpm build:server-utils && pnpm build:api && pnpm build:worker && pnpm build:web",
     "db:migrate": "pnpm --filter @mini-zapier/api run prisma:migrate",
     "db:generate": "pnpm --filter @mini-zapier/api run prisma:generate",
     "db:studio": "pnpm --filter @mini-zapier/api run prisma:studio"
