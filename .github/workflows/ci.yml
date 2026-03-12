@@ -36,25 +36,39 @@ jobs:
     needs: build
     if: >-
       github.event_name == 'push' &&
-      vars.MINI_ZAPIER_E2E_BASE_URL != '' &&
-      secrets.MINI_ZAPIER_E2E_PASSWORD != ''
+      vars.MINI_ZAPIER_E2E_BASE_URL != ''
     steps:
+      - name: Check E2E password is set
+        env:
+          E2E_PASSWORD: ${{ secrets.MINI_ZAPIER_E2E_PASSWORD }}
+        run: |
+          if [ -z "$E2E_PASSWORD" ]; then
+            echo "::notice::MINI_ZAPIER_E2E_PASSWORD secret is not set — skipping E2E."
+            echo "SKIP_E2E=true" >> "$GITHUB_ENV"
+          fi
+
       - uses: actions/checkout@v4
+        if: env.SKIP_E2E != 'true'
 
       - uses: pnpm/action-setup@v4
+        if: env.SKIP_E2E != 'true'
 
       - uses: actions/setup-node@v4
+        if: env.SKIP_E2E != 'true'
         with:
           node-version: 22
           cache: pnpm
 
       - name: Install dependencies
+        if: env.SKIP_E2E != 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright Chromium
+        if: env.SKIP_E2E != 'true'
         run: pnpm --filter @mini-zapier/web exec playwright install chromium
 
       - name: Run E2E smoke tests
+        if: env.SKIP_E2E != 'true'
         working-directory: apps/web
         run: pnpm e2e
         env:
