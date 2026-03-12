@@ -3,7 +3,7 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-021 — `Proxy-aware rate limiting`
+- **Последнее изменение**: TASK-021 follow-up — `throttler spec sync`
 - **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт + TASK-019 (editor validation hardening) закрыт + TASK-020 (production cleanup + origin hardening) закрыт + TASK-021 (proxy-aware rate limiting) закрыт
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
@@ -80,6 +80,7 @@
     - dashboard в браузере загружается, production dashboard чистый (`0 workflows`)
 - **Что сделано в TASK-021**:
   - `@nestjs/throttler@^6.5.0` добавлен в `apps/api/package.json`
+  - follow-up: specifier в `apps/api/package.json` и `pnpm-lock.yaml` синхронизирован и зафиксирован как `^6.5.0`
   - `apps/api/src/main.ts` — `trust proxy: 1` для корректного извлечения client IP за nginx
   - `apps/api/src/app.module.ts` — `ThrottlerModule.forRoot()` с двумя named throttlers: `login` (5/60s), `trigger` (30/60s)
   - `apps/api/src/auth/auth.controller.ts` — `@UseGuards(ThrottlerGuard)` + `@Throttle({ login: ... })` на `POST /api/auth/login`
@@ -199,3 +200,5 @@
 | TASK-019 | done | см. `git log` (`TASK-019: workflow editor validation hardening`) | duplicate trigger block, pre-save graph validation, invalid-save regression tests |
 | TASK-020 | done | см. `git log` (`TASK-020: production cleanup + origin hardening`) | deleted test workflows, loopback port binding, nginx config, vercel HTTPS rewrite |
 | TASK-021 | done | см. `git log` (`TASK-021: proxy-aware rate limiting`) | @nestjs/throttler, trust proxy, login 5/60s, trigger 30/60s, deployed+verified |
+| TASK-021 follow-up | done | см. `git log` (`TASK-021: sync throttler version spec`) | package.json + pnpm-lock specifier synced to `@nestjs/throttler@^6.5.0` |
+
