@@ -11,6 +11,15 @@ class PositionFieldsDto {
   fields!: string[];
 }
 
+export const AVAILABLE_FIELDS_EMPTY_STATES = [
+  'NO_EXECUTIONS',
+  'INCOMPATIBLE_EXECUTIONS',
+  'NO_FIELDS',
+] as const;
+
+export type AvailableFieldsEmptyState =
+  (typeof AVAILABLE_FIELDS_EMPTY_STATES)[number];
+
 export class AvailableFieldsResponseDto {
   @ApiProperty({
     example: 'cm123execution',
@@ -33,6 +42,15 @@ export class AvailableFieldsResponseDto {
       'Whether at least one SUCCESS execution exists for this workflow.',
   })
   hasExecutions!: boolean;
+
+  @ApiProperty({
+    enum: AVAILABLE_FIELDS_EMPTY_STATES,
+    nullable: true,
+    example: 'NO_FIELDS',
+    description:
+      'Reason why positions is empty. Null when compatible fields were found.',
+  })
+  emptyState!: AvailableFieldsEmptyState | null;
 
   @ApiProperty({
     type: [PositionFieldsDto],

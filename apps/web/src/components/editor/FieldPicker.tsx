@@ -272,9 +272,11 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
             </div>
           ) : data === null || data.positions.length === 0 ? (
             <div className="px-4 py-3 text-xs text-slate-400">
-              {data?.hasExecutions
+              {data?.emptyState === 'INCOMPATIBLE_EXECUTIONS'
                 ? 'Run the workflow again after saving to refresh available fields.'
-                : 'Run the workflow at least once to see available fields.'}
+                : data?.emptyState === 'NO_FIELDS'
+                  ? 'Run the workflow again with sample data to capture available fields.'
+                  : 'Run the workflow at least once to see available fields.'}
             </div>
           ) : (
             <div className="max-h-60 overflow-y-auto">
@@ -310,3 +312,4 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
     </div>
   );
 }
+

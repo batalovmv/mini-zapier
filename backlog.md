@@ -624,8 +624,8 @@
   - API должен возвращать `sourceExecutionId` и `sourceWorkflowVersion`, чтобы UI мог показать "данные из версии X" если workflow изменился с момента последнего execution
   - `FieldPicker` должен быть **assistive UI**, а не механизмом валидации: если данных нет, версия не совпала или поле исчезло, ручной ввод `{{input.*}}` продолжает работать без блокировок
 - **Что хотим получить**:
-  - Во всех полях где поддерживается `{{input.field}}` — при вводе `{{` или по кнопке показывать **dropdown с доступными полями**
-  - **Surfaces**: mapping value в Data Transform, template textarea в Data Transform (mode=template), HTTP Request url/body/header values, Email subject/body, Telegram message, DB Query params
+  - Во всех полях где поддерживается `{{input.field}}` — по кнопке `⚡` показывать **dropdown с доступными полями**
+  - **Surfaces**: mapping value в Data Transform, template textarea в Data Transform (mode=template), HTTP Request url/body/header values, Email subject/body, Telegram message
   - Список полей берётся из **последнего успешного execution**: для action на позиции N в цепочке → outputData шага N-1, для первого action → triggerData
   - Если workflow ещё ни разу не запускался — показать подсказку "Запустите workflow хотя бы раз чтобы увидеть доступные поля" и оставить ручной ввод
   - Если workflow version изменился с момента execution — показать warning "Поля из версии N, текущая версия M"
@@ -636,10 +636,10 @@
   - Компонент `FieldPicker` — dropdown/autocomplete с иконкой ⚡ рядом с input-полями
   - Интеграция во все interpolation surfaces (см. список выше)
   - Fallback на ручной ввод если нет данных
-- **Не входит**: парсинг JSON Schema, предпросмотр значений, валидация что поле существует при save
+- **Не входит**: парсинг JSON Schema, предпросмотр значений, валидация что поле существует при save, DbQueryConfig params (нужен отдельный JSON-aware insertion path)
 - **Файлы**: apps/api/src/execution/ (новый endpoint), apps/web/src/components/editor/FieldPicker.tsx, все config-forms
 - **Acceptance**:
-  - В mapping value нажал кнопку или ввёл `{{` → dropdown с полями из последнего execution
+  - В mapping value нажал кнопку `⚡` → dropdown с полями из последнего execution
   - В template textarea Data Transform — тот же picker работает
   - Выбрал поле → вставилось `{{input.fieldName}}`
   - Workflow без executions → подсказка, ручной ввод работает
@@ -723,4 +723,5 @@
   - API `GET /api/workflows/:id/executions?status=FAILED` возвращает отфильтрованный список + counts
   - При смене tab/filter pagination сбрасывается на страницу 1
 - **Проверка**: создать несколько failed executions, проверить фильтрацию, убедиться что counts обновляются
+
 

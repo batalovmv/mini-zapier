@@ -73,12 +73,19 @@ export interface AvailableFieldsPosition {
   fields: string[];
 }
 
+export type AvailableFieldsEmptyState =
+  | 'NO_EXECUTIONS'
+  | 'INCOMPATIBLE_EXECUTIONS'
+  | 'NO_FIELDS';
+
 export interface AvailableFieldsResponse {
   sourceExecutionId: string | null;
   sourceWorkflowVersion: number | null;
   hasExecutions: boolean;
+  emptyState: AvailableFieldsEmptyState | null;
   positions: AvailableFieldsPosition[];
 }
 
 export type WorkflowListResponse = PaginatedResponse<WorkflowDto>;
 export type ExecutionListResponse = PaginatedResponse<WorkflowExecutionDto>;
+

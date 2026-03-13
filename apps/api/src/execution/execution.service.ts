@@ -284,6 +284,7 @@ export class ExecutionService {
     });
 
     const hasExecutions = recentExecutions.length > 0;
+    let hasCompatibleExecution = false;
 
     for (const execution of recentExecutions) {
       const snapshot = parseSnapshotForChain(execution.definitionSnapshot);
@@ -295,6 +296,8 @@ export class ExecutionService {
       if (snapshotSignature !== currentSignature) {
         continue;
       }
+
+      hasCompatibleExecution = true;
 
       const snapshotChain = resolveChainPositions(
         snapshot.nodes,
@@ -337,6 +340,7 @@ export class ExecutionService {
         sourceExecutionId: execution.id,
         sourceWorkflowVersion: execution.workflowVersion,
         hasExecutions,
+        emptyState: null,
         positions,
       };
     }
@@ -345,6 +349,11 @@ export class ExecutionService {
       sourceExecutionId: null,
       sourceWorkflowVersion: null,
       hasExecutions,
+      emptyState: hasExecutions
+        ? hasCompatibleExecution
+          ? 'NO_FIELDS'
+          : 'INCOMPATIBLE_EXECUTIONS'
+        : 'NO_EXECUTIONS',
       positions: [],
     };
   }
@@ -591,3 +600,4 @@ export class ExecutionService {
     };
   }
 }
+

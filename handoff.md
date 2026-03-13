@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-025 — `Field picker для template interpolation`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–024 закрыты + TASK-025 (field picker) закрыт
+- **Последнее изменение**: TASK-025 — `Field picker follow-up fixes`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–024 закрыты + TASK-025 (field picker + follow-up fixes) закрыт
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -143,6 +143,8 @@
     - `savedStructuralFingerprint` in Zustand store (set on load, not on local edits) — when mismatch, picker hides fields and shows "Save workflow to update"
     - `insertAtCursor` uses existing `onChange((prev) => ...)` pattern, no new local state
     - Blank-key guard: picker hidden for mapping/header rows with empty key
+    - `available-fields` response now returns `emptyState` (`NO_EXECUTIONS` | `INCOMPATIBLE_EXECUTIONS` | `NO_FIELDS`) so UI shows the correct assistive hint for empty dropdowns
+    - Documentation synced with delivered scope: picker is button-driven (`⚡`), `DbQueryConfig` remains excluded from this slice
 
 ## Следующий шаг
 **TASK-026** (следующий по backlog)
@@ -251,4 +253,6 @@
 | TASK-023 | done | 2a624c1 | remove dev copy, compact toolbar, toast cleanup, inline login error, node label in canvas |
 | TASK-024 | done | 9c01091, 2ce1a17 | GitHub Actions CI: build gate + optional e2e smoke |
 | TASK-025 | done | см. `git log` | Field picker: available-fields API + FieldPicker component + config form integration |
+| TASK-025 follow-up | done | см. `git log` (`TASK-025: fix field picker empty states`) | API/UI empty-state reason + backlog/handoff scope sync |
+
 
