@@ -668,7 +668,7 @@
 - **Проверка**: визуальная проверка в браузере, pnpm build
 
 ### TASK-027: Webhook helper — Copy URL, Copy curl, usage hints
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: помочь пользователю быстро использовать webhook endpoint после создания workflow
 - **Проблема**: после создания workflow с Webhook trigger пользователь видит URL в config panel, но:
   1. URL обрезается в узком read-only input и его неудобно копировать

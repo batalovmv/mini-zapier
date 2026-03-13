@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-026 — `Config panel layout polish`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–026 закрыты
+- **Последнее изменение**: TASK-027 — `Webhook helper — Copy URL, Copy curl, usage hints`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–027 закрыты
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -146,6 +146,16 @@
     - `available-fields` response now returns `emptyState` (`NO_EXECUTIONS` | `INCOMPATIBLE_EXECUTIONS` | `NO_FIELDS`) so UI shows the correct assistive hint for empty dropdowns
     - Documentation synced with delivered scope: picker is button-driven (`⚡`), `DbQueryConfig` remains excluded from this slice
 
+- **Что сделано в TASK-027**:
+  - `apps/web/src/components/editor/config-forms/WebhookConfig.tsx` — полная переработка:
+    - **Copy URL** кнопка — копирует полный webhook URL в clipboard
+    - **Copy curl** кнопка — копирует однострочную curl-команду с `<your-secret>` placeholder
+    - Обе кнопки `disabled` когда `workflowId === null` (workflow ещё не сохранён)
+    - URL input: monospace шрифт + `title` tooltip с полным URL
+    - `toast.success('Copied!')` при успехе, `toast.error(...)` при отказе clipboard API
+    - Hint про `Idempotency-Key` / `X-Event-ID` показан отдельным текстом в UI (не в curl)
+    - `X-Webhook-Secret` hint оформлен с `<code>` тегом
+  - **Проверки**: `pnpm --filter @mini-zapier/web run build` — OK
 - **Что сделано в TASK-026**:
   - `apps/web/src/components/editor/config-forms/DataTransformConfig.tsx` — mapping rows switched to a two-line layout inside compact cards, so key and value each get full row width; remove control stays compact `×`; placeholders remain `key` / `value`
   - `apps/web/src/components/editor/config-forms/HttpRequestConfig.tsx` — header rows switched to a two-line layout inside compact cards, so header name and value each get full row width; remove control stays compact `×`; placeholders remain `header name` / `header value`
@@ -155,7 +165,7 @@
     - browser visual smoke в этой сессии не запускался
 
 ## Следующий шаг
-**TASK-027** (следующий по backlog)
+**TASK-028** (следующий по backlog)
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -263,3 +273,4 @@
 | TASK-025 | done | см. `git log` | Field picker: available-fields API + FieldPicker component + config form integration |
 | TASK-025 follow-up | done | см. `git log` (`TASK-025: fix field picker empty states`) | API/UI empty-state reason + backlog/handoff scope sync |
 | TASK-026 | done | см. `git log` | two-line mapping/header rows, compact remove controls, clearer empty placeholders |
+| TASK-027 | done | см. `git log` | Copy URL/curl buttons, clipboard toasts, Idempotency-Key hint, monospace URL |
