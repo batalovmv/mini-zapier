@@ -160,7 +160,7 @@ export function DataTransformConfig({
             {mappingEntries.map(([key, value], index) => (
               <div
                 key={`${key}-${index}`}
-                className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto] items-center gap-2"
+                className="grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)_auto_auto] items-center gap-1.5"
               >
                 <input
                   aria-label={`Mapping key ${index + 1}`}
@@ -168,7 +168,7 @@ export function DataTransformConfig({
                   onChange={(event) =>
                     updateMappingKey(index, event.target.value)
                   }
-                  placeholder="Field"
+                  placeholder="key"
                   type="text"
                   value={key}
                 />
@@ -178,7 +178,7 @@ export function DataTransformConfig({
                   onChange={(event) =>
                     updateMappingValue(index, event.target.value)
                   }
-                  placeholder="{{input.field}}"
+                  placeholder="value"
                   ref={(el) => {
                     mappingValueRefs.current[index] = el;
                   }}
@@ -203,11 +203,13 @@ export function DataTransformConfig({
                   <div className="h-6 w-6" />
                 )}
                 <button
-                  className="rounded-2xl border border-slate-900/10 px-3 text-sm font-semibold text-slate-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
+                  aria-label={`Remove mapping row ${index + 1}`}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
                   onClick={() => removeMapping(index)}
+                  title="Remove"
                   type="button"
                 >
-                  Remove
+                  &times;
                 </button>
               </div>
             ))}

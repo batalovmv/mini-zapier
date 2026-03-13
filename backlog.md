@@ -649,7 +649,7 @@
 - **Проверка**: создать workflow, запустить, открыть редактор, убедиться что в config-формах видны поля из triggerData/outputData. Сохранить workflow (PUT), убедиться что picker не сломался
 
 ### TASK-026: Config panel layout polish — ширина полей и placeholder clarity
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: исправить визуальные проблемы в config panel форм, которые мешают работе
 - **Проблема**: config panel имеет фиксированную ширину, из-за чего:
   1. **Mapping key/value inputs обрезают текст** — `{{input.total}}` показывается как `{{input.tot...`, `{{input.customer_name}}` как `{{input.cus...`. Пользователь не видит полное значение без клика в поле

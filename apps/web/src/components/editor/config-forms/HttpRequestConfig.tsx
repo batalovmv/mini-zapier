@@ -155,13 +155,13 @@ export function HttpRequestConfig({
           {headerEntries.map(([key, value], index) => (
             <div
               key={`${key}-${index}`}
-              className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto] items-center gap-2"
+              className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_auto_auto] items-center gap-1.5"
             >
                 <input
                   aria-label={`Header key ${index + 1}`}
                   className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) => updateHeaderKey(index, event.target.value)}
-                  placeholder="Header"
+                  placeholder="header name"
                 type="text"
                 value={key}
               />
@@ -169,7 +169,7 @@ export function HttpRequestConfig({
                   aria-label={`Header value ${index + 1}`}
                   className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) => updateHeaderValue(index, event.target.value)}
-                  placeholder="Value"
+                  placeholder="header value"
                 ref={(el) => {
                   headerValueRefs.current[index] = el;
                 }}
@@ -194,11 +194,13 @@ export function HttpRequestConfig({
                 <div className="h-6 w-6" />
               )}
               <button
-                className="rounded-2xl border border-slate-900/10 px-3 text-sm font-semibold text-slate-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
+                aria-label={`Remove header row ${index + 1}`}
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
                 onClick={() => removeHeader(index)}
+                title="Remove"
                 type="button"
               >
-                Remove
+                &times;
               </button>
             </div>
           ))}
