@@ -147,9 +147,9 @@
     - Documentation synced with delivered scope: picker is button-driven (`⚡`), `DbQueryConfig` remains excluded from this slice
 
 - **Что сделано в TASK-026**:
-  - `apps/web/src/components/editor/config-forms/DataTransformConfig.tsx` — mapping rows widened toward value input, remove control collapsed to compact `×`, placeholders changed from `Field` / `{{input.field}}` to `key` / `value`
-  - `apps/web/src/components/editor/config-forms/HttpRequestConfig.tsx` — header rows widened, remove control collapsed to compact `×`, placeholders changed to `header name` / `header value`
-  - `FieldPicker` spacing preserved via existing `h-6 w-6` spacer, so rows with and without picker keep the same control column width
+  - `apps/web/src/components/editor/config-forms/DataTransformConfig.tsx` — mapping rows switched to a two-line layout inside compact cards, so key and value each get full row width; remove control stays compact `×`; placeholders remain `key` / `value`
+  - `apps/web/src/components/editor/config-forms/HttpRequestConfig.tsx` — header rows switched to a two-line layout inside compact cards, so header name and value each get full row width; remove control stays compact `×`; placeholders remain `header name` / `header value`
+  - `FieldPicker` stays on the second line next to the value input; the existing `h-6 w-6` spacer is preserved for empty keys, so row rhythm stays stable
   - **Проверки TASK-026**:
     - `pnpm --filter @mini-zapier/web run build`
     - browser visual smoke в этой сессии не запускался
@@ -262,6 +262,4 @@
 | TASK-024 | done | 9c01091, 2ce1a17 | GitHub Actions CI: build gate + optional e2e smoke |
 | TASK-025 | done | см. `git log` | Field picker: available-fields API + FieldPicker component + config form integration |
 | TASK-025 follow-up | done | см. `git log` (`TASK-025: fix field picker empty states`) | API/UI empty-state reason + backlog/handoff scope sync |
-| TASK-026 | done | см. `git log` (`TASK-026: config panel layout polish`) | compact remove controls, wider mapping/header rows, clearer empty placeholders |
-
-
+| TASK-026 | done | см. `git log` | two-line mapping/header rows, compact remove controls, clearer empty placeholders |

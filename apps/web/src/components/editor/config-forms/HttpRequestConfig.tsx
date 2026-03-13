@@ -155,53 +155,58 @@ export function HttpRequestConfig({
           {headerEntries.map(([key, value], index) => (
             <div
               key={`${key}-${index}`}
-              className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_auto_auto] items-center gap-1.5"
+              className="space-y-2 rounded-2xl border border-slate-900/10 bg-slate-50/60 p-3"
             >
+              <div className="flex items-center gap-2">
                 <input
                   aria-label={`Header key ${index + 1}`}
-                  className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                  className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) => updateHeaderKey(index, event.target.value)}
                   placeholder="header name"
-                type="text"
-                value={key}
-              />
+                  type="text"
+                  value={key}
+                />
+                <button
+                  aria-label={`Remove header row ${index + 1}`}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                  onClick={() => removeHeader(index)}
+                  title="Remove"
+                  type="button"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
                 <input
                   aria-label={`Header value ${index + 1}`}
-                  className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                  className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) => updateHeaderValue(index, event.target.value)}
                   placeholder="header value"
-                ref={(el) => {
-                  headerValueRefs.current[index] = el;
-                }}
-                type="text"
-                value={value}
-              />
-              {key.trim().length > 0 ? (
-                <FieldPicker
-                  onSelect={(f) =>
-                    insertAtCursorRecord(
-                      headerValueRefs.current[index],
-                      f,
-                      'headers',
-                      key,
-                      config,
-                      onChange,
-                      toStringRecord,
-                    )
-                  }
+                  ref={(el) => {
+                    headerValueRefs.current[index] = el;
+                  }}
+                  type="text"
+                  value={value}
                 />
-              ) : (
-                <div className="h-6 w-6" />
-              )}
-              <button
-                aria-label={`Remove header row ${index + 1}`}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                onClick={() => removeHeader(index)}
-                title="Remove"
-                type="button"
-              >
-                &times;
-              </button>
+                {key.trim().length > 0 ? (
+                  <FieldPicker
+                    onSelect={(f) =>
+                      insertAtCursorRecord(
+                        headerValueRefs.current[index],
+                        f,
+                        'headers',
+                        key,
+                        config,
+                        onChange,
+                        toStringRecord,
+                      )
+                    }
+                  />
+                ) : (
+                  <div className="h-6 w-6 shrink-0" />
+                )}
+              </div>
             </div>
           ))}
         </div>
