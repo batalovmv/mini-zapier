@@ -176,8 +176,8 @@ export function WorkflowEditorPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <section className="app-panel overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col gap-5">
+      <section className="app-panel shrink-0 overflow-hidden">
         <div className="flex flex-col gap-4 px-6 py-5 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-4">
             <Link
@@ -252,12 +252,12 @@ export function WorkflowEditorPage() {
         ) : null}
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[240px_minmax(0,1fr)_320px] 2xl:grid-cols-[260px_minmax(0,1fr)_340px]">
-        <div className="min-h-[780px]">
+      <section className="grid min-h-0 flex-1 gap-5 xl:grid-cols-[240px_minmax(0,1fr)_320px] xl:grid-rows-[1fr] 2xl:grid-cols-[260px_minmax(0,1fr)_340px]">
+        <div className="min-h-0 xl:overflow-y-auto">
           <NodeSidebar />
         </div>
 
-        <div className="min-h-[780px]">
+        <div className="min-h-0">
           {loading ? (
             <LoadingState
               description="The saved workflow graph is loading into the editor."
@@ -268,7 +268,7 @@ export function WorkflowEditorPage() {
           )}
         </div>
 
-        <div className="min-h-[780px]">
+        <div className="min-h-0 xl:overflow-y-auto">
           <ConfigPanel workflowId={workflowId} />
         </div>
       </section>

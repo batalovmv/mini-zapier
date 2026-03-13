@@ -723,4 +723,34 @@
   - API `GET /api/workflows/:id/executions?status=FAILED` возвращает отфильтрованный список + counts
   - При смене tab/filter pagination сбрасывается на страницу 1
 - **Проверка**: создать несколько failed executions, проверить фильтрацию, убедиться что counts обновляются
+### TASK-029: Workflow Editor full-width workspace layout
+- **Статус**: `done`
+- **Цель**: дать editor-странице больше полезного пространства под canvas без изменения product scope
+- **Проблема**:
+  - editor наследовал общий `max-w-[1680px]` layout и был визуально зажат по центру
+  - canvas получал остаточную ширину после двух боковых панелей
+  - высота canvas и колонок была жёстко ограничена `780px/820px`, из-за чего editor слабо использовал viewport
+- **Что хотим получить**:
+  - editor использует почти всю ширину viewport с рабочими gutter'ами
+  - canvas становится главным surface страницы
+  - sidebar и config panel остаются читаемыми и скроллятся независимо
+  - editor лучше использует высоту экрана на desktop/laptop
+- **Scope**:
+  - выделить editor route в отдельный wide layout
+  - вынести общий header в переиспользуемый компонент
+  - перевести editor page и canvas с fixed-height на flex/min-h-0 layout
+  - сохранить текущий stacked fallback для меньших экранов
+- **Не входит**: resizable panels, collapse/expand rails, redesign toolbar/forms, backend changes
+- **Файлы**: `apps/web/src/App.tsx`, `apps/web/src/components/AppHeader.tsx`, `apps/web/src/layouts/AppLayout.tsx`, `apps/web/src/layouts/EditorLayout.tsx`, `apps/web/src/pages/WorkflowEditorPage.tsx`, `apps/web/src/components/editor/FlowCanvas.tsx`
+- **Acceptance**:
+  - editor страница визуально шире dashboard/history
+  - canvas получает больше ширины за счёт отдельного wide layout
+  - fixed heights `780px/820px` убраны, editor использует viewport-aware flex sizing
+  - sidebar/config panel не ломают скролл внутри editor layout
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - browser visual smoke в этой сессии не запускался
+
+
 

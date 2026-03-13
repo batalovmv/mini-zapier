@@ -5,6 +5,7 @@ import {
 
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AppLayout } from './layouts/AppLayout';
+import { EditorLayout } from './layouts/EditorLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { ExecutionHistoryPage } from './pages/ExecutionHistoryPage';
 import { LoginPage } from './pages/LoginPage';
@@ -20,16 +21,21 @@ const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       {
+        element: <EditorLayout />,
+        children: [
+          {
+            path: 'workflows/:id/edit',
+            element: <WorkflowEditorPage />,
+          },
+        ],
+      },
+      {
         path: '/',
         element: <AppLayout />,
         children: [
           {
             index: true,
             element: <DashboardPage />,
-          },
-          {
-            path: 'workflows/:id/edit',
-            element: <WorkflowEditorPage />,
           },
           {
             path: 'workflows/:id/history',

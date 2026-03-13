@@ -132,7 +132,7 @@ function FlowCanvasInner() {
   }
 
   return (
-    <div className="app-panel relative h-[780px] overflow-hidden 2xl:h-[820px]">
+    <div className="app-panel relative flex h-full flex-col overflow-hidden">
       <div className="border-b border-slate-900/10 px-5 py-4">
         <div className="flex items-center justify-between gap-4">
           <p className="muted-label">Workflow Canvas</p>
@@ -146,7 +146,7 @@ function FlowCanvasInner() {
 
       <div
         data-testid="workflow-canvas-dropzone"
-        className="h-[calc(100%-89px)]"
+        className="min-h-0 flex-1"
         onDragOver={(event) => {
           event.preventDefault();
           event.dataTransfer.dropEffect = 'move';

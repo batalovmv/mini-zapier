@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-028 — `Execution History status filters + counters`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–028 закрыты
+- **Последнее изменение**: TASK-029 — `Workflow Editor full-width workspace layout`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–029 закрыты
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -177,6 +177,18 @@
     - `pnpm --filter @mini-zapier/web run build`
     - browser visual smoke в этой сессии не запускался
 
+- **Что сделано в TASK-029**:
+  - `apps/web/src/components/AppHeader.tsx` — вынесен общий sticky header с nav/logout, который переиспользуется обоими layout'ами
+  - `apps/web/src/layouts/EditorLayout.tsx` — добавлен отдельный wide layout для editor route без `max-w-[1680px]` на основном контенте
+  - `apps/web/src/layouts/AppLayout.tsx` — inline header удалён, обычные страницы продолжают использовать общий centered container
+  - `apps/web/src/App.tsx` — editor route вынесен в отдельную ветку под `ProtectedRoute`, dashboard/history остались под `AppLayout`
+  - `apps/web/src/pages/WorkflowEditorPage.tsx` — страница переведена на `flex` + `min-h-0` layout; toolbar фиксируется по контенту, рабочая grid-область забирает оставшуюся высоту
+  - `apps/web/src/components/editor/FlowCanvas.tsx` — fixed heights `780px/820px` убраны; canvas теперь тянется через `h-full` / `flex-1`
+  - `NodeSidebar` и `ConfigPanel` продолжают работать внутри `h-full` flex-контейнеров с независимым vertical scroll в desktop layout
+  - **Проверки TASK-029**:
+    - `pnpm --filter @mini-zapier/web build`
+    - browser visual smoke в этой сессии не запускался
+
 ## Следующий шаг
 Новых TASK в текущем `backlog.md` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
 
@@ -288,4 +300,7 @@
 | TASK-026 | done | см. `git log` | two-line mapping/header rows, compact remove controls, clearer empty placeholders |
 | TASK-027 | done | см. `git log` | Copy URL/curl buttons, clipboard toasts, Idempotency-Key hint, monospace URL |
 | TASK-028 | done | см. `git log` (`TASK-028: execution history status filters + counters`) | History tabs/counters + API status filter/counts |
+| TASK-029 | done | см. `git log` (`TASK-029: workflow editor full-width workspace layout`) | shared header + wide editor layout + viewport-aware canvas sizing |
+
+
 
