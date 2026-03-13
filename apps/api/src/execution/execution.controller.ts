@@ -64,9 +64,14 @@ export class ExecutionController {
   }
 
   @Get('workflows/:id/executions')
-  @ApiOperation({ summary: 'List workflow executions' })
+  @ApiOperation({
+    summary: 'List workflow executions with optional status filter and counts',
+  })
   @ApiParam({ name: 'id', description: 'Workflow id' })
-  @ApiOkResponse({ description: 'Executions returned.' })
+  @ApiOkResponse({
+    description:
+      'Filtered executions returned with aggregate counts for the whole workflow.',
+  })
   @ApiNotFoundResponse({ description: 'Workflow not found.' })
   @ApiBadRequestResponse({ description: 'Pagination is invalid.' })
   getExecutions(

@@ -6,11 +6,20 @@ import { ExecutionTable } from '../components/execution/ExecutionTable';
 import { StepLogViewer } from '../components/execution/StepLogViewer';
 import { getApiErrorMessage } from '../lib/api/client';
 import { getExecution, listWorkflowExecutions } from '../lib/api/executions';
-import type { ExecutionListResponse } from '../lib/api/types';
+import type {
+  ExecutionHistoryStatusFilter,
+  ExecutionListResponse,
+} from '../lib/api/types';
 
 const EXECUTIONS_PER_PAGE = 8;
 const POLLING_INTERVAL_MS = 5000;
+const DEFAULT_STATUS_FILTER: ExecutionHistoryStatusFilter = 'ALL';
+const PENDING_STATUS = 'PENDING' as WorkflowExecutionDto['status'];
 const RUNNING_STATUS = 'RUNNING' as WorkflowExecutionDto['status'];
+const IN_PROGRESS_STATUSES = new Set<WorkflowExecutionDto['status']>([
+  PENDING_STATUS,
+  RUNNING_STATUS,
+]);
 
 function createEmptyExecutionResponse(page = 1): ExecutionListResponse {
   return {
@@ -18,6 +27,12 @@ function createEmptyExecutionResponse(page = 1): ExecutionListResponse {
     total: 0,
     page,
     limit: EXECUTIONS_PER_PAGE,
+    counts: {
+      all: 0,
+      success: 0,
+      failed: 0,
+      inProgress: 0,
+    },
   };
 }
 
@@ -26,6 +41,8 @@ export function ExecutionHistoryPage() {
   const workflowId = id;
 
   const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] =
+    useState<ExecutionHistoryStatusFilter>(DEFAULT_STATUS_FILTER);
   const [executionsResponse, setExecutionsResponse] = useState<ExecutionListResponse>(
     () => createEmptyExecutionResponse(),
   );
@@ -46,6 +63,7 @@ export function ExecutionHistoryPage() {
 
   async function loadExecutionList(
     targetPage: number,
+    targetFilter: ExecutionHistoryStatusFilter,
     background = false,
   ): Promise<void> {
     const requestId = ++listRequestRef.current;
@@ -62,6 +80,7 @@ export function ExecutionHistoryPage() {
       const response = await listWorkflowExecutions(workflowId, {
         page: targetPage,
         limit: EXECUTIONS_PER_PAGE,
+        status: targetFilter === 'ALL' ? undefined : targetFilter,
       });
 
       if (requestId !== listRequestRef.current) {
@@ -153,6 +172,7 @@ export function ExecutionHistoryPage() {
     listRequestRef.current += 1;
     detailRequestRef.current += 1;
     setPage(1);
+    setStatusFilter(DEFAULT_STATUS_FILTER);
     setExecutionsResponse(createEmptyExecutionResponse(1));
     setSelectedExecutionId(null);
     setSelectedExecution(null);
@@ -172,8 +192,8 @@ export function ExecutionHistoryPage() {
       return;
     }
 
-    void loadExecutionList(page);
-  }, [workflowId, page]);
+    void loadExecutionList(page, statusFilter);
+  }, [page, statusFilter, workflowId]);
 
   useEffect(() => {
     if (!selectedExecutionId) {
@@ -188,20 +208,25 @@ export function ExecutionHistoryPage() {
     void loadExecutionDetail(selectedExecutionId);
   }, [selectedExecutionId]);
 
-  const hasRunningExecutions =
-    executionsResponse.items.some(
-      (execution) => execution.status === RUNNING_STATUS,
-    ) || selectedExecution?.status === RUNNING_STATUS;
+  const selectedExecutionStatus =
+    selectedExecution?.status ??
+    executionsResponse.items.find((execution) => execution.id === selectedExecutionId)
+      ?.status;
+  const selectedExecutionInProgress =
+    selectedExecutionStatus !== undefined &&
+    IN_PROGRESS_STATUSES.has(selectedExecutionStatus);
+  const hasInProgressExecutions =
+    executionsResponse.counts.inProgress > 0 || selectedExecutionInProgress;
 
   useEffect(() => {
-    if (workflowId === 'new' || !hasRunningExecutions) {
+    if (workflowId === 'new' || !hasInProgressExecutions) {
       return;
     }
 
     const intervalHandle = window.setInterval(() => {
-      void loadExecutionList(page, true);
+      void loadExecutionList(page, statusFilter, true);
 
-      if (selectedExecutionId) {
+      if (selectedExecutionId && selectedExecutionInProgress) {
         void loadExecutionDetail(selectedExecutionId, true);
       }
     }, POLLING_INTERVAL_MS);
@@ -209,7 +234,14 @@ export function ExecutionHistoryPage() {
     return () => {
       window.clearInterval(intervalHandle);
     };
-  }, [hasRunningExecutions, page, selectedExecutionId, workflowId]);
+  }, [
+    hasInProgressExecutions,
+    page,
+    selectedExecutionId,
+    selectedExecutionInProgress,
+    statusFilter,
+    workflowId,
+  ]);
 
   function handleSelectExecution(executionId: string): void {
     if (executionId === selectedExecutionId) {
@@ -218,6 +250,17 @@ export function ExecutionHistoryPage() {
     }
 
     setSelectedExecutionId(executionId);
+  }
+
+  function handleStatusFilterChange(
+    nextFilter: ExecutionHistoryStatusFilter,
+  ): void {
+    if (nextFilter === statusFilter) {
+      return;
+    }
+
+    setStatusFilter(nextFilter);
+    setPage(1);
   }
 
   return (
@@ -258,14 +301,17 @@ export function ExecutionHistoryPage() {
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)]">
         <ExecutionTable
+          counts={executionsResponse.counts}
           executions={executionsResponse.items}
           limit={executionsResponse.limit}
           loading={listLoading}
           onPageChange={setPage}
           onSelectExecution={handleSelectExecution}
+          onStatusFilterChange={handleStatusFilterChange}
           page={executionsResponse.page}
           refreshing={listRefreshing}
           selectedExecutionId={selectedExecutionId}
+          statusFilter={statusFilter}
           total={executionsResponse.total}
         />
 

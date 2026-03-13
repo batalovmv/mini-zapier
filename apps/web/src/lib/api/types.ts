@@ -27,9 +27,13 @@ export interface WorkflowListParams {
   status?: WorkflowStatus;
 }
 
+export type ExecutionListStatusFilter = 'SUCCESS' | 'FAILED' | 'IN_PROGRESS';
+export type ExecutionHistoryStatusFilter = ExecutionListStatusFilter | 'ALL';
+
 export interface ExecutionListParams {
   page?: number;
   limit?: number;
+  status?: ExecutionListStatusFilter;
 }
 
 export interface WorkflowMutationInput {
@@ -55,6 +59,13 @@ export type UpdateConnectionInput = Partial<ConnectionMutationInput>;
 
 export interface ExecutionStartResponse {
   executionId: string;
+}
+
+export interface ExecutionCounts {
+  all: number;
+  success: number;
+  failed: number;
+  inProgress: number;
 }
 
 export interface StatsResponse {
@@ -87,5 +98,8 @@ export interface AvailableFieldsResponse {
 }
 
 export type WorkflowListResponse = PaginatedResponse<WorkflowDto>;
-export type ExecutionListResponse = PaginatedResponse<WorkflowExecutionDto>;
 
+export interface ExecutionListResponse
+  extends PaginatedResponse<WorkflowExecutionDto> {
+  counts: ExecutionCounts;
+}

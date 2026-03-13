@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-027 — `Webhook helper — Copy URL, Copy curl, usage hints`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–027 закрыты
+- **Последнее изменение**: TASK-028 — `Execution History status filters + counters`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–028 закрыты
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -156,6 +156,19 @@
     - Hint про `Idempotency-Key` / `X-Event-ID` показан отдельным текстом в UI (не в curl)
     - `X-Webhook-Secret` hint оформлен с `<code>` тегом
   - **Проверки**: `pnpm --filter @mini-zapier/web run build` — OK
+- **Что сделано в TASK-028**:
+  - **Backend**:
+    - `apps/api/src/execution/dto/list-executions-query.dto.ts` — `status` query filter (`SUCCESS` | `FAILED` | `IN_PROGRESS`) для `GET /api/workflows/:id/executions`
+    - `apps/api/src/execution/execution.service.ts` — filtered history list + aggregate counts `{all, success, failed, inProgress}` по всему workflow
+    - `apps/api/src/execution/execution.controller.ts` — Swagger summary/description обновлены под filter + counts
+  - **Frontend**:
+    - `apps/web/src/lib/api/types.ts` — history params/response расширены `status` и `counts`
+    - `apps/web/src/pages/ExecutionHistoryPage.tsx` — state for active tab, page reset on filter change, polling по `counts.inProgress`
+    - `apps/web/src/components/execution/ExecutionTable.tsx` — tabs `All | Success | Failed | In progress`, counters, filter-aware empty states
+  - **Проверки TASK-028**:
+    - `pnpm --filter @mini-zapier/api build`
+    - `pnpm --filter @mini-zapier/web build`
+
 - **Что сделано в TASK-026**:
   - `apps/web/src/components/editor/config-forms/DataTransformConfig.tsx` — mapping rows switched to a two-line layout inside compact cards, so key and value each get full row width; remove control stays compact `×`; placeholders remain `key` / `value`
   - `apps/web/src/components/editor/config-forms/HttpRequestConfig.tsx` — header rows switched to a two-line layout inside compact cards, so header name and value each get full row width; remove control stays compact `×`; placeholders remain `header name` / `header value`
@@ -165,7 +178,7 @@
     - browser visual smoke в этой сессии не запускался
 
 ## Следующий шаг
-**TASK-028** (следующий по backlog)
+Новых TASK в текущем `backlog.md` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -274,3 +287,5 @@
 | TASK-025 follow-up | done | см. `git log` (`TASK-025: fix field picker empty states`) | API/UI empty-state reason + backlog/handoff scope sync |
 | TASK-026 | done | см. `git log` | two-line mapping/header rows, compact remove controls, clearer empty placeholders |
 | TASK-027 | done | см. `git log` | Copy URL/curl buttons, clipboard toasts, Idempotency-Key hint, monospace URL |
+| TASK-028 | done | см. `git log` (`TASK-028: execution history status filters + counters`) | History tabs/counters + API status filter/counts |
+

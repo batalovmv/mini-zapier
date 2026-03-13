@@ -28,7 +28,10 @@ import {
   resolveChainPositions,
 } from './available-fields.util';
 import { AvailableFieldsResponseDto } from './dto/available-fields-response.dto';
-import { ListExecutionsQueryDto } from './dto/list-executions-query.dto';
+import {
+  ExecutionListStatusFilter,
+  ListExecutionsQueryDto,
+} from './dto/list-executions-query.dto';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
@@ -52,6 +55,14 @@ export interface ExecutionListResponse {
   total: number;
   page: number;
   limit: number;
+  counts: ExecutionCounts;
+}
+
+export interface ExecutionCounts {
+  all: number;
+  success: number;
+  failed: number;
+  inProgress: number;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -203,17 +214,48 @@ export class ExecutionService {
 
     const page = this.parsePositiveInteger(query.page, 'page', DEFAULT_PAGE);
     const limit = this.parsePositiveInteger(query.limit, 'limit', DEFAULT_LIMIT);
+    const where = this.buildExecutionListWhere(workflowId, query.status);
 
-    const [total, executions] = await this.prisma.$transaction([
+    const [
+      total,
+      executions,
+      allCount,
+      successCount,
+      failedCount,
+      inProgressCount,
+    ] = await this.prisma.$transaction([
       this.prisma.workflowExecution.count({
-        where: { workflowId },
+        where,
       }),
       this.prisma.workflowExecution.findMany({
-        where: { workflowId },
+        where,
         skip: (page - 1) * limit,
         take: limit,
         orderBy: {
           createdAt: 'desc',
+        },
+      }),
+      this.prisma.workflowExecution.count({
+        where: { workflowId },
+      }),
+      this.prisma.workflowExecution.count({
+        where: {
+          workflowId,
+          status: ExecutionStatus.SUCCESS,
+        },
+      }),
+      this.prisma.workflowExecution.count({
+        where: {
+          workflowId,
+          status: ExecutionStatus.FAILED,
+        },
+      }),
+      this.prisma.workflowExecution.count({
+        where: {
+          workflowId,
+          status: {
+            in: [ExecutionStatus.PENDING, ExecutionStatus.RUNNING],
+          },
         },
       }),
     ]);
@@ -223,6 +265,12 @@ export class ExecutionService {
       total,
       page,
       limit,
+      counts: {
+        all: allCount,
+        success: successCount,
+        failed: failedCount,
+        inProgress: inProgressCount,
+      },
     };
   }
 
@@ -396,6 +444,30 @@ export class ExecutionService {
       throw new NotFoundException(`Workflow "${workflowId}" not found.`);
     }
   }
+
+  private buildExecutionListWhere(
+    workflowId: string,
+    status?: ExecutionListStatusFilter,
+  ): Prisma.WorkflowExecutionWhereInput {
+    if (!status) {
+      return { workflowId };
+    }
+
+    if (status === ExecutionListStatusFilter.IN_PROGRESS) {
+      return {
+        workflowId,
+        status: {
+          in: [ExecutionStatus.PENDING, ExecutionStatus.RUNNING],
+        },
+      };
+    }
+
+    return {
+      workflowId,
+      status,
+    };
+  }
+
 
   private buildDefinitionSnapshot(
     workflow: WorkflowWithGraph,
@@ -600,4 +672,6 @@ export class ExecutionService {
     };
   }
 }
+
+
 
