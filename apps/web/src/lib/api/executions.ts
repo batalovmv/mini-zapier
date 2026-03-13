@@ -2,6 +2,7 @@ import { WorkflowExecutionDto } from '@mini-zapier/shared';
 
 import { apiClient } from './client';
 import {
+  AvailableFieldsResponse,
   ExecutionListParams,
   ExecutionListResponse,
   ExecutionStartResponse,
@@ -28,6 +29,16 @@ export async function listWorkflowExecutions(
     {
       params,
     },
+  );
+
+  return response.data;
+}
+
+export async function getAvailableFields(
+  workflowId: string,
+): Promise<AvailableFieldsResponse> {
+  const response = await apiClient.get<AvailableFieldsResponse>(
+    `/workflows/${workflowId}/available-fields`,
   );
 
   return response.data;

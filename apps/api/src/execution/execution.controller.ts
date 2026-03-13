@@ -20,6 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { WorkflowExecutionDto } from '@mini-zapier/shared';
 
+import { AvailableFieldsResponseDto } from './dto/available-fields-response.dto';
 import { ListExecutionsQueryDto } from './dto/list-executions-query.dto';
 import { ExecutionListResponse, ExecutionService } from './execution.service';
 
@@ -73,6 +74,20 @@ export class ExecutionController {
     @Query() query: ListExecutionsQueryDto,
   ): Promise<ExecutionListResponse> {
     return this.executionService.getExecutions(workflowId, query);
+  }
+
+  @Get('workflows/:id/available-fields')
+  @ApiOperation({ summary: 'Get available template fields for workflow actions' })
+  @ApiParam({ name: 'id', description: 'Workflow id' })
+  @ApiOkResponse({
+    description: 'Available fields returned.',
+    type: AvailableFieldsResponseDto,
+  })
+  @ApiNotFoundResponse({ description: 'Workflow not found.' })
+  getAvailableFields(
+    @Param('id') workflowId: string,
+  ): Promise<AvailableFieldsResponseDto> {
+    return this.executionService.getAvailableFields(workflowId);
   }
 
   @Get('executions/:id')

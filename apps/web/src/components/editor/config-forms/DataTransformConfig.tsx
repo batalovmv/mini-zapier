@@ -1,4 +1,7 @@
+import { useRef } from 'react';
+
 import type { ConfigUpdater } from '../ConfigPanel';
+import { FieldPicker, insertAtCursor, insertAtCursorRecord } from '../FieldPicker';
 
 function toStringRecord(value: unknown): Record<string, string> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -21,6 +24,9 @@ export function DataTransformConfig({
   config,
   onChange,
 }: DataTransformConfigProps) {
+  const templateRef = useRef<HTMLTextAreaElement>(null);
+  const mappingValueRefs = useRef<(HTMLInputElement | null)[]>([]);
+
   const mode = config.mode === 'mapping' ? 'mapping' : 'template';
   const mapping = toStringRecord(config.mapping);
   const mappingEntries =
@@ -103,8 +109,15 @@ export function DataTransformConfig({
       </label>
 
       {mode === 'template' ? (
-        <label className="block">
-          <span className="muted-label">Template</span>
+        <div className="block">
+          <div className="flex items-center justify-between">
+            <span className="muted-label">Template</span>
+            <FieldPicker
+              onSelect={(f) =>
+                insertAtCursor(templateRef, f, 'template', config, onChange)
+              }
+            />
+          </div>
           <textarea
             aria-label="Data transform template"
             className="mt-2 min-h-36 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
@@ -117,9 +130,10 @@ export function DataTransformConfig({
               }));
             }}
             placeholder='{"name":"{{input.name}}"}'
+            ref={templateRef}
             value={typeof config.template === 'string' ? config.template : ''}
           />
-        </label>
+        </div>
       ) : (
         <div>
           <div className="flex items-center justify-between gap-3">
@@ -146,7 +160,7 @@ export function DataTransformConfig({
             {mappingEntries.map(([key, value], index) => (
               <div
                 key={`${key}-${index}`}
-                className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2"
+                className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto] items-center gap-2"
               >
                 <input
                   aria-label={`Mapping key ${index + 1}`}
@@ -165,9 +179,29 @@ export function DataTransformConfig({
                     updateMappingValue(index, event.target.value)
                   }
                   placeholder="{{input.field}}"
+                  ref={(el) => {
+                    mappingValueRefs.current[index] = el;
+                  }}
                   type="text"
                   value={value}
                 />
+                {key.trim().length > 0 ? (
+                  <FieldPicker
+                    onSelect={(f) =>
+                      insertAtCursorRecord(
+                        mappingValueRefs.current[index],
+                        f,
+                        'mapping',
+                        key,
+                        config,
+                        onChange,
+                        toStringRecord,
+                      )
+                    }
+                  />
+                ) : (
+                  <div className="h-6 w-6" />
+                )}
                 <button
                   className="rounded-2xl border border-slate-900/10 px-3 text-sm font-semibold text-slate-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
                   onClick={() => removeMapping(index)}

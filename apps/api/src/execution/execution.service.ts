@@ -21,6 +21,13 @@ import {
 
 import { PrismaService } from '../prisma/prisma.service';
 import { QueueService } from '../queue/queue.service';
+import {
+  computeChainSignature,
+  extractFieldPaths,
+  parseSnapshotForChain,
+  resolveChainPositions,
+} from './available-fields.util';
+import { AvailableFieldsResponseDto } from './dto/available-fields-response.dto';
 import { ListExecutionsQueryDto } from './dto/list-executions-query.dto';
 
 const DEFAULT_PAGE = 1;
@@ -236,6 +243,110 @@ export class ExecutionService {
     }
 
     return this.toWorkflowExecutionDto(execution);
+  }
+
+  async getAvailableFields(
+    workflowId: string,
+  ): Promise<AvailableFieldsResponseDto> {
+    const workflow = await this.prisma.workflow.findUnique({
+      where: { id: workflowId },
+      include: { nodes: true, edges: true },
+    });
+
+    if (!workflow) {
+      throw new NotFoundException(`Workflow "${workflowId}" not found.`);
+    }
+
+    const currentNodes = workflow.nodes.map((n) => ({
+      id: n.id,
+      nodeKind: n.nodeKind,
+      nodeType: n.nodeType,
+    }));
+    const currentEdges = workflow.edges.map((e) => ({
+      sourceNodeId: e.sourceNodeId,
+      targetNodeId: e.targetNodeId,
+    }));
+    const currentSignature = computeChainSignature(currentNodes, currentEdges);
+    const currentChain = resolveChainPositions(currentNodes, currentEdges);
+
+    const recentExecutions = await this.prisma.workflowExecution.findMany({
+      where: {
+        workflowId,
+        status: ExecutionStatus.SUCCESS,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      include: {
+        stepLogs: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    const hasExecutions = recentExecutions.length > 0;
+
+    for (const execution of recentExecutions) {
+      const snapshot = parseSnapshotForChain(execution.definitionSnapshot);
+      const snapshotSignature = computeChainSignature(
+        snapshot.nodes,
+        snapshot.edges,
+      );
+
+      if (snapshotSignature !== currentSignature) {
+        continue;
+      }
+
+      const snapshotChain = resolveChainPositions(
+        snapshot.nodes,
+        snapshot.edges,
+      );
+
+      const positions: { position: number; fields: string[] }[] = [];
+      let hasAnyFields = false;
+
+      // Position 0: trigger data
+      const triggerFields = extractFieldPaths(execution.triggerData);
+      positions.push({ position: 0, fields: triggerFields });
+
+      if (triggerFields.length > 0) {
+        hasAnyFields = true;
+      }
+
+      // Position 1..N: step log outputs
+      for (let i = 0; i < currentChain.length; i++) {
+        const snapshotNodeId = snapshotChain[i];
+        const stepLog = snapshotNodeId
+          ? execution.stepLogs.find((sl) => sl.nodeId === snapshotNodeId)
+          : undefined;
+        const fields = stepLog
+          ? extractFieldPaths(stepLog.outputData)
+          : [];
+
+        positions.push({ position: i + 1, fields });
+
+        if (fields.length > 0) {
+          hasAnyFields = true;
+        }
+      }
+
+      if (!hasAnyFields) {
+        continue;
+      }
+
+      return {
+        sourceExecutionId: execution.id,
+        sourceWorkflowVersion: execution.workflowVersion,
+        hasExecutions,
+        positions,
+      };
+    }
+
+    return {
+      sourceExecutionId: null,
+      sourceWorkflowVersion: null,
+      hasExecutions,
+      positions: [],
+    };
   }
 
   private async cleanupFailedEnqueue(

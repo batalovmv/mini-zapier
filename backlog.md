@@ -608,3 +608,119 @@
   - падение build роняет pipeline
   - при наличии env/secrets optional `e2e` job стартует после установки Playwright browser
   - падение e2e роняет pipeline, если e2e job включён
+
+---
+
+## Post-v1: UX improvements
+
+### TASK-025: Field picker для template interpolation
+- **Статус**: `done`
+- **Цель**: дать пользователю выбирать доступные поля из dropdown вместо ручного ввода `{{input.field}}`
+- **Проблема**: сейчас при создании mapping в Data Transform, написании `{{input.}}` в HTTP Request body/url, template mode Data Transform, Email subject/body, Telegram message — пользователь должен **угадывать** имена полей. Нет никакой подсказки какие поля доступны. Единственный способ узнать — сходить в History → Step Logs → Output data предыдущего шага и посмотреть JSON. Это плохой UX — новый пользователь не поймёт что писать.
+- **Контекст (важно для разработчика)**:
+  - Каждый action в цепочке получает `input` — это output предыдущего шага (или triggerData для первого action после trigger)
+  - Ноды получают **новые server-side id** при каждом `PUT /workflows/:id` (workflow.service.ts удаляет старые и создаёт новые). Поэтому **нельзя ключевать поля по nodeId** из execution — после любого сохранения маппинг сломается
+  - Правильный подход: определять "available input for current action" по **позиции в линейной цепочке** (chain-resolver уже умеет строить упорядоченный массив нод). Для action на позиции N → взять outputData шага N-1 (или triggerData если N=0)
+  - API должен возвращать `sourceExecutionId` и `sourceWorkflowVersion`, чтобы UI мог показать "данные из версии X" если workflow изменился с момента последнего execution
+  - `FieldPicker` должен быть **assistive UI**, а не механизмом валидации: если данных нет, версия не совпала или поле исчезло, ручной ввод `{{input.*}}` продолжает работать без блокировок
+- **Что хотим получить**:
+  - Во всех полях где поддерживается `{{input.field}}` — при вводе `{{` или по кнопке показывать **dropdown с доступными полями**
+  - **Surfaces**: mapping value в Data Transform, template textarea в Data Transform (mode=template), HTTP Request url/body/header values, Email subject/body, Telegram message, DB Query params
+  - Список полей берётся из **последнего успешного execution**: для action на позиции N в цепочке → outputData шага N-1, для первого action → triggerData
+  - Если workflow ещё ни разу не запускался — показать подсказку "Запустите workflow хотя бы раз чтобы увидеть доступные поля" и оставить ручной ввод
+  - Если workflow version изменился с момента execution — показать warning "Поля из версии N, текущая версия M"
+  - При выборе поля из dropdown — вставить `{{input.fieldName}}` в текущую позицию курсора
+  - Для вложенных объектов поддержать dot-notation: `{{input.data.user.name}}`
+- **Scope**:
+  - Новый API endpoint: `GET /api/workflows/:id/available-fields` — для каждой позиции в линейной цепочке возвращает: `{position, fields: string[], sourceExecutionId, sourceWorkflowVersion}`. Позиция определяется через chain-resolver по текущему definition (edges), данные берутся из step logs последнего SUCCESS execution
+  - Компонент `FieldPicker` — dropdown/autocomplete с иконкой ⚡ рядом с input-полями
+  - Интеграция во все interpolation surfaces (см. список выше)
+  - Fallback на ручной ввод если нет данных
+- **Не входит**: парсинг JSON Schema, предпросмотр значений, валидация что поле существует при save
+- **Файлы**: apps/api/src/execution/ (новый endpoint), apps/web/src/components/editor/FieldPicker.tsx, все config-forms
+- **Acceptance**:
+  - В mapping value нажал кнопку или ввёл `{{` → dropdown с полями из последнего execution
+  - В template textarea Data Transform — тот же picker работает
+  - Выбрал поле → вставилось `{{input.fieldName}}`
+  - Workflow без executions → подсказка, ручной ввод работает
+  - Вложенные поля отображаются через dot-notation
+  - После PUT (новые nodeId) picker продолжает работать (привязка по позиции, не по id)
+  - Отсутствие данных в picker НЕ блокирует сохранение workflow и НЕ ломает ручной ввод template strings
+- **Проверка**: создать workflow, запустить, открыть редактор, убедиться что в config-формах видны поля из triggerData/outputData. Сохранить workflow (PUT), убедиться что picker не сломался
+
+### TASK-026: Config panel layout polish — ширина полей и placeholder clarity
+- **Статус**: `todo`
+- **Цель**: исправить визуальные проблемы в config panel форм, которые мешают работе
+- **Проблема**: config panel имеет фиксированную ширину, из-за чего:
+  1. **Mapping key/value inputs обрезают текст** — `{{input.total}}` показывается как `{{input.tot...`, `{{input.customer_name}}` как `{{input.cus...`. Пользователь не видит полное значение без клика в поле
+  2. **Header key/value тоже обрезаются** — `Content-Ty...` вместо `Content-Type`
+  3. **"Add field" в mapping** создаёт строку с placeholder `Field` / `{{input.field}}` — выглядит как заполненные данные, а не placeholder. Не очевидно что это пустая строка
+- **Что хотим получить**:
+  - Mapping row layout: key и value inputs занимают больше ширины. Варианты: убрать кнопку Remove в иконку ✕, показывать Remove только при hover, или перевести mapping rows в вертикальный layout (key сверху, value снизу)
+  - Header key/value: аналогично расширить или перевести в вертикальный layout
+  - Новая строка mapping: **пустые поля** с placeholder text (серым цветом, `placeholder=`), а не заполненные значениями `Field`/`{{input.field}}`
+- **Не входит**: resizable config panel, drag-and-drop reorder, webhook URL (→ TASK-027)
+- **Файлы**: apps/web/src/components/editor/config-forms/DataTransformConfig.tsx, HttpRequestConfig.tsx
+- **Acceptance**:
+  - `{{input.customer_name}}` полностью видно в mapping value input без скролла
+  - Header `Content-Type` / `application/json` полностью видны
+  - Новая строка mapping — пустые поля с серым placeholder
+- **Проверка**: визуальная проверка в браузере, pnpm build
+
+### TASK-027: Webhook helper — Copy URL, Copy curl, usage hints
+- **Статус**: `todo`
+- **Цель**: помочь пользователю быстро использовать webhook endpoint после создания workflow
+- **Проблема**: после создания workflow с Webhook trigger пользователь видит URL в config panel, но:
+  1. URL обрезается в узком read-only input и его неудобно копировать
+  2. Непонятно как именно вызвать webhook — какие заголовки нужны, в каком формате body
+  3. Новый пользователь не знает про обязательный `X-Webhook-Secret` и опциональный `Idempotency-Key`
+- **Что хотим получить**:
+  - **Copy URL** кнопка — копирует полный webhook URL в clipboard одним кликом
+  - **Copy curl** кнопка — копирует готовую curl-команду для тестирования:
+    ```
+    curl -X POST <url> \
+      -H "Content-Type: application/json" \
+      -H "X-Webhook-Secret: <your-secret>" \
+      -d '{"key": "value"}'
+    ```
+  - Секрет в curl: показывать `<your-secret>` (не расшифрованный) с подсказкой "замените на секрет из вашего Connection"
+  - Опционально: строка с `Idempotency-Key` header в curl примере (закомментированная) + hint что это для дедупликации
+  - Toast "Copied!" после каждого копирования
+  - URL поле: расширить или сделать monospace с ellipsis + tooltip при hover показывающий полный URL
+  - `Copy curl` должен копировать **однострочный** пример команды, чтобы он был пригоден для быстрого paste в обычный терминал и не зависел от shell-specific multiline syntax
+- **Не входит**: sandbox/test mode, webhook log viewer, inline test-send
+- **Файлы**: apps/web/src/components/editor/config-forms/WebhookConfig.tsx
+- **Acceptance**:
+  - Кнопка "Copy URL" копирует полный webhook URL в clipboard
+  - Кнопка "Copy curl" копирует готовую curl команду с placeholder secret
+  - Toast "Copied!" после копирования
+  - Полный URL виден (tooltip/expanded) без обрезки
+- **Проверка**: визуальная проверка, ручное тестирование copy в clipboard, pnpm build
+
+### TASK-028: Execution History — фильтр по статусу + счётчики
+- **Статус**: `todo`
+- **Цель**: дать пользователю быстро находить нужные executions по статусу
+- **Проблема**: при большом количестве executions таблица показывает все подряд. Нет возможности отфильтровать только FAILED (чтобы разобраться с ошибками) или увидеть сколько выполнений в каждом статусе.
+- **Контекст (важно для разработчика)**:
+  - В системе 4 статуса execution: `PENDING`, `RUNNING`, `SUCCESS`, `FAILED` (см. packages/shared execution.ts)
+  - Текущий UI уже показывает PENDING как "Queued" (ExecutionTable.tsx)
+  - Текущий API `GET /api/workflows/:id/executions` поддерживает только `page`/`limit`, ответ содержит `{items, total, page, limit}` — нет фильтра по статусу и нет счётчиков
+  - Для табов со счётчиками нужно расширить API: либо добавить `counts: {all, success, failed, inProgress}` в response, либо отдельный endpoint. Рекомендуется расширить текущий response — один запрос вместо нескольких
+  - `counts` должны считаться по **всему workflow**, а не по текущей странице выдачи, иначе табы и счётчики будут misleading
+- **Что хотим получить**:
+  - Tabs фильтр: **All** | **Success** | **Failed** | **In progress** (PENDING + RUNNING объединены, т.к. пользователю не важна разница)
+  - Счётчик рядом с каждым табом: "Failed (3)", "In progress (1)"
+  - API: `GET /api/workflows/:id/executions?status=FAILED&page=1&limit=20`
+  - API response расширить полем `counts`: `{items, total, page, limit, counts: {all: 15, success: 10, failed: 4, inProgress: 1}}`
+  - `status` query param принимает: `SUCCESS`, `FAILED`, `IN_PROGRESS` (маппится на `WHERE status IN ('PENDING','RUNNING')`)
+- **Не входит**: текстовый поиск по triggerData, date range picker, export в CSV, real-time WebSocket
+- **Файлы**: apps/api/src/execution/execution.controller.ts, apps/api/src/execution/execution.service.ts, apps/api/src/execution/dto/list-executions-query.dto.ts, apps/web/src/pages/ExecutionHistoryPage.tsx, apps/web/src/components/execution/ExecutionTable.tsx
+- **Acceptance**:
+  - Tabs All | Success | Failed | In progress на странице History
+  - Выбор "Failed" показывает только failed executions
+  - Счётчики показывают количество в каждой категории (один API запрос)
+  - "In progress" показывает PENDING + RUNNING executions вместе
+  - API `GET /api/workflows/:id/executions?status=FAILED` возвращает отфильтрованный список + counts
+  - При смене tab/filter pagination сбрасывается на страницу 1
+- **Проверка**: создать несколько failed executions, проверить фильтрацию, убедиться что counts обновляются
+

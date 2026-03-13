@@ -11,6 +11,7 @@ import {
 import { create } from 'zustand';
 
 import type { WorkflowMutationInput } from '../lib/api/types';
+import { computeStructuralFingerprint } from '../lib/editor-chain';
 import {
   createEditorNode,
   getNodeDefinition,
@@ -307,6 +308,7 @@ interface WorkflowEditorStore {
   nodes: WorkflowEditorNode[];
   edges: WorkflowEditorEdge[];
   selectedNodeId: string | null;
+  savedStructuralFingerprint: string | null;
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   onConnect: (connection: Connection) => void;
@@ -344,6 +346,7 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
   nodes: [],
   edges: [],
   selectedNodeId: null,
+  savedStructuralFingerprint: null,
 
   onNodesChange(changes) {
     set((state) => {
@@ -493,10 +496,21 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
       nodes: [],
       edges: [],
       selectedNodeId: null,
+      savedStructuralFingerprint: null,
     });
   },
 
   loadWorkflow(workflow) {
+    const editorNodes = workflow.nodes.map((node) => toEditorNode(node));
+    const editorEdges = workflow.edges.map((edge) => ({
+      id: edge.id ?? crypto.randomUUID(),
+      source: edge.sourceNodeId,
+      target: edge.targetNodeId,
+      sourceHandle: edge.sourceHandle ?? null,
+      targetHandle: edge.targetHandle ?? null,
+      type: 'smoothstep',
+    }));
+
     set({
       workflowId: workflow.id,
       workflowName: workflow.name,
@@ -505,16 +519,13 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
       workflowDescription: workflow.description ?? null,
       workflowTimezone: workflow.timezone ?? null,
       viewport: toViewport(workflow.viewport),
-      nodes: workflow.nodes.map((node) => toEditorNode(node)),
-      edges: workflow.edges.map((edge) => ({
-        id: edge.id ?? crypto.randomUUID(),
-        source: edge.sourceNodeId,
-        target: edge.targetNodeId,
-        sourceHandle: edge.sourceHandle ?? null,
-        targetHandle: edge.targetHandle ?? null,
-        type: 'smoothstep',
-      })),
+      nodes: editorNodes,
+      edges: editorEdges,
       selectedNodeId: null,
+      savedStructuralFingerprint: computeStructuralFingerprint(
+        editorNodes,
+        editorEdges,
+      ),
     });
   },
 

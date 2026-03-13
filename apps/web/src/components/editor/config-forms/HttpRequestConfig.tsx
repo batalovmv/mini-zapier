@@ -1,4 +1,7 @@
+import { useRef } from 'react';
+
 import type { ConfigUpdater } from '../ConfigPanel';
+import { FieldPicker, insertAtCursor, insertAtCursorRecord } from '../FieldPicker';
 
 function toStringRecord(value: unknown): Record<string, string> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -21,6 +24,10 @@ export function HttpRequestConfig({
   config,
   onChange,
 }: HttpRequestConfigProps) {
+  const urlRef = useRef<HTMLInputElement>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const headerValueRefs = useRef<(HTMLInputElement | null)[]>([]);
+
   const headers = toStringRecord(config.headers);
   const headerEntries =
     Object.entries(headers).length > 0
@@ -82,8 +89,15 @@ export function HttpRequestConfig({
 
   return (
     <div className="space-y-5">
-      <label className="block">
-        <span className="muted-label">URL</span>
+      <div className="block">
+        <div className="flex items-center justify-between">
+          <span className="muted-label">URL</span>
+          <FieldPicker
+            onSelect={(f) =>
+              insertAtCursor(urlRef, f, 'url', config, onChange)
+            }
+          />
+        </div>
         <input
           aria-label="HTTP request URL"
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
@@ -92,10 +106,11 @@ export function HttpRequestConfig({
             onChange((prev) => ({ ...prev, url: value }));
           }}
           placeholder="https://example.com/orders/{{input.id}}"
+          ref={urlRef}
           type="text"
           value={typeof config.url === 'string' ? config.url : ''}
         />
-      </label>
+      </div>
 
       <label className="block">
         <span className="muted-label">Method</span>
@@ -140,7 +155,7 @@ export function HttpRequestConfig({
           {headerEntries.map(([key, value], index) => (
             <div
               key={`${key}-${index}`}
-              className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2"
+              className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto] items-center gap-2"
             >
                 <input
                   aria-label={`Header key ${index + 1}`}
@@ -155,9 +170,29 @@ export function HttpRequestConfig({
                   className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) => updateHeaderValue(index, event.target.value)}
                   placeholder="Value"
+                ref={(el) => {
+                  headerValueRefs.current[index] = el;
+                }}
                 type="text"
                 value={value}
               />
+              {key.trim().length > 0 ? (
+                <FieldPicker
+                  onSelect={(f) =>
+                    insertAtCursorRecord(
+                      headerValueRefs.current[index],
+                      f,
+                      'headers',
+                      key,
+                      config,
+                      onChange,
+                      toStringRecord,
+                    )
+                  }
+                />
+              ) : (
+                <div className="h-6 w-6" />
+              )}
               <button
                 className="rounded-2xl border border-slate-900/10 px-3 text-sm font-semibold text-slate-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
                 onClick={() => removeHeader(index)}
@@ -170,8 +205,15 @@ export function HttpRequestConfig({
         </div>
       </div>
 
-      <label className="block">
-        <span className="muted-label">Body</span>
+      <div className="block">
+        <div className="flex items-center justify-between">
+          <span className="muted-label">Body</span>
+          <FieldPicker
+            onSelect={(f) =>
+              insertAtCursor(bodyRef, f, 'body', config, onChange)
+            }
+          />
+        </div>
         <textarea
           aria-label="HTTP request body"
           className="mt-2 min-h-36 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
@@ -180,9 +222,10 @@ export function HttpRequestConfig({
             onChange((prev) => ({ ...prev, body: value }));
           }}
           placeholder='{"orderId":"{{input.id}}"}'
+          ref={bodyRef}
           value={typeof config.body === 'string' ? config.body : ''}
         />
-      </label>
+      </div>
     </div>
   );
 }

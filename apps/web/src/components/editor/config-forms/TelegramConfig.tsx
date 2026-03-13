@@ -1,4 +1,7 @@
+import { useRef } from 'react';
+
 import type { ConfigUpdater } from '../ConfigPanel';
+import { FieldPicker, insertAtCursor } from '../FieldPicker';
 
 interface TelegramConfigProps {
   config: Record<string, unknown>;
@@ -9,6 +12,8 @@ export function TelegramConfig({
   config,
   onChange,
 }: TelegramConfigProps) {
+  const messageRef = useRef<HTMLTextAreaElement>(null);
+
   return (
     <div className="space-y-5">
       <label className="block">
@@ -25,8 +30,15 @@ export function TelegramConfig({
         />
       </label>
 
-      <label className="block">
-        <span className="muted-label">Message</span>
+      <div className="block">
+        <div className="flex items-center justify-between">
+          <span className="muted-label">Message</span>
+          <FieldPicker
+            onSelect={(f) =>
+              insertAtCursor(messageRef, f, 'message', config, onChange)
+            }
+          />
+        </div>
         <textarea
           className="mt-2 min-h-40 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
           onChange={(event) => {
@@ -34,9 +46,10 @@ export function TelegramConfig({
             onChange((prev) => ({ ...prev, message: value }));
           }}
           placeholder="Order {{input.id}} is ready."
+          ref={messageRef}
           value={typeof config.message === 'string' ? config.message : ''}
         />
-      </label>
+      </div>
     </div>
   );
 }

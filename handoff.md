@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-024 — `CI quality gate`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018 (deploy + auth) закрыт + TASK-019 (editor validation hardening) закрыт + TASK-020 (production cleanup + origin hardening) закрыт + TASK-021 (proxy-aware rate limiting) закрыт + TASK-022 (liveness, readiness, env fail-fast) закрыт + TASK-023 (editor UX hardening) закрыт + TASK-024 (CI quality gate) закрыт
+- **Последнее изменение**: TASK-025 — `Field picker для template interpolation`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–024 закрыты + TASK-025 (field picker) закрыт
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -123,8 +123,29 @@
   - E2E env: `MINI_ZAPIER_E2E_BASE_URL` и `MINI_ZAPIER_E2E_USERNAME` из repository variables, `MINI_ZAPIER_E2E_PASSWORD` из secrets, `MINI_ZAPIER_E2E_ECHO_URL` из variables
   - Concurrency group `ci-${{ github.ref }}` с `cancel-in-progress: true`
 
+- **Что сделано в TASK-025**:
+  - **Backend**: `apps/api/src/execution/available-fields.util.ts` — `resolveChainPositions()`, `extractFieldPaths()`, `computeChainSignature()`, `parseSnapshotForChain()`
+  - **Backend**: `apps/api/src/execution/dto/available-fields-response.dto.ts` — DTO + Swagger
+  - **Backend**: `execution.service.ts` — `getAvailableFields(workflowId)`: finds compatible SUCCESS execution via chain signature matching, skips empty manual runs, returns field paths per chain position
+  - **Backend**: `execution.controller.ts` — `GET /api/workflows/:id/available-fields` endpoint
+  - **Frontend**: `apps/web/src/lib/editor-chain.ts` — `computeChainPosition()`, `computeStructuralFingerprint()`
+  - **Frontend**: `apps/web/src/stores/workflow-editor.store.ts` — added `savedStructuralFingerprint` field, set in `loadWorkflow()`, cleared in `resetEditor()`
+  - **Frontend**: `apps/web/src/lib/api/executions.ts` — `getAvailableFields()` API client
+  - **Frontend**: `apps/web/src/lib/api/types.ts` — `AvailableFieldsResponse`, `AvailableFieldsPosition` types
+  - **Frontend**: `apps/web/src/components/editor/FieldPicker.tsx` — shared module-level cache with dedup, `useAvailableFields()` hook, `FieldPicker` component with ⚡ dropdown, `insertAtCursor()` and `insertAtCursorRecord()` utilities
+  - **Frontend**: Config forms integration — DataTransformConfig (template + mapping values), HttpRequestConfig (url + body + header values), EmailActionConfig (subject + body), TelegramConfig (message)
+  - **Excluded**: DbQueryConfig (JSON.parse validation conflicts with raw template insertion)
+  - **Key design decisions**:
+    - Position-based keying (not nodeId) since server regenerates IDs on every PUT
+    - Chain signature (trigger type + ordered action types) for structural compatibility between current workflow and execution snapshot
+    - Shared module-level cache with inflight dedup (multiple picker instances = 1 API call)
+    - Force refetch on dropdown open (covers Run-from-editor scenario)
+    - `savedStructuralFingerprint` in Zustand store (set on load, not on local edits) — when mismatch, picker hides fields and shows "Save workflow to update"
+    - `insertAtCursor` uses existing `onChange((prev) => ...)` pattern, no new local state
+    - Blank-key guard: picker hidden for mapping/header rows with empty key
+
 ## Следующий шаг
-**TASK-025** (следующий по backlog)
+**TASK-026** (следующий по backlog)
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -229,4 +250,5 @@
 | TASK-022 | done | 1c19f92 | liveness/readiness endpoints, env fail-fast for api+worker, ioredis readiness check, deployed+verified |
 | TASK-023 | done | 2a624c1 | remove dev copy, compact toolbar, toast cleanup, inline login error, node label in canvas |
 | TASK-024 | done | 9c01091, 2ce1a17 | GitHub Actions CI: build gate + optional e2e smoke |
+| TASK-025 | done | см. `git log` | Field picker: available-fields API + FieldPicker component + config form integration |
 

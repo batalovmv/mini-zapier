@@ -68,5 +68,17 @@ export interface StatsResponse {
   recentExecutions: WorkflowExecutionDto[];
 }
 
+export interface AvailableFieldsPosition {
+  position: number;
+  fields: string[];
+}
+
+export interface AvailableFieldsResponse {
+  sourceExecutionId: string | null;
+  sourceWorkflowVersion: number | null;
+  hasExecutions: boolean;
+  positions: AvailableFieldsPosition[];
+}
+
 export type WorkflowListResponse = PaginatedResponse<WorkflowDto>;
 export type ExecutionListResponse = PaginatedResponse<WorkflowExecutionDto>;
