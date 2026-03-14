@@ -191,10 +191,10 @@ export function WorkflowEditorPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-5 xl:overflow-hidden">
       <section className="app-panel app-panel-strong shrink-0 overflow-hidden">
-        <div className="flex flex-col gap-4 px-5 py-4 xl:flex-row xl:items-center xl:justify-between xl:px-6 xl:py-5">
-          <div className="flex flex-1 items-center gap-4">
+        <div className="flex flex-col gap-4 px-5 py-4 xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end xl:gap-6 xl:px-6 xl:py-5">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
             <Link
-              className="rounded-full border border-slate-900/10 bg-white/88 px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white"
+              className="inline-flex h-11 shrink-0 items-center rounded-full border border-slate-900/10 bg-white/88 px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white"
               to="/"
             >
               &larr; {messages.common.back}
@@ -202,7 +202,7 @@ export function WorkflowEditorPage() {
             <label className="block min-w-0 max-w-2xl flex-1">
               <span className="muted-label">{messages.workflowEditorPage.workflowName}</span>
               <input
-                className="mt-1 w-full rounded-[1.4rem] border border-slate-900/12 bg-white/92 px-4 py-2.5 text-base font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] outline-none transition focus:border-amber-500"
+                className="mt-1 h-11 w-full rounded-[1.35rem] border border-slate-900/12 bg-white/92 px-4 text-base font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] outline-none transition focus:border-amber-500"
                 data-testid="workflow-name-input"
                 onChange={(event) => setWorkflowName(event.target.value)}
                 placeholder={messages.workflowEditorPage.untitledWorkflow}
@@ -212,16 +212,19 @@ export function WorkflowEditorPage() {
             </label>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <span className={`status-pill ${getStatusClasses(workflowStatus)}`}>
+          <div className="flex flex-wrap items-center justify-end gap-2 rounded-[1.45rem] border border-slate-900/10 bg-white/72 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+            <span
+              className={`inline-flex h-10 items-center rounded-full border px-3.5 text-xs font-semibold uppercase tracking-[0.18em] ${getStatusClasses(workflowStatus)}`}
+            >
               {messages.common.workflowStatusLabels[workflowStatus]}
             </span>
-            <span className="app-chip font-semibold text-slate-700">
+            <span className="inline-flex h-10 items-center rounded-full border border-slate-900/10 bg-white/84 px-3.5 text-sm font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
               {workflowVersion === null ? messages.workflowEditorPage.unsaved : `v${workflowVersion}`}
             </span>
+            <span className="hidden h-7 w-px bg-slate-200/90 sm:block" />
 
             <button
-              className="rounded-full bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_20px_32px_-20px_rgba(141,69,20,0.62)] transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-amber-300"
+              className="inline-flex h-10 items-center rounded-full bg-amber-600 px-4 text-sm font-semibold text-white shadow-[0_18px_30px_-20px_rgba(141,69,20,0.62)] transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-amber-300"
               data-testid="save-workflow-button"
               disabled={saving}
               onClick={() => void handleSave()}
@@ -230,7 +233,7 @@ export function WorkflowEditorPage() {
               {saving ? messages.workflowEditorPage.saving : messages.common.save}
             </button>
             <button
-              className="rounded-full border border-slate-900/10 bg-white/90 px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+              className="inline-flex h-10 items-center rounded-full border border-slate-900/10 bg-white/90 px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
               data-testid="toggle-workflow-status-button"
               disabled={!workflowId || statusUpdating}
               onClick={() => void handleToggleStatus()}
@@ -242,7 +245,7 @@ export function WorkflowEditorPage() {
                 : toggleStatusLabel}
             </button>
             <button
-              className="rounded-full border border-slate-900/10 bg-white/90 px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-500/40 hover:bg-white disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+              className="inline-flex h-10 items-center rounded-full border border-slate-900/10 bg-white/90 px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-500/40 hover:bg-white disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
               data-testid="run-workflow-button"
               disabled={!workflowId || running}
               onClick={() => void handleRun()}
@@ -286,4 +289,3 @@ export function WorkflowEditorPage() {
     </div>
   );
 }
-

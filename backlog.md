@@ -1075,3 +1075,26 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-041: Inspector empty-state rhythm + editor toolbar alignment
+- **Статус**: `done`
+- **Цель**: убрать мёртвую вертикальную яму в пустом inspector и собрать верхний editor toolbar в более ровную, единообразную action bar композицию
+- **Проблема**:
+  - empty state правой панели оставлял неестественный разрыв между header и guidance block из-за vertical centering
+  - статус, версия и CTA в верхней панели editor выглядели разрозненно по высоте, позициям и визуальному весу
+- **Что сделано**:
+  - `ConfigPanel` — empty state переведён из centered layout в top-aligned stack, поэтому guidance теперь начинается сразу под header без большой пустой ямы
+  - `WorkflowEditorPage` — toolbar пересобран в более собранную action cluster: back button и name field выровнены по baseline, справа status/version/actions получили единый container и одинаковую высоту controls
+- **Не входит**:
+  - новые editor features
+  - backend/API changes
+  - redesign левой библиотеки узлов
+- **Файлы**:
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+- **Acceptance**:
+  - empty state inspector больше не имеет большого разрыва между header и guidance
+  - top toolbar editor выглядит как единый control bar, а не набор плавающих кнопок
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`

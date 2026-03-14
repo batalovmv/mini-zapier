@@ -231,7 +231,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-5">
-          <div className="flex min-h-full flex-col justify-center gap-4">
+          <div className="flex flex-col gap-4">
             <section className={railSectionMutedClass}>
               <p className="muted-label">{messages.configPanel.workspaceGuidanceEyebrow}</p>
 
