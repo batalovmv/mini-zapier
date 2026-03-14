@@ -3,8 +3,14 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-041 — `inspector empty-state rhythm + editor toolbar alignment`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–041 закрыты
+- **Последнее изменение**: TASK-042 — `inspector connection semantics clarity`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–042 закрыты
+- **Что сделано в TASK-042**:
+  - `apps/web/src/components/editor/ConfigPanel.tsx` — голые numeric badges в connection summary заменены на понятные текстовые состояния: `Выбрано: <name>`, `Не выбрано`, `Нет доступных`, `Доступно: N`
+  - `apps/web/src/components/editor/ConfigPanel.tsx` — из header и connection section убрано дублирование безымянного count; теперь inspector показывает именно состояние подключения, а не просто число
+  - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — добавлены locale-aware строки для новой семантики connection status
+  - **Проверки TASK-042**:
+    - `pnpm --filter @mini-zapier/web build`
 - **Что сделано в TASK-041**:
   - `apps/web/src/components/editor/ConfigPanel.tsx` — empty state inspector переведён в top-aligned layout без искусственного vertical centering, поэтому guidance block больше не висит посередине колонки
   - `apps/web/src/pages/WorkflowEditorPage.tsx` — верхний toolbar editor собран в более ровную action bar: status/version/CTA теперь живут в едином control group и выровнены по высоте
@@ -282,7 +288,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-Новых TASK в текущем `backlog.md` после `TASK-041` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
+Новых TASK в текущем `backlog.md` после `TASK-042` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -407,4 +413,4 @@
 | TASK-039 | done | см. `git log` (`TASK-039: inspector cleanup + compact flow-order hint`) | compact flow-order cue in left rail, cleaner and denser right inspector hierarchy |
 | TASK-040 | done | см. `git log` (`TASK-040: inspector structure refinement`) | right inspector flattened into a cleaner tool-panel with less empty-state waste and no duplicated connection summary |
 | TASK-041 | done | см. `git log` (`TASK-041: inspector empty-state rhythm + editor toolbar alignment`) | inspector empty state starts directly under the header, and the top editor controls now read as one aligned action bar |
-
+| TASK-042 | done | см. `git log` (`TASK-042: inspector connection semantics clarity`) | inspector now shows explicit connection states and availability instead of ambiguous numeric count badges |

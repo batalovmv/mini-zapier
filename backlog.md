@@ -1098,3 +1098,28 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-042: Inspector connection semantics clarity
+- **Статус**: `done`
+- **Цель**: убрать неочевидные числовые бейджи из правого inspector и показать состояние подключений так, чтобы пользователь сразу понимал, что именно отображается
+- **Проблема**:
+  - голые числа `0/1/4` в inspector выглядели как технические счётчики без объяснения смысла
+  - count дублировался в header и в connection section, но не отвечал на главный вопрос: выбрано ли подключение для текущего узла
+- **Что сделано**:
+  - `ConfigPanel` — connection summary переведён из голых numeric badges в текстовые status pills: `Выбрано: <name>`, `Не выбрано`, `Нет доступных`, `Доступно: N`
+  - `ConfigPanel` — убрано дублирование безымянного count между header и connection section; header теперь показывает тип подключения и его состояние, а section — состояние плюс доступность только когда это полезно
+  - `messages.en.ts`, `messages.ru.ts` — добавлены locale-aware строки для новых connection status labels
+- **Не входит**:
+  - backend/API changes
+  - redesign форм настройки узлов
+  - новые editor features
+- **Файлы**:
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - inspector больше не показывает голые numeric badges без подписи
+  - connection-required nodes явно различают состояния `выбрано`, `не выбрано` и `нет доступных`
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`

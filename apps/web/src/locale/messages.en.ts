@@ -303,6 +303,11 @@ export const en = {
     noConnectionRequired: 'No connection required',
     connectionSectionDescription: (connectionType: string) =>
       `Attach the ${connectionType} connection used by this node.`,
+    connectionNotSelected: 'Not selected',
+    noConnectionsInline: 'None available',
+    availableConnectionsCount: (count: number) =>
+      `Available: ${formatCount('en-US', count)}`,
+    selectedConnectionSummary: (name: string) => `Selected: ${name}`,
     availableConnections: 'Available connections',
     selectConnection: (connectionType: string) =>
       `Select ${connectionType} connection`,
@@ -631,4 +636,3 @@ export const en = {
 };
 
 export type LocaleMessages = typeof en;
-

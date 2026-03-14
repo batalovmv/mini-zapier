@@ -33,6 +33,8 @@ const railSectionClass =
   'rounded-[1.55rem] border border-slate-900/10 bg-white/88 px-4 py-4 shadow-[0_18px_34px_-30px_rgba(15,23,42,0.24)]';
 const railSectionMutedClass =
   'rounded-[1.55rem] border border-slate-900/10 bg-[linear-gradient(180deg,rgba(250,246,239,0.94)_0%,rgba(255,255,255,0.84)_100%)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]';
+const neutralMetaPillClass =
+  'inline-flex items-center rounded-full border border-slate-900/10 bg-white/84 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]';
 
 export function ConfigPanel({ workflowId }: ConfigPanelProps) {
   const { messages } = useLocale();
@@ -288,6 +290,21 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
       : connections.filter(
           (connection) => connection.type === definition?.connectionType,
         );
+  const selectedConnection =
+    selectedNode.data.connectionId === null
+      ? null
+      : availableConnections.find(
+          (connection) => connection.id === selectedNode.data.connectionId,
+        ) ?? null;
+  const connectionAvailabilityLabel =
+    availableConnections.length === 0
+      ? messages.configPanel.noConnectionsInline
+      : messages.configPanel.availableConnectionsCount(availableConnections.length);
+  const connectionStatusLabel = selectedConnection
+    ? messages.configPanel.selectedConnectionSummary(selectedConnection.name)
+    : availableConnections.length === 0
+      ? messages.configPanel.noConnectionsInline
+      : messages.configPanel.connectionNotSelected;
 
   return (
     <>
@@ -317,13 +334,13 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                 {definition?.connectionType ? (
                   <>
                     <span className="muted-label">{messages.configPanel.connectionEyebrow}</span>
-                    <span className="inline-flex items-center rounded-full border border-slate-900/10 bg-white/84 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                    <span className={neutralMetaPillClass}>
                       {connectionTypeLabel ?? definition.connectionType}
                     </span>
-                    <span className="app-pill">{availableConnections.length}</span>
+                    <span className={neutralMetaPillClass}>{connectionStatusLabel}</span>
                   </>
                 ) : (
-                  <span className="inline-flex items-center rounded-full border border-slate-900/10 bg-white/84 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                  <span className={neutralMetaPillClass}>
                     {messages.configPanel.noConnectionRequired}
                   </span>
                 )}
@@ -347,7 +364,13 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                     )}
                   </p>
                 </div>
-                <span className="app-pill">{availableConnections.length}</span>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2.5 border-t border-slate-900/8 pt-3">
+                <span className={neutralMetaPillClass}>{connectionStatusLabel}</span>
+                {availableConnections.length > 0 ? (
+                  <span className={neutralMetaPillClass}>{connectionAvailabilityLabel}</span>
+                ) : null}
               </div>
 
               <label className="mt-4 block">

@@ -320,6 +320,11 @@ export const ru = {
     noConnectionRequired: 'Подключение не требуется',
     connectionSectionDescription: (connectionType: string) =>
       `Привяжите подключение ${connectionType}, которое использует этот узел.`,
+    connectionNotSelected: 'Не выбрано',
+    noConnectionsInline: 'Нет доступных',
+    availableConnectionsCount: (count: number) =>
+      `Доступно: ${formatCount('ru-RU', count)}`,
+    selectedConnectionSummary: (name: string) => `Выбрано: ${name}`,
     availableConnections: 'Доступные подключения',
     selectConnection: (connectionType: string) =>
       `Выберите подключение ${connectionType}`,
@@ -661,4 +666,3 @@ export const ru = {
       'Соедините все узлы в одну цепочку, которая начинается от триггера.',
   } as Record<WorkflowValidationCode, string>,
 } satisfies LocaleMessages;
-
