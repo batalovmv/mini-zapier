@@ -29,6 +29,11 @@ export type ConfigUpdater = (
   updater: (prev: Record<string, unknown>) => Record<string, unknown>,
 ) => void;
 
+const railSectionClass =
+  'rounded-[1.55rem] border border-slate-900/10 bg-white/88 px-4 py-4 shadow-[0_18px_34px_-30px_rgba(15,23,42,0.24)]';
+const railSectionMutedClass =
+  'rounded-[1.55rem] border border-slate-900/10 bg-[linear-gradient(180deg,rgba(250,246,239,0.94)_0%,rgba(255,255,255,0.84)_100%)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]';
+
 export function ConfigPanel({ workflowId }: ConfigPanelProps) {
   const { messages } = useLocale();
   const nodes = useWorkflowEditorStore((state) => state.nodes);
@@ -226,37 +231,39 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-5">
-          <section className="app-subpanel-muted px-4 py-4">
-            <p className="muted-label">{messages.configPanel.workspaceGuidanceEyebrow}</p>
+          <div className="flex min-h-full flex-col justify-center gap-4">
+            <section className={railSectionMutedClass}>
+              <p className="muted-label">{messages.configPanel.workspaceGuidanceEyebrow}</p>
 
-            <ol className="mt-3 divide-y divide-slate-900/8">
-              {messages.configPanel.inspectorSteps.map((item) => (
-                <li
-                  key={item.step}
-                  className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
-                >
-                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
-                    {item.step}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900">
-                      {item.title}
-                    </p>
-                    <p className="mt-1 text-[13px] leading-5 text-slate-600">
-                      {item.description}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+              <ol className="mt-3 divide-y divide-slate-900/8">
+                {messages.configPanel.inspectorSteps.map((item) => (
+                  <li
+                    key={item.step}
+                    className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
+                  >
+                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
+                      {item.step}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {item.title}
+                      </p>
+                      <p className="mt-1 text-[13px] leading-5 text-slate-600">
+                        {item.description}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
 
-            <div className="mt-4 border-t border-slate-900/8 pt-4">
+            <section className="rounded-[1.45rem] border border-dashed border-slate-900/12 bg-white/55 px-4 py-4">
               <p className="muted-label">{messages.configPanel.whatShowsUpTitle}</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 {messages.configPanel.whatShowsUpDescription}
               </p>
-            </div>
-          </section>
+            </section>
+          </div>
         </div>
       </aside>
     );
@@ -268,13 +275,11 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
           short: 'TR',
           icon: 'bg-emerald-600 text-white',
           chip: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-          summary: 'border-emerald-200/80 bg-emerald-50/55',
         }
       : {
           short: 'AC',
           icon: 'bg-sky-600 text-white',
           chip: 'border-sky-200 bg-sky-50 text-sky-700',
-          summary: 'border-sky-200/80 bg-sky-50/55',
         };
 
   const availableConnections =
@@ -283,11 +288,6 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
       : connections.filter(
           (connection) => connection.type === definition?.connectionType,
         );
-  const connectionSummary = definition?.connectionType
-    ? messages.configPanel.connectionRequired(
-        connectionTypeLabel ?? definition.connectionType,
-      )
-    : messages.configPanel.noConnectionRequired;
 
   return (
     <>
@@ -312,30 +312,21 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
               <p className="mt-2 text-[13px] leading-5 text-slate-600">
                 {selectedNodeDescription}
               </p>
-            </div>
-          </div>
 
-          <div className={`mt-4 rounded-[1.35rem] border px-4 py-3.5 ${selectedNodeTone.summary}`}>
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="muted-label">{messages.configPanel.nodeTypeEyebrow}</p>
-                <p className="mt-1.5 text-sm font-semibold text-slate-900">
-                  {selectedNodeLabel}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-3 border-t border-slate-900/8 pt-3">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="muted-label">{messages.configPanel.connectionEyebrow}</p>
-                  <p className="mt-1.5 text-sm font-semibold text-slate-900">
-                    {connectionSummary}
-                  </p>
-                </div>
+              <div className="mt-4 flex flex-wrap items-center gap-2.5">
                 {definition?.connectionType ? (
-                  <span className="app-pill">{availableConnections.length}</span>
-                ) : null}
+                  <>
+                    <span className="muted-label">{messages.configPanel.connectionEyebrow}</span>
+                    <span className="inline-flex items-center rounded-full border border-slate-900/10 bg-white/84 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                      {connectionTypeLabel ?? definition.connectionType}
+                    </span>
+                    <span className="app-pill">{availableConnections.length}</span>
+                  </>
+                ) : (
+                  <span className="inline-flex items-center rounded-full border border-slate-900/10 bg-white/84 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                    {messages.configPanel.noConnectionRequired}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -343,7 +334,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
           {definition?.connectionType ? (
-            <section className="app-subpanel-muted px-4 py-4">
+            <section className={railSectionMutedClass}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="muted-label">{messages.configPanel.connectionEyebrow}</p>
@@ -362,7 +353,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
               <label className="mt-4 block">
                 <span className="muted-label">{messages.configPanel.availableConnections}</span>
                 <select
-                  className="mt-2 w-full rounded-[1.1rem] border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                  className="mt-2 w-full rounded-[1.15rem] border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   data-testid="connection-select"
                   onChange={(event) =>
                     updateNodeMeta(selectedNode.id, {
@@ -431,17 +422,16 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                   </p>
                 </div>
               ) : null}
-            </section>
-          ) : (
-            <section className="app-subpanel-muted px-4 py-4">
-              <p className="muted-label">{messages.configPanel.connectionEyebrow}</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {messages.configPanel.noConnectionNeeded}
-              </p>
-            </section>
-          )}
 
-          <section className="app-subpanel px-4 py-4">
+              {connectionsError ? (
+                <div className="mt-4 rounded-[1.15rem] border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm text-rose-700">
+                  {connectionsError}
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
+          <section className={railSectionClass}>
             <div>
               <p className="muted-label">{messages.configPanel.nodeSettingsEyebrow}</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -458,24 +448,24 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                 onChange: (updater) => updateNodeConfig(selectedNode.id, updater),
               })}
             </div>
-          </section>
 
-          {connectionsError ? (
-            <div className="rounded-[1.15rem] border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm text-rose-700">
-              {connectionsError}
+            {!definition?.connectionType && connectionsError ? (
+              <div className="mt-4 rounded-[1.15rem] border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm text-rose-700">
+                {connectionsError}
+              </div>
+            ) : null}
+
+            <div className="mt-5 flex justify-end border-t border-slate-900/8 pt-4">
+              <button
+                className="rounded-full border border-rose-200 bg-white/82 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-sm transition hover:border-rose-300 hover:bg-rose-50"
+                data-testid="delete-node-button"
+                onClick={() => setDeleteDialogOpen(true)}
+                type="button"
+              >
+                {messages.configPanel.deleteNode}
+              </button>
             </div>
-          ) : null}
-        </div>
-
-        <div className="border-t border-slate-900/10 px-5 py-4">
-          <button
-            className="w-full rounded-full border border-rose-200 bg-white/82 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-sm transition hover:border-rose-300 hover:bg-rose-50"
-            data-testid="delete-node-button"
-            onClick={() => setDeleteDialogOpen(true)}
-            type="button"
-          >
-            {messages.configPanel.deleteNode}
-          </button>
+          </section>
         </div>
       </aside>
 

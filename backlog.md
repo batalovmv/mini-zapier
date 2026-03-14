@@ -1051,3 +1051,27 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-040: Inspector structure refinement
+- **Статус**: `done`
+- **Цель**: убрать карточную рыхлость правого inspector и привести его к более строгому modern tool-panel виду без изменений editor mechanics
+- **Проблема**:
+  - правый inspector всё ещё выглядел как длинный form sheet с panel-in-panel layout и дублирующимися блоками состояния
+  - empty state оставлял слишком много пустого пространства и не выглядел как собранная рабочая панель
+- **Что сделано**:
+  - `ConfigPanel` — убрано дублирование connection summary и отдельный нижний footer-shell под destructive action; selected state собран как compact header + optional connection section + settings section с встроенным delete action
+  - `ConfigPanel` — empty state центрирован по высоте и пересобран в cleaner guidance stack без лишней тяжёлой карточности
+  - `WorkflowEditorPage` — правая desktop rail-колонка выровнена по ширине с левой, чтобы inspector не ломал заголовки и формы
+- **Не входит**:
+  - новые editor features
+  - backend/API changes
+  - redesign левой библиотеки узлов
+- **Файлы**:
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+- **Acceptance**:
+  - правый inspector визуально плотнее, чище и без дублирующихся connection blocks
+  - empty state inspector не выглядит как длинная пустая колонка с одной карточкой сверху
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
