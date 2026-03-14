@@ -207,7 +207,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
       <aside className="app-panel editor-rail flex h-full min-h-0 flex-col overflow-hidden">
         <div className="border-b border-slate-900/10 px-4 py-4">
           <p className="muted-label">{messages.configPanel.emptyEyebrow}</p>
-          <h2 className="mt-2 text-[1.35rem] font-semibold tracking-tight text-slate-900">
+          <h2 className="mt-2 text-[1.45rem] font-semibold tracking-tight text-slate-900">
             {messages.configPanel.emptyTitle}
           </h2>
           <p className="mt-2.5 text-sm leading-6 text-slate-600">
@@ -216,36 +216,49 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
-          <section className="app-subpanel-muted px-3.5 py-3.5">
-            <p className="muted-label">{messages.configPanel.workspaceGuidanceEyebrow}</p>
-            <div className="mt-3 space-y-2.5">
-              {messages.configPanel.inspectorSteps.map((item) => (
-                <div
-                  key={item.step}
-                  className="rounded-2xl border border-white/70 bg-white/90 px-3 py-2.5 shadow-sm"
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
-                      {item.step}
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">
-                        {item.title}
-                      </p>
-                      <p className="mt-0.5 text-[13px] leading-5 text-slate-600">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+          <section className="rounded-[28px] border border-slate-900/10 bg-white/90 px-4 py-4 shadow-[0_20px_36px_-30px_rgba(15,23,42,0.26)]">
+            <div className="flex items-start gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[1.1rem] bg-slate-950 text-[11px] font-black uppercase tracking-[0.28em] text-white shadow-[0_16px_28px_-18px_rgba(15,23,42,0.52)]">
+                IN
+              </span>
+              <div className="min-w-0">
+                <p className="muted-label">{messages.configPanel.workspaceGuidanceEyebrow}</p>
+                <h3 className="mt-2 text-lg font-semibold tracking-tight text-slate-900">
+                  {messages.configPanel.emptyTitle}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {messages.configPanel.emptyDescription}
+                </p>
+              </div>
             </div>
           </section>
 
-          <section className="app-subpanel px-3.5 py-3.5">
-            <p className="text-sm font-semibold text-slate-900">
-              {messages.configPanel.whatShowsUpTitle}
-            </p>
+          <section className="app-subpanel-muted px-4 py-4">
+            <p className="muted-label">{messages.configPanel.workspaceGuidanceEyebrow}</p>
+            <ol className="mt-4 space-y-3">
+              {messages.configPanel.inspectorSteps.map((item) => (
+                <li
+                  key={item.step}
+                  className="flex items-start gap-3 border-b border-slate-900/8 pb-3 last:border-b-0 last:pb-0"
+                >
+                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
+                    {item.step}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-900">
+                      {item.title}
+                    </p>
+                    <p className="mt-1 text-[13px] leading-5 text-slate-600">
+                      {item.description}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section className="app-subpanel px-4 py-4">
+            <p className="muted-label">{messages.configPanel.whatShowsUpTitle}</p>
             <p className="mt-2 text-sm leading-6 text-slate-600">
               {messages.configPanel.whatShowsUpDescription}
             </p>
@@ -454,4 +467,3 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
     </>
   );
 }
-

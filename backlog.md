@@ -950,3 +950,28 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-036: Workflow editor rail visual cleanup
+- **Статус**: `done`
+- **Цель**: сделать боковые панели editor визуально чище и пригоднее для русских текстов без изменения editor mechanics
+- **Проблема**:
+  - левая библиотека и пустой inspector выглядели перегруженно из-за panel-in-panel layout и слишком узких desktop колонок
+  - длинные русские тексты ломали ритм и визуально сжимали rails
+- **Что сделано**:
+  - desktop ширина rails увеличена в editor grid
+  - `NodeSidebar` пересобран в более плоскую list-driven композицию с cleaner section cards и без лишних вложенных badges внутри каждого item
+  - empty state `ConfigPanel` перепакован в более явный inspector placeholder с одной hero-card и компактным step-list
+- **Не входит**:
+  - новые editor features
+  - changes в workflow mechanics
+  - backend/API changes
+- **Файлы**:
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+  - `apps/web/src/components/editor/NodeSidebar.tsx`
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+- **Acceptance**:
+  - desktop rails выглядят шире и чище
+  - русские тексты в левой и правой панели читаются без чрезмерного визуального шума
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`

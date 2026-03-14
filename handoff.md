@@ -3,8 +3,14 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-035 — `workflow editor viewport containment + rail density`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–035 закрыты
+- **Последнее изменение**: TASK-036 — `workflow editor rail visual cleanup`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–036 закрыты
+- **Что сделано в TASK-036**:
+  - `apps/web/src/pages/WorkflowEditorPage.tsx` — desktop grid rails widened to better fit RU copy without crushing the canvas
+  - `apps/web/src/components/editor/NodeSidebar.tsx` — левая библиотека пересобрана в cleaner list-driven layout: flatter onboarding steps, stronger section headers, simpler draggable items without nested badge noise
+  - `apps/web/src/components/editor/ConfigPanel.tsx` — empty inspector state перепакован в более собранный placeholder с hero-card и compact step list
+  - **Проверки TASK-036**:
+    - `pnpm --filter @mini-zapier/web build`
 - **Что сделано в TASK-035**:
   - `apps/web/src/layouts/EditorLayout.tsx`, `apps/web/src/pages/WorkflowEditorPage.tsx` — editor route переведён в desktop `h-screen` shell с `overflow-hidden`; workspace grid теперь использует `minmax(0,1fr)`, поэтому canvas и rails перестали раздувать страницу по высоте
   - `apps/web/src/components/editor/FlowCanvas.tsx` — canvas shell получил корректный `min-h-0`, header слегка уплотнён, чтобы освободить больше vertical space под рабочую область
@@ -247,7 +253,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-Новых TASK в текущем `backlog.md` после `TASK-035` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
+Новых TASK в текущем `backlog.md` после `TASK-036` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -366,5 +372,7 @@
 | TASK-034 | done | см. `git log` (`TASK-034: web language switcher EN/RU`) | locale infrastructure, EN/RU switcher, centralized copy, locale-aware date/time formatting, build + preview smoke with mock API |
 | TASK-034 follow-up | done | см. `git log` (`TASK-034: localization copy cleanup`) | canonical node labels kept untranslated, raw enum labels removed from UI, leftover aria-labels localized, RU copy polished |
 | TASK-035 | done | см. `git log` (`TASK-035: editor viewport containment + rail density`) | desktop editor shell constrained to viewport, rails compacted, internal scroll preserved |
+| TASK-036 | done | см. `git log` (`TASK-036: editor rail visual cleanup`) | wider desktop rails, cleaner node library, simplified empty inspector state |
+
 
 
