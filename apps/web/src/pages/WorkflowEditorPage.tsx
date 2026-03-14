@@ -189,9 +189,9 @@ export function WorkflowEditorPage() {
     workflowStatus === ACTIVE_STATUS ? messages.common.pause : messages.common.activate;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-5 xl:overflow-hidden">
       <section className="app-panel app-panel-strong shrink-0 overflow-hidden">
-        <div className="flex flex-col gap-4 px-6 py-5 xl:flex-row xl:items-center xl:justify-between xl:py-6">
+        <div className="flex flex-col gap-4 px-5 py-4 xl:flex-row xl:items-center xl:justify-between xl:px-6 xl:py-5">
           <div className="flex flex-1 items-center gap-4">
             <Link
               className="rounded-full border border-slate-900/10 bg-white/88 px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white"
@@ -202,7 +202,7 @@ export function WorkflowEditorPage() {
             <label className="block min-w-0 max-w-2xl flex-1">
               <span className="muted-label">{messages.workflowEditorPage.workflowName}</span>
               <input
-                className="mt-1 w-full rounded-[1.4rem] border border-slate-900/12 bg-white/92 px-4 py-3 text-base font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] outline-none transition focus:border-amber-500"
+                className="mt-1 w-full rounded-[1.4rem] border border-slate-900/12 bg-white/92 px-4 py-2.5 text-base font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] outline-none transition focus:border-amber-500"
                 data-testid="workflow-name-input"
                 onChange={(event) => setWorkflowName(event.target.value)}
                 placeholder={messages.workflowEditorPage.untitledWorkflow}
@@ -263,12 +263,12 @@ export function WorkflowEditorPage() {
         ) : null}
       </section>
 
-      <section className="grid min-h-0 flex-1 gap-6 xl:grid-cols-[240px_minmax(0,1fr)_320px] xl:grid-rows-[1fr] 2xl:grid-cols-[260px_minmax(0,1fr)_340px]">
-        <div className="min-h-0 xl:overflow-y-auto">
+      <section className="grid min-h-0 flex-1 gap-5 overflow-hidden xl:grid-cols-[224px_minmax(0,1fr)_304px] xl:grid-rows-[minmax(0,1fr)] 2xl:grid-cols-[236px_minmax(0,1fr)_320px]">
+        <div className="min-h-0 overflow-hidden">
           <NodeSidebar />
         </div>
 
-        <div className="min-h-0">
+        <div className="min-h-0 overflow-hidden">
           {loading ? (
             <LoadingState
               description={messages.workflowEditorPage.loadingDescription}
@@ -279,10 +279,11 @@ export function WorkflowEditorPage() {
           )}
         </div>
 
-        <div className="min-h-0 xl:overflow-y-auto">
+        <div className="min-h-0 overflow-hidden">
           <ConfigPanel workflowId={workflowId} />
         </div>
       </section>
     </div>
   );
 }
+

@@ -255,13 +255,13 @@ function FlowCanvasInner() {
   }
 
   return (
-    <div className="app-panel editor-canvas-shell relative flex h-full flex-col overflow-hidden">
-      <div className="border-b border-slate-900/10 px-5 py-5">
+    <div className="app-panel editor-canvas-shell relative flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="border-b border-slate-900/10 px-5 py-4">
         <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
           <div className="min-w-0">
             <p className="muted-label">{messages.flowCanvas.eyebrow}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
+              <h2 className="text-[1.4rem] font-semibold tracking-tight text-slate-900">
                 {isEmpty ? messages.flowCanvas.emptyTitle : messages.flowCanvas.workspaceTitle}
               </h2>
               <span className="app-pill">
@@ -277,7 +277,7 @@ function FlowCanvasInner() {
             </p>
           </div>
 
-          <div className="app-subpanel px-4 py-4 2xl:max-w-[260px]">
+          <div className="app-subpanel px-4 py-3.5 2xl:max-w-[248px]">
             <p className="muted-label">{messages.flowCanvas.inspectorEyebrow}</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
               {selectedNodeLabel
@@ -477,4 +477,5 @@ export function FlowCanvas() {
     </ReactFlowProvider>
   );
 }
+
 

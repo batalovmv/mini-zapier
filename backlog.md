@@ -921,3 +921,32 @@
   - `pnpm --filter @mini-zapier/web build`
   - headless smoke на локальном `vite preview` + mock API: login, dashboard, workflow editor, execution history, 404, empty states, header switcher + persistence
 
+
+### TASK-035: Workflow editor viewport containment + rail density
+- **Статус**: `done`
+- **Цель**: убрать вертикальный выход editor workspace за viewport на desktop и сделать боковые rail-панели визуально собраннее
+- **Проблема**:
+  - editor page могла становиться выше viewport, из-за чего canvas и rails уезжали ниже первого экрана
+  - левая palette и правый inspector были слишком рыхлыми по вертикали и выглядели тяжелее, чем нужно
+- **Что сделано**:
+  - `EditorLayout` переведён в desktop `h-screen` shell с `overflow-hidden` внутри main
+  - `WorkflowEditorPage` переведён на `minmax(0,1fr)` grid row и внутреннее overflow containment для всех трёх колонок
+  - `FlowCanvas` header слегка уплотнён, canvas shell получил корректный `min-h-0`
+  - `NodeSidebar` и `ConfigPanel` уплотнены по paddings, typography и card density без изменения editor mechanics
+- **Не входит**:
+  - resizable/collapsible panels
+  - новые editor features
+  - backend/API changes
+- **Файлы**:
+  - `apps/web/src/layouts/EditorLayout.tsx`
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+  - `apps/web/src/components/editor/FlowCanvas.tsx`
+  - `apps/web/src/components/editor/NodeSidebar.tsx`
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+- **Acceptance**:
+  - desktop editor больше не растягивает страницу по высоте из-за workspace shell
+  - rails скроллятся внутри своей области, а не раздувают весь page layout
+  - боковые панели выглядят плотнее и чище
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
