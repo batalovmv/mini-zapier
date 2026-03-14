@@ -3,8 +3,15 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-042 — `inspector connection semantics clarity`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–042 закрыты
+- **Последнее изменение**: TASK-043 — `connections management page`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–043 закрыты
+- **Что сделано в TASK-043**:
+  - `apps/web/src/pages/ConnectionsPage.tsx` — добавлен отдельный раздел `/connections` с grouped catalog по типам подключений, create/edit/delete actions и reuse-oriented UI copy
+  - `apps/web/src/components/connections/ConnectionFormDialog.tsx` — добавлен отдельный диалог создания/редактирования подключений; rename-only edit не требует повторного ввода секретов, а полная замена credentials требует ввести весь набор заново
+  - `apps/web/src/App.tsx`, `apps/web/src/components/AppHeader.tsx` — новый раздел встроен в protected routing и основную navigation panel
+  - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — добавлены EN/RU строки для connections page и dialog states без backend changes
+  - **Проверки TASK-043**:
+    - `pnpm --filter @mini-zapier/web build`
 - **Что сделано в TASK-042**:
   - `apps/web/src/components/editor/ConfigPanel.tsx` — голые numeric badges в connection summary заменены на понятные текстовые состояния: `Выбрано: <name>`, `Не выбрано`, `Нет доступных`, `Доступно: N`
   - `apps/web/src/components/editor/ConfigPanel.tsx` — из header и connection section убрано дублирование безымянного count; теперь inspector показывает именно состояние подключения, а не просто число
@@ -288,7 +295,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-Новых TASK в текущем `backlog.md` после `TASK-042` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
+Новых TASK в текущем `backlog.md` после `TASK-043` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -414,3 +421,4 @@
 | TASK-040 | done | см. `git log` (`TASK-040: inspector structure refinement`) | right inspector flattened into a cleaner tool-panel with less empty-state waste and no duplicated connection summary |
 | TASK-041 | done | см. `git log` (`TASK-041: inspector empty-state rhythm + editor toolbar alignment`) | inspector empty state starts directly under the header, and the top editor controls now read as one aligned action bar |
 | TASK-042 | done | см. `git log` (`TASK-042: inspector connection semantics clarity`) | inspector now shows explicit connection states and availability instead of ambiguous numeric count badges |
+| TASK-043 | done | см. `git log` (`TASK-043: connections management page`) | dedicated `/connections` section, reusable connection catalog, standalone create/edit/delete dialog |

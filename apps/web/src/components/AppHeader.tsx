@@ -25,6 +25,10 @@ export function AppHeader() {
       end: true,
     },
     {
+      to: '/connections',
+      label: messages.header.navigation.connections,
+    },
+    {
       to: '/workflows/new/edit',
       label: messages.header.navigation.createWorkflow,
     },

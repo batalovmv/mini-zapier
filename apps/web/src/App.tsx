@@ -6,6 +6,7 @@ import {
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AppLayout } from './layouts/AppLayout';
 import { EditorLayout } from './layouts/EditorLayout';
+import { ConnectionsPage } from './pages/ConnectionsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ExecutionHistoryPage } from './pages/ExecutionHistoryPage';
 import { LoginPage } from './pages/LoginPage';
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
           {
             index: true,
             element: <DashboardPage />,
+          },
+          {
+            path: 'connections',
+            element: <ConnectionsPage />,
           },
           {
             path: 'workflows/:id/history',

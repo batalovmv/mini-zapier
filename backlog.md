@@ -1123,3 +1123,33 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-043: Connections management page
+- **Статус**: `done`
+- **Цель**: вынести управление reusable connections в отдельный раздел сайта, чтобы пользователь мог централизованно создавать, редактировать, удалять и затем переиспользовать свои SMTP/Telegram/PostgreSQL/Webhook подключения в сценариях
+- **Проблема**:
+  - подключения существовали только как inline-flow внутри editor inspector, поэтому пользователь не видел их как отдельные рабочие ресурсы
+  - не было централизованного места, где можно заранее подготовить свои интеграции и потом просто выбирать их в узлах
+- **Что сделано**:
+  - добавлена новая страница `ConnectionsPage` с отдельным route `/connections` и пунктом navigation в `AppHeader`
+  - реализован каталог подключений по типам (`WEBHOOK`, `SMTP`, `TELEGRAM`, `POSTGRESQL`) с create/edit/delete actions и reuse-oriented copy
+  - добавлен отдельный `ConnectionFormDialog` для создания и обновления подключений; при редактировании можно переименовать connection без повторного ввода секретов или полностью заменить весь credentials set
+  - EN/RU словари расширены строками для новой страницы и её диалогов без backend changes
+- **Не входит**:
+  - отдельная usage-analytics по workflows, где connection используется
+  - bulk actions, search/filtering, tags
+  - backend/API changes
+- **Файлы**:
+  - `apps/web/src/pages/ConnectionsPage.tsx`
+  - `apps/web/src/components/connections/ConnectionFormDialog.tsx`
+  - `apps/web/src/App.tsx`
+  - `apps/web/src/components/AppHeader.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - в UI есть отдельный раздел `Подключения / Connections`
+  - пользователь может создать connection заранее, затем редактировать имя или полностью заменить credentials
+  - существующие connections читаются как reusable resources, а не как скрытая часть editor inspector
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`

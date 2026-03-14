@@ -78,6 +78,7 @@ export const en = {
     brandSubtitle: 'Workflow control center',
     navigation: {
       dashboard: 'Dashboard',
+      connections: 'Connections',
       createWorkflow: 'Create Workflow',
     },
     logout: 'Logout',
@@ -331,6 +332,69 @@ export const en = {
     deleteNodeDialogConfirm: 'Delete node',
     connectionCreatedToast: (name: string) => `Connection "${name}" created.`,
     nodeDeletedToast: (label: string) => `Node "${label}" deleted.`,
+  },
+  connectionsPage: {
+    eyebrow: 'Connections library',
+    title: 'Store reusable secrets and service credentials in one place.',
+    description:
+      'Manage Telegram, SMTP, PostgreSQL and webhook connections separately from workflows, then reuse them anywhere in the editor.',
+    createConnection: 'Create connection',
+    refresh: 'Refresh list',
+    refreshing: 'Refreshing...',
+    totalConnections: (count: number) =>
+      `Connections saved: ${formatCount('en-US', count)}`,
+    reuseHint:
+      'Connections created here appear in node inspectors and can be reused across multiple workflows.',
+    loadingTitle: 'Loading connections...',
+    loadingDescription: 'Fetching the saved connections from the API.',
+    emptyTitle: 'No connections saved yet',
+    emptyDescription:
+      'Create the first reusable connection so workflow nodes can select it later instead of entering secrets repeatedly.',
+    sectionEyebrow: 'Connection type',
+    typeDescriptions: {
+      WEBHOOK:
+        'Secrets for webhook triggers and inbound email signing live here and can be reused across trigger nodes.',
+      SMTP:
+        'SMTP hosts, ports and mailbox credentials used by outbound email actions.',
+      TELEGRAM:
+        'Telegram bot tokens that message actions can reuse across notifications.',
+      POSTGRESQL:
+        'Database connection strings for parameterized PostgreSQL query actions.',
+    },
+    noConnectionsForTypeTitle: (typeLabel: string) =>
+      `No ${typeLabel} connections yet`,
+    noConnectionsForTypeDescription: (typeLabel: string) =>
+      `Create a ${typeLabel} connection once and reuse it across workflows instead of entering the same secrets in every node.`,
+    storedKeysLabel: 'Stored fields',
+    storedKeysCount: (count: number) =>
+      `Stored fields: ${formatCount('en-US', count)}`,
+    updatedLabel: 'Updated',
+    editConnection: 'Edit',
+    deleteConnection: 'Delete',
+    dialogEyebrow: 'Connection library',
+    createDialogTitle: (typeLabel: string) => `Create ${typeLabel} connection`,
+    createDialogDescription: (typeLabel: string) =>
+      `Save a reusable ${typeLabel} connection that workflow nodes can select later.`,
+    editDialogTitle: (name: string) => `Edit ${name}`,
+    editDialogDescription: (typeLabel: string) =>
+      `Rename this ${typeLabel} connection or replace its credentials set. Stored secret values are never shown again.`,
+    selectType: 'Connection type',
+    suggestedKeys: 'Suggested keys',
+    webhookHint:
+      'Use `secret` for webhook triggers or `signingSecret` for inbound email providers. You can also define a custom key set if your integration expects it.',
+    keepCredentialsHint:
+      'Leave credential values blank to keep the stored secrets. If you change any key or value, re-enter the full credentials set.',
+    replaceCredentialsError:
+      'Enter a value for every credential field when creating or replacing credentials.',
+    valuePlaceholderEdit: 'Enter new value',
+    updateConnection: 'Update connection',
+    connectionCreatedToast: (name: string) => `Connection "${name}" created.`,
+    connectionUpdatedToast: (name: string) => `Connection "${name}" updated.`,
+    connectionDeletedToast: (name: string) => `Connection "${name}" deleted.`,
+    deleteDialogTitle: 'Delete connection?',
+    deleteDialogDescription: (name: string) =>
+      `Delete connection "${name}"? The API will block removal if it is still used by a workflow node.`,
+    deleteDialogConfirm: 'Delete connection',
   },
   connectionCreateDialog: {
     cancel: 'Cancel',

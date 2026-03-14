@@ -79,6 +79,7 @@ export const ru = {
     brandSubtitle: 'Центр управления сценариями',
     navigation: {
       dashboard: 'Панель',
+      connections: 'Подключения',
       createWorkflow: 'Создать сценарий',
     },
     logout: 'Выйти',
@@ -349,6 +350,69 @@ export const ru = {
     deleteNodeDialogConfirm: 'Удалить узел',
     connectionCreatedToast: (name: string) => `Подключение "${name}" создано.`,
     nodeDeletedToast: (label: string) => `Узел "${label}" удалён.`,
+  },
+  connectionsPage: {
+    eyebrow: 'Библиотека подключений',
+    title: 'Храните переиспользуемые секреты и доступы в одном месте.',
+    description:
+      'Управляйте Telegram, SMTP, PostgreSQL и webhook-подключениями отдельно от сценариев, а затем выбирайте их в редакторе.',
+    createConnection: 'Создать подключение',
+    refresh: 'Обновить список',
+    refreshing: 'Обновление...',
+    totalConnections: (count: number) =>
+      `Подключений сохранено: ${formatCount('ru-RU', count)}`,
+    reuseHint:
+      'Подключения, созданные здесь, появляются в инспекторе узлов и переиспользуются в нескольких сценариях.',
+    loadingTitle: 'Загрузка подключений...',
+    loadingDescription: 'Получаем сохранённые подключения из API.',
+    emptyTitle: 'Подключений пока нет',
+    emptyDescription:
+      'Создайте первое переиспользуемое подключение, чтобы потом выбирать его в узлах сценария вместо повторного ввода секретов.',
+    sectionEyebrow: 'Тип подключения',
+    typeDescriptions: {
+      WEBHOOK:
+        'Секреты для webhook-триггеров и подписи входящих email лежат здесь и переиспользуются в trigger-узлах.',
+      SMTP:
+        'SMTP-хосты, порты и почтовые credentials для действий отправки email.',
+      TELEGRAM:
+        'Токены Telegram-ботов, которые можно переиспользовать в уведомлениях.',
+      POSTGRESQL:
+        'Строки подключения к PostgreSQL для параметризованных SQL-действий.',
+    },
+    noConnectionsForTypeTitle: (typeLabel: string) =>
+      `Подключений ${typeLabel} пока нет`,
+    noConnectionsForTypeDescription: (typeLabel: string) =>
+      `Создайте подключение ${typeLabel} один раз и потом переиспользуйте его в сценариях вместо повторного ввода одних и тех же секретов.`,
+    storedKeysLabel: 'Сохранённые поля',
+    storedKeysCount: (count: number) =>
+      `Полей сохранено: ${formatCount('ru-RU', count)}`,
+    updatedLabel: 'Обновлён',
+    editConnection: 'Редактировать',
+    deleteConnection: 'Удалить',
+    dialogEyebrow: 'Библиотека подключений',
+    createDialogTitle: (typeLabel: string) => `Создать подключение ${typeLabel}`,
+    createDialogDescription: (typeLabel: string) =>
+      `Сохраните переиспользуемое подключение ${typeLabel}, которое потом можно выбрать в узлах сценария.`,
+    editDialogTitle: (name: string) => `Редактировать ${name}`,
+    editDialogDescription: (typeLabel: string) =>
+      `Переименуйте подключение ${typeLabel} или полностью замените набор credentials. Сохранённые секреты повторно не показываются.`,
+    selectType: 'Тип подключения',
+    suggestedKeys: 'Рекомендуемые поля',
+    webhookHint:
+      'Используйте `secret` для webhook-триггеров или `signingSecret` для inbound-email провайдеров. При необходимости можно задать и свой набор ключей.',
+    keepCredentialsHint:
+      'Оставьте значения пустыми, чтобы сохранить текущие секреты. Если меняете любой ключ или значение, заново введите весь набор credentials.',
+    replaceCredentialsError:
+      'При создании или полной замене credentials нужно заполнить значение для каждого поля.',
+    valuePlaceholderEdit: 'Введите новое значение',
+    updateConnection: 'Сохранить изменения',
+    connectionCreatedToast: (name: string) => `Подключение "${name}" создано.`,
+    connectionUpdatedToast: (name: string) => `Подключение "${name}" обновлено.`,
+    connectionDeletedToast: (name: string) => `Подключение "${name}" удалено.`,
+    deleteDialogTitle: 'Удалить подключение?',
+    deleteDialogDescription: (name: string) =>
+      `Удалить подключение "${name}"? API заблокирует удаление, если оно всё ещё используется узлом сценария.`,
+    deleteDialogConfirm: 'Удалить подключение',
   },
   connectionCreateDialog: {
     cancel: 'Отмена',
