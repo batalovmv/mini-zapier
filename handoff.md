@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-029 — `Workflow Editor full-width workspace layout`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–029 закрыты
+- **Последнее изменение**: TASK-030 — `Dashboard visual hierarchy pass`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–030 закрыты
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -189,6 +189,13 @@
     - `pnpm --filter @mini-zapier/web build`
     - browser visual smoke в этой сессии не запускался
 
+- **Что сделано в TASK-030**:
+  - `apps/web/src/pages/DashboardPage.tsx` — hero блок уплотнён: меньше вертикальный размер, компактнее CTA и tighter spacing между dashboard sections
+  - `apps/web/src/components/dashboard/StatsOverview.tsx` — усилены заголовок секции, metric card contrast и scanability за счёт tighter panel spacing, pills и более явных value tones
+  - `apps/web/src/components/dashboard/WorkflowList.tsx` — усилен section header, tightened panel spacing и снижены зазоры между workflow cards
+  - **Проверки TASK-030**:
+    - `pnpm --filter @mini-zapier/web build`
+    - desktop visual smoke dashboard через локальный `vite preview` + Playwright mock API
 ## Следующий шаг
 Новых TASK в текущем `backlog.md` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
 
@@ -301,6 +308,12 @@
 | TASK-027 | done | см. `git log` | Copy URL/curl buttons, clipboard toasts, Idempotency-Key hint, monospace URL |
 | TASK-028 | done | см. `git log` (`TASK-028: execution history status filters + counters`) | History tabs/counters + API status filter/counts |
 | TASK-029 | done | см. `git log` (`TASK-029: workflow editor full-width workspace layout`) | shared header + wide editor layout + viewport-aware canvas sizing |
+| TASK-030 | done | см. `git log` (`TASK-030: dashboard visual hierarchy pass`) | compact hero, denser stats/workflow hierarchy, desktop smoke screenshot |
+
+
+
+
+
 
 
 

@@ -754,3 +754,37 @@
 
 
 
+
+### TASK-030: Dashboard visual hierarchy pass
+- **Статус**: `done`
+- **Цель**: сделать dashboard визуально собраннее и понятнее без изменения структуры продукта и без новых фич
+- **Проблема**:
+  - верхний hero-блок слишком высокий и съедает первый экран
+  - hero, stats section и workflow list слишком близки по визуальному весу
+  - экран выглядит аккуратно, но иерархия слабая и операционный фокус размыт
+- **Что хотим получить**:
+  - hero компактнее и полезнее
+  - stats и workflow list визуально читаются как более важные рабочие секции
+  - первый экран плотнее и информативнее
+- **Scope**:
+  - уменьшить вертикальный размер hero-блока
+  - усилить контраст и иерархию заголовков, подзаголовков и секций
+  - подправить spacing и внутренние отступы dashboard panels
+  - сохранить существующий контент, действия и API-интеграции
+- **Не входит**:
+  - новые карточки, фильтры, сортировки, графики
+  - изменения editor page
+  - backend/API changes
+- **Файлы**:
+  - `apps/web/src/pages/DashboardPage.tsx`
+  - `apps/web/src/components/dashboard/StatsOverview.tsx`
+  - `apps/web/src/components/dashboard/WorkflowList.tsx`
+  - при необходимости `apps/web/src/index.css`
+- **Acceptance**:
+  - hero заметно компактнее по высоте
+  - stats section и workflow list визуально отделены и легче сканируются
+  - dashboard выглядит плотнее, но не перегруженно
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - manual visual smoke на dashboard в desktop width

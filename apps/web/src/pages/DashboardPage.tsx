@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 
-import { ConfirmationDialog } from '../components/ui/ConfirmationDialog';
 import { StatsOverview } from '../components/dashboard/StatsOverview';
 import { WorkflowCardAction } from '../components/dashboard/WorkflowCard';
 import { WorkflowList } from '../components/dashboard/WorkflowList';
+import { ConfirmationDialog } from '../components/ui/ConfirmationDialog';
 import { getApiErrorMessage } from '../lib/api/client';
 import {
   executeWorkflow,
@@ -101,13 +101,11 @@ export function DashboardPage() {
     });
 
     try {
-      const response = await executeWorkflow(workflow.id, {});
+      await executeWorkflow(workflow.id, {});
 
       await refreshDashboardData();
 
-      toast.success(
-        `Workflow "${workflow.name}" execution started.`,
-      );
+      toast.success(`Workflow "${workflow.name}" execution started.`);
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     } finally {
@@ -176,22 +174,22 @@ export function DashboardPage() {
     (loading || lastExecutionsLoading) && !(statsLoading || workflowsLoading);
 
   return (
-    <div className="space-y-8">
-      <section className="app-panel overflow-hidden">
-        <div className="border-b border-slate-900/10 px-8 py-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+    <div className="space-y-6 xl:space-y-7">
+      <section className="app-panel overflow-hidden border-white/60 bg-white/70 shadow-[0_20px_50px_-38px_rgba(15,23,42,0.5)]">
+        <div className="border-b border-slate-900/10 px-6 py-6 sm:px-7 sm:py-7">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="muted-label">Dashboard</p>
-              <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-slate-900">
+              <p className="muted-label">Workflow operations</p>
+              <h1 className="mt-2 max-w-4xl text-3xl font-semibold tracking-tight text-slate-900 sm:text-[2.4rem] sm:leading-[1.08]">
                 Operate workflows, monitor execution health and launch manual runs.
               </h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px]">
                 Monitor workflow health, launch manual runs and manage your automations.
               </p>
             </div>
 
             <Link
-              className="inline-flex rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
+              className="inline-flex self-start rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 lg:self-end"
               data-testid="create-workflow-link"
               to="/workflows/new/edit"
             >
@@ -201,7 +199,7 @@ export function DashboardPage() {
         </div>
 
         {dashboardError ? (
-          <div className="px-8 py-6">
+          <div className="px-6 pb-6 pt-0 sm:px-7 sm:pb-7">
             <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
               {dashboardError}
             </div>
