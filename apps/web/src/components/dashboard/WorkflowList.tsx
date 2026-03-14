@@ -30,12 +30,12 @@ export function WorkflowList({
   onDelete,
 }: WorkflowListProps) {
   return (
-    <section className="app-panel p-6 sm:p-7">
-      <div className="flex flex-col gap-4 border-b border-slate-900/10 pb-5 lg:flex-row lg:items-end lg:justify-between">
+    <section className="app-panel p-5 sm:p-6">
+      <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="muted-label">Workflow list</p>
-          <h2 className="mt-2 text-[1.95rem] font-semibold tracking-tight text-slate-900 sm:text-[2.2rem]">
-            Manage existing workflow definitions
+          <h2 className="mt-2 text-[1.7rem] font-semibold tracking-tight text-slate-900 sm:text-[1.95rem]">
+            Scan workflow health and act quickly
           </h2>
         </div>
 
@@ -46,7 +46,7 @@ export function WorkflowList({
         </p>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-4">
         {loading ? (
           <LoadingState
             compact
@@ -67,7 +67,7 @@ export function WorkflowList({
             title="Нет workflows"
           />
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {workflows.map((workflow) => (
               <WorkflowCard
                 key={workflow.id}

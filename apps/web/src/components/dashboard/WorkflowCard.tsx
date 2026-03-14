@@ -24,6 +24,12 @@ const workflowStatusClassNames = {
   PAUSED: 'border-amber-200 bg-amber-50 text-amber-700',
 } as Record<WorkflowStatus, string>;
 
+const workflowStatusDescriptions = {
+  ACTIVE: 'Ready to receive triggers',
+  DRAFT: 'Not active yet',
+  PAUSED: 'Temporarily paused',
+} as Record<WorkflowStatus, string>;
+
 const executionStatusClassNames = {
   PENDING: 'border-slate-200 bg-slate-100 text-slate-600',
   RUNNING: 'border-sky-200 bg-sky-50 text-sky-700',
@@ -31,11 +37,22 @@ const executionStatusClassNames = {
   FAILED: 'border-rose-200 bg-rose-50 text-rose-700',
 } as Record<ExecutionStatus, string>;
 
+const executionStatusDescriptions = {
+  PENDING: 'Queued for processing',
+  RUNNING: 'Currently running',
+  SUCCESS: 'Finished successfully',
+  FAILED: 'Needs attention',
+} as Record<ExecutionStatus, string>;
+
 function formatDateTime(value: string): string {
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value));
+}
+
+function getExecutionDisplayTime(execution: WorkflowExecutionDto): string {
+  return execution.completedAt ?? execution.startedAt ?? execution.createdAt;
 }
 
 function getStatusActionLabel(status: WorkflowStatus): string {
@@ -54,60 +71,130 @@ export function WorkflowCard({
   const isBusy = pendingAction !== null;
 
   return (
-    <article className="rounded-3xl border border-slate-900/10 bg-white/90 p-6 shadow-panel">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <h3 className="text-xl font-semibold text-slate-900">{workflow.name}</h3>
+    <article
+      className="workflow-card-shell"
+      data-workflow-status={workflow.status}
+    >
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.9fr)] xl:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="muted-label">Workflow</p>
+              <h3 className="mt-2 text-[1.15rem] font-semibold leading-tight text-slate-950 sm:text-[1.3rem]">
+                {workflow.name}
+              </h3>
+            </div>
             <span
-              className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${workflowStatusClassNames[workflow.status]}`}
+              className={`inline-flex items-center rounded-full border px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] shadow-sm ${workflowStatusClassNames[workflow.status]}`}
             >
               {workflow.status}
             </span>
           </div>
 
-          <p className="max-w-2xl text-sm leading-6 text-slate-600">
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
             {workflow.description?.trim() || 'No workflow description provided.'}
           </p>
 
-          <div className="flex flex-wrap gap-4 text-sm text-slate-500">
-            <span>Version {workflow.version}</span>
-            <span>{workflow.timezone}</span>
-            <span>{workflow.nodes.length} nodes</span>
-            <span>Updated {formatDateTime(workflow.updatedAt)}</span>
-          </div>
+          <dl className="mt-4 grid gap-x-4 gap-y-3 text-xs text-slate-500 sm:grid-cols-2 xl:grid-cols-4">
+            <div>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Version
+              </dt>
+              <dd className="mt-1 text-sm font-medium text-slate-700">
+                v{workflow.version}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Timezone
+              </dt>
+              <dd className="mt-1 text-sm font-medium text-slate-700">
+                {workflow.timezone}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Nodes
+              </dt>
+              <dd className="mt-1 text-sm font-medium text-slate-700">
+                {workflow.nodes.length}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Updated
+              </dt>
+              <dd className="mt-1 text-sm font-medium text-slate-700">
+                {formatDateTime(workflow.updatedAt)}
+              </dd>
+            </div>
+          </dl>
         </div>
 
-        <div className="min-w-[14rem] rounded-2xl border border-slate-900/10 bg-slate-50/80 p-4">
-          <p className="muted-label">Last execution</p>
-
-          {executionLoading && !lastExecution ? (
-            <div className="mt-3 flex items-center gap-3 text-sm text-slate-500">
-              <Spinner size="sm" />
-              <span>Loading latest execution...</span>
-            </div>
-          ) : lastExecution ? (
-            <div className="mt-3 space-y-3">
-              <span
-                className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${executionStatusClassNames[lastExecution.status]}`}
-              >
-                {lastExecution.status}
-              </span>
-              <div className="space-y-1 text-sm text-slate-600">
-                <p>Started {formatDateTime(lastExecution.createdAt)}</p>
-                <p>Workflow version {lastExecution.workflowVersion}</p>
+        <div className="workflow-card-operational">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <section className="workflow-card-metric">
+              <p className="muted-label">Workflow status</p>
+              <div className="mt-3 flex items-start gap-3">
+                <span
+                  className={`inline-flex items-center rounded-full border px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] shadow-sm ${workflowStatusClassNames[workflow.status]}`}
+                >
+                  {workflow.status}
+                </span>
+                <p className="pt-0.5 text-sm font-medium text-slate-600">
+                  {workflowStatusDescriptions[workflow.status]}
+                </p>
               </div>
-            </div>
-          ) : (
-            <p className="mt-3 text-sm text-slate-500">No executions recorded yet.</p>
-          )}
+            </section>
+
+            <section className="workflow-card-metric">
+              <div className="flex items-center justify-between gap-3">
+                <p className="muted-label">Last execution</p>
+                {executionLoading ? (
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    Syncing
+                  </span>
+                ) : null}
+              </div>
+
+              {executionLoading && !lastExecution ? (
+                <div className="mt-3 flex items-center gap-3 text-sm text-slate-500">
+                  <Spinner size="sm" />
+                  <span>Loading latest execution...</span>
+                </div>
+              ) : lastExecution ? (
+                <div className="mt-3">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <span
+                      className={`inline-flex items-center rounded-full border px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] shadow-sm ${executionStatusClassNames[lastExecution.status]}`}
+                    >
+                      {lastExecution.status}
+                    </span>
+                    <span className="text-sm font-medium text-slate-600">
+                      {executionStatusDescriptions[lastExecution.status]}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-base font-semibold text-slate-950">
+                    {formatDateTime(getExecutionDisplayTime(lastExecution))}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Workflow version {lastExecution.workflowVersion}
+                  </p>
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-slate-500">
+                  No executions recorded yet.
+                </p>
+              )}
+            </section>
+          </div>
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-3">
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-900/10 pt-4">
         <Link
           className={[
-            'rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700',
+            'rounded-full border border-slate-900/10 bg-white/85 px-3.5 py-2 text-[13px] font-semibold text-slate-700 transition hover:border-slate-900/20 hover:bg-slate-50',
             isBusy ? 'pointer-events-none opacity-60' : '',
           ].join(' ')}
           data-testid={`workflow-${workflow.id}-edit`}
@@ -117,7 +204,7 @@ export function WorkflowCard({
         </Link>
 
         <Link
-          className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+          className="rounded-full border border-slate-900/10 bg-white/85 px-3.5 py-2 text-[13px] font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
           data-testid={`workflow-${workflow.id}-history`}
           to={`/workflows/${workflow.id}/history`}
         >
@@ -125,7 +212,7 @@ export function WorkflowCard({
         </Link>
 
         <button
-          className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-sky-400 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-full border border-slate-900/10 bg-white/85 px-3.5 py-2 text-[13px] font-semibold text-slate-700 transition hover:border-sky-400 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
           data-testid={`workflow-${workflow.id}-run`}
           disabled={isBusy}
           onClick={() => onRun(workflow)}
@@ -135,7 +222,7 @@ export function WorkflowCard({
         </button>
 
         <button
-          className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-full border border-slate-900/10 bg-white/85 px-3.5 py-2 text-[13px] font-semibold text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
           data-testid={`workflow-${workflow.id}-status`}
           disabled={isBusy}
           onClick={() => onToggleStatus(workflow)}
@@ -147,7 +234,7 @@ export function WorkflowCard({
         </button>
 
         <button
-          className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-full border border-rose-200 bg-rose-50/90 px-3.5 py-2 text-[13px] font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
           data-testid={`workflow-${workflow.id}-delete`}
           disabled={isBusy}
           onClick={() => onDelete(workflow)}

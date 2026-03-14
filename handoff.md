@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-031 — `Editor empty-state and workspace guidance`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–031 закрыты
+- **Последнее изменение**: TASK-032 — `Workflow cards density + status emphasis`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–032 закрыты
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -204,6 +204,14 @@
   - **Проверки TASK-031**:
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke empty editor через локальный `vite preview` + Playwright screenshot с mock `GET /api/auth/me` и `GET /api/connections`
+
+- **Что сделано в TASK-032**:
+  - `apps/web/src/components/dashboard/WorkflowCard.tsx` — workflow cards переведены в более плотный grid-layout с отдельным operational block для `workflow status` и `last execution`; вторичная мета-информация ужата, action-row визуально приглушён без изменения поведения
+  - `apps/web/src/components/dashboard/WorkflowList.tsx` — секция workflow list получила tighter spacing и более scan-friendly section header
+  - `apps/web/src/index.css` — добавлены dashboard-specific card surfaces с status accent rail/background для более быстрой навигации по списку
+  - **Проверки TASK-032**:
+    - `pnpm --filter @mini-zapier/web build`
+    - desktop visual smoke dashboard workflow list через локальный `vite preview` + Playwright screenshot с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`
 ## Следующий шаг
 Новых TASK в текущем `backlog.md` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
 
@@ -318,5 +326,7 @@
 | TASK-029 | done | см. `git log` (`TASK-029: workflow editor full-width workspace layout`) | shared header + wide editor layout + viewport-aware canvas sizing |
 | TASK-030 | done | см. `git log` (`TASK-030: dashboard visual hierarchy pass`) | compact hero, denser stats/workflow hierarchy, desktop smoke screenshot |
 | TASK-031 | done | см. `git log` (`TASK-031: editor empty-state and workspace guidance`) | guided empty canvas, stronger workspace rails, desktop smoke screenshot |
+| TASK-032 | done | см. `git log` (`TASK-032: workflow cards density and status emphasis`) | denser dashboard cards, stronger status/last execution emphasis, desktop smoke screenshot |
+
 
 

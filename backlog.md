@@ -818,3 +818,33 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - desktop visual smoke empty editor через локальный `vite preview` + Playwright screenshot с mock auth/connections
+
+### TASK-032: Workflow cards density + status emphasis
+- **Статус**: `done`
+- **Цель**: сделать workflow cards на dashboard более операционными, чтобы статус и последнее выполнение считывались быстрее
+- **Проблема**:
+  - карточки workflow выглядят слишком воздушно
+  - метаданные и статус не имеют достаточно сильной иерархии
+  - кнопки и operational state конкурируют друг с другом по вниманию
+- **Что сделано**:
+  - переработан spacing и внутренний layout workflow cards
+  - усилены статусные акценты и visual hierarchy operational info
+  - вторичная мета-информация ужата без потери читаемости
+  - все текущие действия карточек и текущее поведение сохранены
+- **Не входит**:
+  - новые действия
+  - bulk actions
+  - table view/list mode switch
+  - backend/API changes
+- **Файлы**:
+  - `apps/web/src/components/dashboard/WorkflowCard.tsx`
+  - `apps/web/src/components/dashboard/WorkflowList.tsx`
+  - `apps/web/src/index.css`
+- **Acceptance**:
+  - workflow cards легче сканируются списком
+  - статус и last execution визуально заметнее, чем вторичные метаданные
+  - карточки выглядят плотнее без потери читаемости
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - manual visual smoke на dashboard workflow list
