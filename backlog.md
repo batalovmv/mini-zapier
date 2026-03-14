@@ -975,3 +975,27 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-037: Node library rail redesign
+- **Статус**: `done`
+- **Цель**: сделать левую библиотеку узлов editor более профессиональной, современной и удобной для сканирования, особенно с русским copy
+- **Проблема**:
+  - левый rail был визуально уже правого inspector и ощущался вторичным, хотя именно он является главным toolbox editor
+  - библиотека узлов выглядела перегруженно из-за нескольких уровней cards/onboarding blocks и медленно сканировалась
+- **Что сделано**:
+  - левая desktop колонка editor widened и стала шире правой
+  - `NodeSidebar` переведён из card-stack layout в cleaner tool-rail: compact header, short flow-order cue, flatter section headers и более плотные draggable node rows
+  - цветовой акцент сохранён только как сигнал типа секции/иконки, без тяжёлых tinted panels вокруг каждого уровня
+- **Не входит**:
+  - новые editor features
+  - changes в drag-and-drop mechanics
+  - backend/API changes
+- **Файлы**:
+  - `apps/web/src/components/editor/NodeSidebar.tsx`
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+- **Acceptance**:
+  - левый rail визуально primary и шире правого inspector на desktop
+  - node library быстрее сканируется списком и не выглядит как набор вложенных карточек
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`

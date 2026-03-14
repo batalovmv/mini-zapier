@@ -3,8 +3,14 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-036 — `workflow editor rail visual cleanup`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–036 закрыты
+- **Последнее изменение**: TASK-037 — `node library rail redesign`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–037 закрыты
+- **Что сделано в TASK-037**:
+  - `apps/web/src/pages/WorkflowEditorPage.tsx` — desktop editor grid updated so the left node library rail is now wider than the right inspector
+  - `apps/web/src/components/editor/NodeSidebar.tsx` — библиотека узлов переведена в cleaner tool-rail: compact header, short flow-order cue, flatter section hierarchy и более плотные draggable rows вместо stacked nested cards
+  - Визуальный акцент left rail упрощён: меньше тяжёлых tinted containers, больше scanability и clear tool-list feel
+  - **Проверки TASK-037**:
+    - `pnpm --filter @mini-zapier/web build`
 - **Что сделано в TASK-036**:
   - `apps/web/src/pages/WorkflowEditorPage.tsx` — desktop grid rails widened to better fit RU copy without crushing the canvas
   - `apps/web/src/components/editor/NodeSidebar.tsx` — левая библиотека пересобрана в cleaner list-driven layout: flatter onboarding steps, stronger section headers, simpler draggable items without nested badge noise
@@ -253,7 +259,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-Новых TASK в текущем `backlog.md` после `TASK-036` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
+Новых TASK в текущем `backlog.md` после `TASK-037` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -373,6 +379,8 @@
 | TASK-034 follow-up | done | см. `git log` (`TASK-034: localization copy cleanup`) | canonical node labels kept untranslated, raw enum labels removed from UI, leftover aria-labels localized, RU copy polished |
 | TASK-035 | done | см. `git log` (`TASK-035: editor viewport containment + rail density`) | desktop editor shell constrained to viewport, rails compacted, internal scroll preserved |
 | TASK-036 | done | см. `git log` (`TASK-036: editor rail visual cleanup`) | wider desktop rails, cleaner node library, simplified empty inspector state |
+| TASK-037 | done | см. `git log` (`TASK-037: node library rail redesign`) | left rail widened and rebuilt into a cleaner, more professional toolbox list |
+
 
 
 
