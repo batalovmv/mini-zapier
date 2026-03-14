@@ -1,3 +1,5 @@
+import { useLocale } from '../../locale/LocaleProvider';
+
 import { Spinner } from './Spinner';
 
 interface LoadingStateProps {
@@ -7,10 +9,12 @@ interface LoadingStateProps {
 }
 
 export function LoadingState({
-  title = 'Loading...',
-  description = 'Please wait while the latest data is fetched.',
+  title,
+  description,
   compact = false,
 }: LoadingStateProps) {
+  const { messages } = useLocale();
+
   return (
     <div
       className={[
@@ -19,9 +23,11 @@ export function LoadingState({
       ].join(' ')}
     >
       <Spinner size={compact ? 'sm' : 'lg'} />
-      <h3 className="mt-4 text-lg font-semibold text-slate-900">{title}</h3>
+      <h3 className="mt-4 text-lg font-semibold text-slate-900">
+        {title ?? messages.loadingState.title}
+      </h3>
       <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">
-        {description}
+        {description ?? messages.loadingState.description}
       </p>
     </div>
   );

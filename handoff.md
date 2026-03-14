@@ -3,8 +3,17 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-033 — `Global polish of spacing, contrast and accent hierarchy`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–033 закрыты
+- **Последнее изменение**: TASK-034 — `Web UI language switcher (EN/RU)`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–034 закрыты
+- **Что сделано в TASK-034**:
+  - `apps/web/src/locale/*` — добавлены словари `en`/`ru`, shared locale helpers, `LocaleProvider` и `useLocale` без новой зависимости
+  - `apps/web/src/components/AppHeader.tsx` — добавлен переключатель `EN / RU` в header с persistence через `localStorage`
+  - `apps/web/src/pages/*`, `apps/web/src/components/dashboard/*`, `apps/web/src/components/execution/*`, `apps/web/src/components/editor/*`, `apps/web/src/components/ui/*` — user-facing copy вынесен в централизованные словари
+  - `apps/web/src/lib/api/client.ts`, `apps/web/src/stores/workflow-editor.store.ts` — frontend fallback/error copy и workflow validation переведены на locale-aware messages без изменения routing/API/editor mechanics
+  - `LocaleProvider` теперь управляет `document.documentElement.lang`, форматированием дат/времени/длительностей и сохранением выбора языка между перезагрузками
+  - **Проверки TASK-034**:
+    - `pnpm --filter @mini-zapier/web build`
+    - headless smoke на локальном `vite preview` + mock API: `login`, `dashboard`, `workflow editor`, `execution history`, `404`, `empty states`, `header switcher`, persistence после reload
 - **Follow-up после TASK-033**:
   - `apps/web/src/components/AppHeader.tsx` — header переведён на responsive mobile layout: brand остаётся сверху, nav + logout занимают отдельную строку без horizontal overflow
   - **Проверки follow-up**:
@@ -226,7 +235,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-Новых TASK в текущем `backlog.md` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
+Новых TASK в текущем `backlog.md` после `TASK-034` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -342,8 +351,5 @@
 | TASK-032 | done | см. `git log` (`TASK-032: workflow cards density and status emphasis`) | denser dashboard cards, stronger status/last execution emphasis, desktop smoke screenshot |
 | TASK-033 | done | см. `git log` (`TASK-033: global visual polish and hierarchy pass`) | stronger global surface contrast, accent hierarchy, dashboard/editor desktop smoke screenshots |
 | TASK-033 follow-up | done | см. `git log` (`TASK-033: fix mobile header overflow`) | responsive AppHeader fix for narrow screens, 390px smoke recheck |
-
-
-
-
+| TASK-034 | done | см. `git log` (`TASK-034: web language switcher EN/RU`) | locale infrastructure, EN/RU switcher, centralized copy, locale-aware date/time formatting, build + preview smoke with mock API |
 

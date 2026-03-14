@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FocusEvent,
+  type RefObject,
+} from 'react';
 
+import { useLocale } from '../../locale/LocaleProvider';
 import { getAvailableFields } from '../../lib/api/executions';
 import type { AvailableFieldsResponse } from '../../lib/api/types';
 import {
@@ -8,10 +16,6 @@ import {
 } from '../../lib/editor-chain';
 import { useWorkflowEditorStore } from '../../stores/workflow-editor.store';
 import type { ConfigUpdater } from './ConfigPanel';
-
-// ---------------------------------------------------------------------------
-// Module-level shared cache + deduplication
-// ---------------------------------------------------------------------------
 
 const cache = new Map<string, AvailableFieldsResponse>();
 const inflight = new Map<string, Promise<AvailableFieldsResponse>>();
@@ -33,10 +37,6 @@ function fetchWithDedup(
 
   return promise;
 }
-
-// ---------------------------------------------------------------------------
-// useAvailableFields hook
-// ---------------------------------------------------------------------------
 
 interface UseAvailableFieldsResult {
   data: AvailableFieldsResponse | null;
@@ -83,7 +83,7 @@ function useAvailableFields(
           }
         })
         .catch(() => {
-          // Assistive-only — silently fail
+          // Assistive-only — silently fail.
         })
         .finally(() => {
           if (workflowIdRef.current === workflowId) {
@@ -105,12 +105,8 @@ function useAvailableFields(
   return { data, loading, refetch };
 }
 
-// ---------------------------------------------------------------------------
-// insertAtCursor utility
-// ---------------------------------------------------------------------------
-
 export function insertAtCursor(
-  ref: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>,
+  ref: RefObject<HTMLInputElement | HTMLTextAreaElement | null>,
   fieldString: string,
   configKey: string,
   config: Record<string, unknown>,
@@ -137,10 +133,6 @@ export function insertAtCursor(
   });
 }
 
-/**
- * Insert a field string into a Record<string, string> value at cursor position.
- * Used for mapping values and header values.
- */
 export function insertAtCursorRecord(
   refEl: HTMLInputElement | null,
   fieldString: string,
@@ -171,15 +163,12 @@ export function insertAtCursorRecord(
   });
 }
 
-// ---------------------------------------------------------------------------
-// FieldPicker component
-// ---------------------------------------------------------------------------
-
 interface FieldPickerProps {
   onSelect: (field: string) => void;
 }
 
 export function FieldPicker({ onSelect }: FieldPickerProps) {
+  const { messages } = useLocale();
   const workflowId = useWorkflowEditorStore((s) => s.workflowId);
   const workflowVersion = useWorkflowEditorStore((s) => s.workflowVersion);
   const selectedNodeId = useWorkflowEditorStore((s) => s.selectedNodeId);
@@ -193,30 +182,25 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Compute chain position
   const chainPosition =
     selectedNodeId !== null
       ? computeChainPosition(nodes, edges, selectedNodeId)
       : -1;
 
-  // Don't render for trigger nodes or unknown positions
   if (chainPosition < 0) {
     return null;
   }
 
-  // Structural fingerprint check
   const currentFingerprint = computeStructuralFingerprint(nodes, edges);
   const hasUnsavedChanges =
     savedFingerprint !== null && currentFingerprint !== savedFingerprint;
 
-  // Version mismatch check
   const versionMismatch =
     data !== null &&
     data.sourceWorkflowVersion !== null &&
     workflowVersion !== null &&
     data.sourceWorkflowVersion !== workflowVersion;
 
-  // Fields for current position
   const positionData = data?.positions.find(
     (p) => p.position === chainPosition,
   );
@@ -236,8 +220,7 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
     setOpen(false);
   }
 
-  // Close on outside click
-  function handleBlur(event: React.FocusEvent) {
+  function handleBlur(event: FocusEvent) {
     if (
       containerRef.current &&
       !containerRef.current.contains(event.relatedTarget as Node)
@@ -256,7 +239,7 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
       <button
         className="flex h-6 w-6 items-center justify-center rounded-lg text-amber-600 transition hover:bg-amber-50"
         onClick={handleToggle}
-        title="Insert field reference"
+        title={messages.fieldPicker.insertFieldReference}
         type="button"
       >
         <span className="text-sm">⚡</span>
@@ -265,30 +248,32 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
       {open ? (
         <div className="absolute right-0 top-8 z-50 w-64 rounded-xl border border-slate-200 bg-white shadow-lg">
           {loading ? (
-            <div className="px-4 py-3 text-xs text-slate-400">Loading…</div>
+            <div className="px-4 py-3 text-xs text-slate-400">{messages.fieldPicker.loading}</div>
           ) : hasUnsavedChanges ? (
             <div className="px-4 py-3 text-xs text-amber-600">
-              Save workflow to update available fields.
+              {messages.fieldPicker.saveWorkflowToUpdate}
             </div>
           ) : data === null || data.positions.length === 0 ? (
             <div className="px-4 py-3 text-xs text-slate-400">
               {data?.emptyState === 'INCOMPATIBLE_EXECUTIONS'
-                ? 'Run the workflow again after saving to refresh available fields.'
+                ? messages.fieldPicker.incompatibleExecutions
                 : data?.emptyState === 'NO_FIELDS'
-                  ? 'Run the workflow again with sample data to capture available fields.'
-                  : 'Run the workflow at least once to see available fields.'}
+                  ? messages.fieldPicker.noFieldsFromRun
+                  : messages.fieldPicker.runAtLeastOnce}
             </div>
           ) : (
             <div className="max-h-60 overflow-y-auto">
               {versionMismatch ? (
                 <div className="border-b border-slate-100 px-4 py-2 text-xs text-amber-600">
-                  Fields from v{data.sourceWorkflowVersion}, current v
-                  {workflowVersion}
+                  {messages.fieldPicker.versionMismatch(
+                    data.sourceWorkflowVersion ?? 0,
+                    workflowVersion,
+                  )}
                 </div>
               ) : null}
               {fields.length === 0 ? (
                 <div className="px-4 py-3 text-xs text-slate-400">
-                  No fields available for this position.
+                  {messages.fieldPicker.noFieldsForPosition}
                 </div>
               ) : (
                 <ul>
@@ -312,4 +297,3 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
     </div>
   );
 }
-

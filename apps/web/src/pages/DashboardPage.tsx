@@ -7,6 +7,7 @@ import { StatsOverview } from '../components/dashboard/StatsOverview';
 import { WorkflowCardAction } from '../components/dashboard/WorkflowCard';
 import { WorkflowList } from '../components/dashboard/WorkflowList';
 import { ConfirmationDialog } from '../components/ui/ConfirmationDialog';
+import { useLocale } from '../locale/LocaleProvider';
 import { getApiErrorMessage } from '../lib/api/client';
 import {
   executeWorkflow,
@@ -52,6 +53,7 @@ async function fetchLastExecutions(
 }
 
 export function DashboardPage() {
+  const { messages } = useLocale();
   const workflows = useDashboardStore((state) => state.workflows);
   const stats = useDashboardStore((state) => state.stats);
   const loading = useDashboardStore((state) => state.loading);
@@ -83,7 +85,7 @@ export function DashboardPage() {
 
       setLastExecutions(nextLastExecutions);
     } catch (error) {
-      setDashboardError(getApiErrorMessage(error));
+      setDashboardError(getApiErrorMessage(error, messages.errors));
       setLastExecutions({});
     } finally {
       setLastExecutionsLoading(false);
@@ -105,9 +107,9 @@ export function DashboardPage() {
 
       await refreshDashboardData();
 
-      toast.success(`Workflow "${workflow.name}" execution started.`);
+      toast.success(messages.dashboardPage.executionStartedToast(workflow.name));
     } catch (error) {
-      toast.error(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error, messages.errors));
     } finally {
       setPendingAction(null);
     }
@@ -129,9 +131,14 @@ export function DashboardPage() {
 
       await refreshDashboardData();
 
-      toast.success(`Workflow "${workflow.name}" is now ${nextStatus}.`);
+      toast.success(
+        messages.dashboardPage.statusUpdatedToast(
+          workflow.name,
+          messages.common.workflowStatusLabels[nextStatus],
+        ),
+      );
     } catch (error) {
-      toast.error(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error, messages.errors));
     } finally {
       setPendingAction(null);
     }
@@ -159,9 +166,9 @@ export function DashboardPage() {
       await refreshDashboardData();
 
       setWorkflowPendingDelete(null);
-      toast.success(`Workflow "${workflow.name}" deleted.`);
+      toast.success(messages.dashboardPage.deletedToast(workflow.name));
     } catch (error) {
-      toast.error(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error, messages.errors));
     } finally {
       setPendingAction(null);
     }
@@ -179,12 +186,12 @@ export function DashboardPage() {
         <div className="border-b border-slate-900/10 px-6 py-6 sm:px-7 sm:py-7">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-4xl">
-              <p className="muted-label">Workflow operations</p>
+              <p className="muted-label">{messages.dashboardPage.eyebrow}</p>
               <h1 className="mt-2 max-w-4xl text-3xl font-semibold tracking-tight text-slate-900 sm:text-[2.45rem] sm:leading-[1.06]">
-                Operate workflows, monitor execution health and launch manual runs.
+                {messages.dashboardPage.title}
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px]">
-                Monitor workflow health, launch manual runs and manage your automations.
+                {messages.dashboardPage.description}
               </p>
             </div>
 
@@ -193,7 +200,7 @@ export function DashboardPage() {
               data-testid="create-workflow-link"
               to="/workflows/new/edit"
             >
-              Create Workflow
+              {messages.dashboardPage.createWorkflow}
             </Link>
           </div>
         </div>
@@ -226,13 +233,15 @@ export function DashboardPage() {
 
       {workflowPendingDelete ? (
         <ConfirmationDialog
-          confirmLabel="Delete workflow"
+          confirmLabel={messages.dashboardPage.deleteDialogConfirm}
           confirmTone="danger"
-          description={`Delete workflow "${workflowPendingDelete.name}"? This action cannot be undone.`}
+          description={messages.dashboardPage.deleteDialogDescription(
+            workflowPendingDelete.name,
+          )}
           onCancel={() => setWorkflowPendingDelete(null)}
           onConfirm={() => void confirmDelete()}
           pending={pendingAction?.action === 'delete'}
-          title="Delete workflow?"
+          title={messages.dashboardPage.deleteDialogTitle}
         />
       ) : null}
     </div>

@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 
+import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
 import { FieldPicker, insertAtCursor, insertAtCursorRecord } from '../FieldPicker';
 
@@ -24,6 +25,7 @@ export function DataTransformConfig({
   config,
   onChange,
 }: DataTransformConfigProps) {
+  const { messages } = useLocale();
   const templateRef = useRef<HTMLTextAreaElement>(null);
   const mappingValueRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -93,7 +95,7 @@ export function DataTransformConfig({
   return (
     <div className="space-y-5">
       <label className="block">
-        <span className="muted-label">Mode</span>
+        <span className="muted-label">{messages.configForms.dataTransform.mode}</span>
         <select
           aria-label="Data transform mode"
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
@@ -103,15 +105,15 @@ export function DataTransformConfig({
           }}
           value={mode}
         >
-          <option value="template">Template</option>
-          <option value="mapping">Mapping</option>
+          <option value="template">{messages.configForms.dataTransform.templateMode}</option>
+          <option value="mapping">{messages.configForms.dataTransform.mappingMode}</option>
         </select>
       </label>
 
       {mode === 'template' ? (
         <div className="block">
           <div className="flex items-center justify-between">
-            <span className="muted-label">Template</span>
+            <span className="muted-label">{messages.configForms.dataTransform.template}</span>
             <FieldPicker
               onSelect={(f) =>
                 insertAtCursor(templateRef, f, 'template', config, onChange)
@@ -137,7 +139,7 @@ export function DataTransformConfig({
       ) : (
         <div>
           <div className="flex items-center justify-between gap-3">
-            <span className="muted-label">Mapping</span>
+            <span className="muted-label">{messages.configForms.dataTransform.mapping}</span>
             <button
               className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
               onClick={() =>
@@ -152,7 +154,7 @@ export function DataTransformConfig({
               }
               type="button"
             >
-              Add field
+              {messages.configForms.dataTransform.addField}
             </button>
           </div>
 
@@ -169,7 +171,7 @@ export function DataTransformConfig({
                     onChange={(event) =>
                       updateMappingKey(index, event.target.value)
                     }
-                    placeholder="key"
+                    placeholder={messages.configForms.dataTransform.keyPlaceholder}
                     type="text"
                     value={key}
                   />
@@ -177,7 +179,7 @@ export function DataTransformConfig({
                     aria-label={`Remove mapping row ${index + 1}`}
                     className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
                     onClick={() => removeMapping(index)}
-                    title="Remove"
+                    title={messages.configForms.dataTransform.remove}
                     type="button"
                   >
                     &times;
@@ -191,7 +193,7 @@ export function DataTransformConfig({
                     onChange={(event) =>
                       updateMappingValue(index, event.target.value)
                     }
-                    placeholder="value"
+                    placeholder={messages.configForms.dataTransform.valuePlaceholder}
                     ref={(el) => {
                       mappingValueRefs.current[index] = el;
                     }}

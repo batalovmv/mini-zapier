@@ -1,3 +1,5 @@
+import { useLocale } from '../../locale/LocaleProvider';
+
 import { ModalShell } from './ModalShell';
 
 interface ConfirmationDialogProps {
@@ -15,12 +17,14 @@ export function ConfirmationDialog({
   title,
   description,
   confirmLabel,
-  cancelLabel = 'Cancel',
+  cancelLabel,
   confirmTone = 'default',
   pending = false,
   onCancel,
   onConfirm,
 }: ConfirmationDialogProps) {
+  const { messages } = useLocale();
+
   return (
     <ModalShell
       actions={
@@ -30,7 +34,7 @@ export function ConfirmationDialog({
             onClick={onCancel}
             type="button"
           >
-            {cancelLabel}
+            {cancelLabel ?? messages.confirmationDialog.cancel}
           </button>
           <button
             className={[
@@ -43,17 +47,17 @@ export function ConfirmationDialog({
             onClick={onConfirm}
             type="button"
           >
-            {pending ? 'Working...' : confirmLabel}
+            {pending ? messages.confirmationDialog.working : confirmLabel}
           </button>
         </>
       }
       description={description}
-      eyebrow="Confirmation"
+      eyebrow={messages.confirmationDialog.eyebrow}
       onClose={pending ? () => undefined : onCancel}
       title={title}
     >
       <p className="text-sm leading-6 text-slate-600">
-        This action is destructive and requires explicit confirmation.
+        {messages.confirmationDialog.destructiveNote}
       </p>
     </ModalShell>
   );

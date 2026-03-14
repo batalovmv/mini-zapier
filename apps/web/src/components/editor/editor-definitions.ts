@@ -5,6 +5,15 @@ type WorkflowNodeDto = WorkflowDto['nodes'][number];
 
 export type EditorNodeKind = WorkflowNodeDto['nodeKind'];
 export type EditorNodeType = WorkflowNodeDto['nodeType'];
+export type EditorDefinitionId =
+  | 'trigger:WEBHOOK'
+  | 'trigger:CRON'
+  | 'trigger:EMAIL'
+  | 'action:HTTP_REQUEST'
+  | 'action:EMAIL'
+  | 'action:TELEGRAM'
+  | 'action:DB_QUERY'
+  | 'action:DATA_TRANSFORM';
 export type SupportedConnectionType =
   | 'SMTP'
   | 'TELEGRAM'
@@ -29,12 +38,11 @@ export type WorkflowEditorNode = Node<
 export type WorkflowEditorEdge = Edge;
 
 export interface EditorPaletteItem {
-  id: string;
+  id: EditorDefinitionId;
   section: 'Triggers' | 'Actions';
   nodeKind: EditorNodeKind;
   nodeType: EditorNodeType;
-  label: string;
-  description: string;
+  defaultLabel: string;
   accent: string;
   icon: string;
   connectionType: SupportedConnectionType | null;
@@ -46,8 +54,7 @@ const paletteItems: EditorPaletteItem[] = [
     section: 'Triggers',
     nodeKind: 'trigger',
     nodeType: 'WEBHOOK',
-    label: 'Webhook',
-    description: 'Receive JSON over the public webhook endpoint.',
+    defaultLabel: 'Webhook',
     accent: 'emerald',
     icon: 'WH',
     connectionType: 'WEBHOOK',
@@ -57,8 +64,7 @@ const paletteItems: EditorPaletteItem[] = [
     section: 'Triggers',
     nodeKind: 'trigger',
     nodeType: 'CRON',
-    label: 'Cron',
-    description: 'Run the workflow on a repeat schedule.',
+    defaultLabel: 'Cron',
     accent: 'emerald',
     icon: 'CR',
     connectionType: null,
@@ -68,8 +74,7 @@ const paletteItems: EditorPaletteItem[] = [
     section: 'Triggers',
     nodeKind: 'trigger',
     nodeType: 'EMAIL',
-    label: 'Email Trigger',
-    description: 'Accept inbound email payloads from a provider webhook.',
+    defaultLabel: 'Email Trigger',
     accent: 'emerald',
     icon: 'EM',
     connectionType: 'WEBHOOK',
@@ -79,8 +84,7 @@ const paletteItems: EditorPaletteItem[] = [
     section: 'Actions',
     nodeKind: 'action',
     nodeType: 'HTTP_REQUEST',
-    label: 'HTTP Request',
-    description: 'Call an HTTP endpoint with templated input data.',
+    defaultLabel: 'HTTP Request',
     accent: 'sky',
     icon: 'HT',
     connectionType: null,
@@ -90,8 +94,7 @@ const paletteItems: EditorPaletteItem[] = [
     section: 'Actions',
     nodeKind: 'action',
     nodeType: 'EMAIL',
-    label: 'Email',
-    description: 'Send an email through an SMTP connection.',
+    defaultLabel: 'Email',
     accent: 'sky',
     icon: 'ML',
     connectionType: 'SMTP',
@@ -101,8 +104,7 @@ const paletteItems: EditorPaletteItem[] = [
     section: 'Actions',
     nodeKind: 'action',
     nodeType: 'TELEGRAM',
-    label: 'Telegram',
-    description: 'Send a Telegram message with templated content.',
+    defaultLabel: 'Telegram',
     accent: 'sky',
     icon: 'TG',
     connectionType: 'TELEGRAM',
@@ -112,8 +114,7 @@ const paletteItems: EditorPaletteItem[] = [
     section: 'Actions',
     nodeKind: 'action',
     nodeType: 'DB_QUERY',
-    label: 'PostgreSQL Query',
-    description: 'Execute a parameterized PostgreSQL query.',
+    defaultLabel: 'PostgreSQL Query',
     accent: 'sky',
     icon: 'DB',
     connectionType: 'POSTGRESQL',
@@ -123,13 +124,12 @@ const paletteItems: EditorPaletteItem[] = [
     section: 'Actions',
     nodeKind: 'action',
     nodeType: 'DATA_TRANSFORM',
-    label: 'Data Transform',
-    description: 'Interpolate templates or build a mapped payload.',
+    defaultLabel: 'Data Transform',
     accent: 'sky',
     icon: 'DT',
     connectionType: null,
   },
-] ;
+];
 
 export const EDITOR_PALETTE_ITEMS = [...paletteItems];
 
@@ -148,11 +148,11 @@ function cloneConfig(config: Record<string, unknown>): Record<string, unknown> {
 export function createDefinitionKey(
   nodeKind: EditorNodeKind,
   nodeType: EditorNodeType,
-): string {
-  return `${nodeKind}:${nodeType}`;
+): EditorDefinitionId {
+  return `${nodeKind}:${nodeType}` as EditorDefinitionId;
 }
 
-export function getPaletteItemById(id: string): EditorPaletteItem | undefined {
+export function getPaletteItemById(id: EditorDefinitionId): EditorPaletteItem | undefined {
   return paletteItemById.get(id);
 }
 
@@ -223,7 +223,7 @@ export function createEditorNode(
     type: paletteItem.nodeKind === 'trigger' ? 'triggerNode' : 'actionNode',
     position,
     data: {
-      label: paletteItem.label,
+      label: paletteItem.defaultLabel,
       nodeKind: paletteItem.nodeKind,
       nodeType: paletteItem.nodeType,
       config: createDefaultNodeConfig(paletteItem.nodeKind, paletteItem.nodeType),

@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 
+import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
 import { FieldPicker, insertAtCursor, insertAtCursorRecord } from '../FieldPicker';
 
@@ -24,6 +25,7 @@ export function HttpRequestConfig({
   config,
   onChange,
 }: HttpRequestConfigProps) {
+  const { messages } = useLocale();
   const urlRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const headerValueRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -91,7 +93,7 @@ export function HttpRequestConfig({
     <div className="space-y-5">
       <div className="block">
         <div className="flex items-center justify-between">
-          <span className="muted-label">URL</span>
+          <span className="muted-label">{messages.configForms.httpRequest.url}</span>
           <FieldPicker
             onSelect={(f) =>
               insertAtCursor(urlRef, f, 'url', config, onChange)
@@ -105,7 +107,7 @@ export function HttpRequestConfig({
             const value = event.target.value;
             onChange((prev) => ({ ...prev, url: value }));
           }}
-          placeholder="https://example.com/orders/{{input.id}}"
+          placeholder={messages.configForms.httpRequest.urlPlaceholder}
           ref={urlRef}
           type="text"
           value={typeof config.url === 'string' ? config.url : ''}
@@ -113,7 +115,7 @@ export function HttpRequestConfig({
       </div>
 
       <label className="block">
-        <span className="muted-label">Method</span>
+        <span className="muted-label">{messages.configForms.httpRequest.method}</span>
         <select
           aria-label="HTTP request method"
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
@@ -133,7 +135,7 @@ export function HttpRequestConfig({
 
       <div>
         <div className="flex items-center justify-between gap-3">
-          <span className="muted-label">Headers</span>
+          <span className="muted-label">{messages.configForms.httpRequest.headers}</span>
           <button
             className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
             onClick={() =>
@@ -147,7 +149,7 @@ export function HttpRequestConfig({
             }
             type="button"
           >
-            Add header
+            {messages.configForms.httpRequest.addHeader}
           </button>
         </div>
 
@@ -162,7 +164,7 @@ export function HttpRequestConfig({
                   aria-label={`Header key ${index + 1}`}
                   className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) => updateHeaderKey(index, event.target.value)}
-                  placeholder="header name"
+                  placeholder={messages.configForms.httpRequest.headerNamePlaceholder}
                   type="text"
                   value={key}
                 />
@@ -170,7 +172,7 @@ export function HttpRequestConfig({
                   aria-label={`Remove header row ${index + 1}`}
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
                   onClick={() => removeHeader(index)}
-                  title="Remove"
+                  title={messages.configForms.httpRequest.remove}
                   type="button"
                 >
                   &times;
@@ -182,7 +184,7 @@ export function HttpRequestConfig({
                   aria-label={`Header value ${index + 1}`}
                   className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) => updateHeaderValue(index, event.target.value)}
-                  placeholder="header value"
+                  placeholder={messages.configForms.httpRequest.headerValuePlaceholder}
                   ref={(el) => {
                     headerValueRefs.current[index] = el;
                   }}
@@ -214,7 +216,7 @@ export function HttpRequestConfig({
 
       <div className="block">
         <div className="flex items-center justify-between">
-          <span className="muted-label">Body</span>
+          <span className="muted-label">{messages.configForms.httpRequest.body}</span>
           <FieldPicker
             onSelect={(f) =>
               insertAtCursor(bodyRef, f, 'body', config, onChange)
@@ -228,7 +230,7 @@ export function HttpRequestConfig({
             const value = event.target.value;
             onChange((prev) => ({ ...prev, body: value }));
           }}
-          placeholder='{"orderId":"{{input.id}}"}'
+          placeholder={messages.configForms.httpRequest.bodyPlaceholder}
           ref={bodyRef}
           value={typeof config.body === 'string' ? config.body : ''}
         />

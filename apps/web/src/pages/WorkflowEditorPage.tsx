@@ -7,6 +7,7 @@ import { ConfigPanel } from '../components/editor/ConfigPanel';
 import { FlowCanvas } from '../components/editor/FlowCanvas';
 import { NodeSidebar } from '../components/editor/NodeSidebar';
 import { LoadingState } from '../components/ui/LoadingState';
+import { useLocale } from '../locale/LocaleProvider';
 import { getApiErrorMessage } from '../lib/api/client';
 import { executeWorkflow } from '../lib/api/executions';
 import {
@@ -34,6 +35,7 @@ function getStatusClasses(status: WorkflowDto['status']): string {
 export function WorkflowEditorPage() {
   const { id = 'new' } = useParams();
   const navigate = useNavigate();
+  const { messages } = useLocale();
 
   const workflowId = useWorkflowEditorStore((state) => state.workflowId);
   const workflowName = useWorkflowEditorStore((state) => state.workflowName);
@@ -63,12 +65,12 @@ export function WorkflowEditorPage() {
 
       if (id === 'new') {
         setLoading(false);
-        resetEditor();
+        resetEditor(messages.workflowEditorPage.untitledWorkflow);
         return;
       }
 
       setLoading(true);
-      resetEditor();
+      resetEditor(messages.workflowEditorPage.untitledWorkflow);
 
       try {
         const workflow = await getWorkflow(id);
@@ -78,7 +80,7 @@ export function WorkflowEditorPage() {
         }
       } catch (error) {
         if (!cancelled) {
-          setPageError(getApiErrorMessage(error));
+          setPageError(getApiErrorMessage(error, messages.errors));
         }
       } finally {
         if (!cancelled) {
@@ -92,13 +94,17 @@ export function WorkflowEditorPage() {
     return () => {
       cancelled = true;
     };
-  }, [id, loadWorkflow, resetEditor]);
+  }, [id, loadWorkflow, resetEditor, messages.workflowEditorPage.untitledWorkflow]);
 
   async function handleSave() {
     const validationErrors = validateWorkflow();
 
     if (validationErrors.length > 0) {
-      setPageError(validationErrors.map((e) => e.message).join(' '));
+      setPageError(
+        validationErrors
+          .map((error) => messages.workflowValidation[error.code])
+          .join(' '),
+      );
       return;
     }
 
@@ -106,7 +112,7 @@ export function WorkflowEditorPage() {
     setPageError(null);
 
     try {
-      const payload = saveWorkflowPayload();
+      const payload = saveWorkflowPayload(messages.workflowEditorPage.untitledWorkflow);
       const workflow =
         workflowId === null
           ? await createWorkflow(payload)
@@ -115,8 +121,8 @@ export function WorkflowEditorPage() {
       loadWorkflow(workflow);
       toast.success(
         workflowId === null
-          ? 'Workflow created successfully.'
-          : `Workflow saved. Version ${workflow.version}.`,
+          ? messages.workflowEditorPage.workflowCreatedToast
+          : messages.workflowEditorPage.workflowSavedToast(workflow.version),
       );
 
       if (workflowId === null) {
@@ -125,7 +131,7 @@ export function WorkflowEditorPage() {
         });
       }
     } catch (error) {
-      toast.error(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error, messages.errors));
     } finally {
       setSaving(false);
     }
@@ -148,9 +154,13 @@ export function WorkflowEditorPage() {
       });
 
       loadWorkflow(workflow);
-      toast.success(`Workflow is now ${nextStatus}.`);
+      toast.success(
+        messages.workflowEditorPage.statusUpdatedToast(
+          messages.common.workflowStatusLabels[nextStatus],
+        ),
+      );
     } catch (error) {
-      toast.error(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error, messages.errors));
     } finally {
       setStatusUpdating(false);
     }
@@ -167,13 +177,16 @@ export function WorkflowEditorPage() {
     try {
       await executeWorkflow(workflowId, {});
 
-      toast.success('Execution started.');
+      toast.success(messages.workflowEditorPage.executionStartedToast);
     } catch (error) {
-      toast.error(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error, messages.errors));
     } finally {
       setRunning(false);
     }
   }
+
+  const toggleStatusLabel =
+    workflowStatus === ACTIVE_STATUS ? messages.common.pause : messages.common.activate;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-6">
@@ -184,15 +197,15 @@ export function WorkflowEditorPage() {
               className="rounded-full border border-slate-900/10 bg-white/88 px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white"
               to="/"
             >
-              &larr; Back
+              &larr; {messages.common.back}
             </Link>
             <label className="block min-w-0 max-w-2xl flex-1">
-              <span className="muted-label">Workflow name</span>
+              <span className="muted-label">{messages.workflowEditorPage.workflowName}</span>
               <input
                 className="mt-1 w-full rounded-[1.4rem] border border-slate-900/12 bg-white/92 px-4 py-3 text-base font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] outline-none transition focus:border-amber-500"
                 data-testid="workflow-name-input"
                 onChange={(event) => setWorkflowName(event.target.value)}
-                placeholder="Untitled workflow"
+                placeholder={messages.workflowEditorPage.untitledWorkflow}
                 type="text"
                 value={workflowName}
               />
@@ -201,10 +214,10 @@ export function WorkflowEditorPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             <span className={`status-pill ${getStatusClasses(workflowStatus)}`}>
-              {workflowStatus ?? 'DRAFT'}
+              {messages.common.workflowStatusLabels[workflowStatus]}
             </span>
             <span className="app-chip font-semibold text-slate-700">
-              {workflowVersion === null ? 'Unsaved' : `v${workflowVersion}`}
+              {workflowVersion === null ? messages.workflowEditorPage.unsaved : `v${workflowVersion}`}
             </span>
 
             <button
@@ -214,31 +227,29 @@ export function WorkflowEditorPage() {
               onClick={() => void handleSave()}
               type="button"
             >
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? messages.workflowEditorPage.saving : messages.common.save}
             </button>
             <button
               className="rounded-full border border-slate-900/10 bg-white/90 px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
               data-testid="toggle-workflow-status-button"
               disabled={!workflowId || statusUpdating}
               onClick={() => void handleToggleStatus()}
-              title={!workflowId ? 'Save the workflow first' : undefined}
+              title={!workflowId ? messages.workflowEditorPage.saveFirst : undefined}
               type="button"
             >
               {statusUpdating
-                ? 'Updating...'
-                : workflowStatus === ACTIVE_STATUS
-                  ? 'Pause'
-                  : 'Activate'}
+                ? messages.workflowEditorPage.updating
+                : toggleStatusLabel}
             </button>
             <button
               className="rounded-full border border-slate-900/10 bg-white/90 px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-500/40 hover:bg-white disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
               data-testid="run-workflow-button"
               disabled={!workflowId || running}
               onClick={() => void handleRun()}
-              title={!workflowId ? 'Save the workflow first' : undefined}
+              title={!workflowId ? messages.workflowEditorPage.saveFirst : undefined}
               type="button"
             >
-              {running ? 'Running...' : 'Run'}
+              {running ? messages.workflowEditorPage.running : messages.common.run}
             </button>
           </div>
         </div>
@@ -260,8 +271,8 @@ export function WorkflowEditorPage() {
         <div className="min-h-0">
           {loading ? (
             <LoadingState
-              description="The saved workflow graph is loading into the editor."
-              title="Loading workflow editor..."
+              description={messages.workflowEditorPage.loadingDescription}
+              title={messages.workflowEditorPage.loadingTitle}
             />
           ) : (
             <FlowCanvas />

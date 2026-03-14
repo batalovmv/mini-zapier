@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 
+import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
 import { FieldPicker, insertAtCursor } from '../FieldPicker';
 
@@ -12,20 +13,21 @@ export function EmailActionConfig({
   config,
   onChange,
 }: EmailActionConfigProps) {
+  const { messages } = useLocale();
   const subjectRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   return (
     <div className="space-y-5">
       <label className="block">
-        <span className="muted-label">To</span>
+        <span className="muted-label">{messages.configForms.emailAction.to}</span>
         <input
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
           onChange={(event) => {
             const value = event.target.value;
             onChange((prev) => ({ ...prev, to: value }));
           }}
-          placeholder="ops@example.com"
+          placeholder={messages.configForms.emailAction.toPlaceholder}
           type="email"
           value={typeof config.to === 'string' ? config.to : ''}
         />
@@ -33,7 +35,7 @@ export function EmailActionConfig({
 
       <div className="block">
         <div className="flex items-center justify-between">
-          <span className="muted-label">Subject</span>
+          <span className="muted-label">{messages.configForms.emailAction.subject}</span>
           <FieldPicker
             onSelect={(f) =>
               insertAtCursor(subjectRef, f, 'subject', config, onChange)
@@ -46,7 +48,7 @@ export function EmailActionConfig({
             const value = event.target.value;
             onChange((prev) => ({ ...prev, subject: value }));
           }}
-          placeholder="New order {{input.id}}"
+          placeholder={messages.configForms.emailAction.subjectPlaceholder}
           ref={subjectRef}
           type="text"
           value={typeof config.subject === 'string' ? config.subject : ''}
@@ -55,7 +57,7 @@ export function EmailActionConfig({
 
       <div className="block">
         <div className="flex items-center justify-between">
-          <span className="muted-label">Body</span>
+          <span className="muted-label">{messages.configForms.emailAction.body}</span>
           <FieldPicker
             onSelect={(f) =>
               insertAtCursor(bodyRef, f, 'body', config, onChange)
@@ -68,7 +70,7 @@ export function EmailActionConfig({
             const value = event.target.value;
             onChange((prev) => ({ ...prev, body: value }));
           }}
-          placeholder="Hello, {{input.customerName}}"
+          placeholder={messages.configForms.emailAction.bodyPlaceholder}
           ref={bodyRef}
           value={typeof config.body === 'string' ? config.body : ''}
         />

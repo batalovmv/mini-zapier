@@ -7,6 +7,7 @@ import {
   listConnections,
 } from '../../lib/api/connections';
 import { getApiErrorMessage } from '../../lib/api/client';
+import { useLocale } from '../../locale/LocaleProvider';
 import { useWorkflowEditorStore } from '../../stores/workflow-editor.store';
 import { ConfirmationDialog } from '../ui/ConfirmationDialog';
 import { EmptyState } from '../ui/EmptyState';
@@ -26,94 +27,12 @@ interface ConfigPanelProps {
   workflowId: string | null;
 }
 
-const inspectorSteps = [
-  {
-    step: '1',
-    title: 'Drop or select a node',
-    description: 'The canvas controls what appears in this inspector.',
-  },
-  {
-    step: '2',
-    title: 'Configure its settings',
-    description: 'Forms for the selected trigger or action open here.',
-  },
-  {
-    step: '3',
-    title: 'Attach a connection when needed',
-    description: 'Nodes that use secrets get their connection controls here too.',
-  },
-];
-
 export type ConfigUpdater = (
   updater: (prev: Record<string, unknown>) => Record<string, unknown>,
 ) => void;
 
-function renderConfigForm(options: {
-  workflowId: string | null;
-  nodeKind: string;
-  nodeType: string;
-  config: Record<string, unknown>;
-  onChange: ConfigUpdater;
-}) {
-  const definitionKey = `${options.nodeKind}:${options.nodeType}`;
-
-  switch (definitionKey) {
-    case 'trigger:WEBHOOK':
-      return <WebhookConfig workflowId={options.workflowId} />;
-    case 'trigger:CRON':
-      return (
-        <CronConfig
-          config={options.config}
-          onChange={options.onChange}
-        />
-      );
-    case 'trigger:EMAIL':
-      return <EmailTriggerConfig workflowId={options.workflowId} />;
-    case 'action:HTTP_REQUEST':
-      return (
-        <HttpRequestConfig
-          config={options.config}
-          onChange={options.onChange}
-        />
-      );
-    case 'action:EMAIL':
-      return (
-        <EmailActionConfig
-          config={options.config}
-          onChange={options.onChange}
-        />
-      );
-    case 'action:TELEGRAM':
-      return (
-        <TelegramConfig
-          config={options.config}
-          onChange={options.onChange}
-        />
-      );
-    case 'action:DB_QUERY':
-      return (
-        <DbQueryConfig
-          config={options.config}
-          onChange={options.onChange}
-        />
-      );
-    case 'action:DATA_TRANSFORM':
-      return (
-        <DataTransformConfig
-          config={options.config}
-          onChange={options.onChange}
-        />
-      );
-    default:
-      return (
-        <p className="text-sm leading-6 text-slate-600">
-          No editor form is available for this node type.
-        </p>
-      );
-  }
-}
-
 export function ConfigPanel({ workflowId }: ConfigPanelProps) {
+  const { messages } = useLocale();
   const nodes = useWorkflowEditorStore((state) => state.nodes);
   const selectedNodeId = useWorkflowEditorStore((state) => state.selectedNodeId);
   const updateNodeConfig = useWorkflowEditorStore(
@@ -136,6 +55,16 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
   const definition = selectedNode
     ? getNodeDefinition(selectedNode.data.nodeKind, selectedNode.data.nodeType)
     : undefined;
+  const definitionCopy = definition
+    ? messages.editorDefinitions[definition.id]
+    : undefined;
+  const selectedNodeLabel = definitionCopy?.label ?? selectedNode?.data.label ?? '';
+  const selectedNodeDescription =
+    definitionCopy?.description ?? messages.configPanel.defaultSelectedDescription;
+  const connectionTypeLabel =
+    definition?.connectionType
+      ? messages.common.connectionTypeLabels[definition.connectionType as ConnectionType]
+      : null;
 
   const loadConnections = useCallback(async () => {
     setLoading(true);
@@ -146,13 +75,13 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
       setConnections(nextConnections);
       return nextConnections;
     } catch (error) {
-      const message = getApiErrorMessage(error);
+      const message = getApiErrorMessage(error, messages.errors);
       setConnectionsError(message);
       throw error;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [messages.errors]);
 
   useEffect(() => {
     let cancelled = false;
@@ -190,9 +119,9 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
         connectionId: createdConnection.id,
       });
       setCreateDialogOpen(false);
-      toast.success(`Connection "${createdConnection.name}" created.`);
+      toast.success(messages.configPanel.connectionCreatedToast(createdConnection.name));
     } catch (error) {
-      toast.error(getApiErrorMessage(error));
+      toast.error(getApiErrorMessage(error, messages.errors));
     } finally {
       setConnectionCreating(false);
     }
@@ -205,27 +134,92 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
 
     removeNode(selectedNode.id);
     setDeleteDialogOpen(false);
-    toast.success(`Node "${selectedNode.data.label}" deleted.`);
+    toast.success(messages.configPanel.nodeDeletedToast(selectedNodeLabel));
+  }
+
+  function renderConfigForm(options: {
+    workflowId: string | null;
+    nodeKind: string;
+    nodeType: string;
+    config: Record<string, unknown>;
+    onChange: ConfigUpdater;
+  }) {
+    const definitionKey = `${options.nodeKind}:${options.nodeType}`;
+
+    switch (definitionKey) {
+      case 'trigger:WEBHOOK':
+        return <WebhookConfig workflowId={options.workflowId} />;
+      case 'trigger:CRON':
+        return (
+          <CronConfig
+            config={options.config}
+            onChange={options.onChange}
+          />
+        );
+      case 'trigger:EMAIL':
+        return <EmailTriggerConfig workflowId={options.workflowId} />;
+      case 'action:HTTP_REQUEST':
+        return (
+          <HttpRequestConfig
+            config={options.config}
+            onChange={options.onChange}
+          />
+        );
+      case 'action:EMAIL':
+        return (
+          <EmailActionConfig
+            config={options.config}
+            onChange={options.onChange}
+          />
+        );
+      case 'action:TELEGRAM':
+        return (
+          <TelegramConfig
+            config={options.config}
+            onChange={options.onChange}
+          />
+        );
+      case 'action:DB_QUERY':
+        return (
+          <DbQueryConfig
+            config={options.config}
+            onChange={options.onChange}
+          />
+        );
+      case 'action:DATA_TRANSFORM':
+        return (
+          <DataTransformConfig
+            config={options.config}
+            onChange={options.onChange}
+          />
+        );
+      default:
+        return (
+          <p className="text-sm leading-6 text-slate-600">
+            {messages.configPanel.noFormAvailable}
+          </p>
+        );
+    }
   }
 
   if (!selectedNode) {
     return (
       <aside className="app-panel editor-rail flex h-full flex-col overflow-hidden">
         <div className="border-b border-slate-900/10 px-5 py-5">
-          <p className="muted-label">Config Panel</p>
+          <p className="muted-label">{messages.configPanel.emptyEyebrow}</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
-            Inspector waits for a node
+            {messages.configPanel.emptyTitle}
           </h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            Select a trigger or action on the canvas to configure it here.
+            {messages.configPanel.emptyDescription}
           </p>
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
           <section className="app-subpanel-muted px-4 py-4">
-            <p className="muted-label">Workspace guidance</p>
+            <p className="muted-label">{messages.configPanel.workspaceGuidanceEyebrow}</p>
             <div className="mt-4 space-y-3">
-              {inspectorSteps.map((item) => (
+              {messages.configPanel.inspectorSteps.map((item) => (
                 <div
                   key={item.step}
                   className="rounded-2xl border border-white/70 bg-white/90 px-3 py-3 shadow-sm"
@@ -250,11 +244,10 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
 
           <section className="app-subpanel px-4 py-4">
             <p className="text-sm font-semibold text-slate-900">
-              What shows up here
+              {messages.configPanel.whatShowsUpTitle}
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Connection selectors for nodes that need credentials, node-specific
-              settings, and the remove control for the selected step.
+              {messages.configPanel.whatShowsUpDescription}
             </p>
           </section>
         </div>
@@ -273,14 +266,14 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
     <>
       <aside className="app-panel editor-rail flex h-full flex-col overflow-hidden">
         <div className="border-b border-slate-900/10 px-5 py-5">
-          <p className="muted-label">Config Panel</p>
+          <p className="muted-label">{messages.configPanel.panelEyebrow}</p>
           <div className="mt-2 flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
-                {selectedNode.data.label}
+                {selectedNodeLabel}
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                {definition?.description ?? 'Configure the selected node.'}
+                {selectedNodeDescription}
               </p>
             </div>
             <span
@@ -290,23 +283,23 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                   : 'border-sky-200 bg-sky-50 text-sky-700'
               }`}
             >
-              {selectedNode.data.nodeKind}
+              {messages.common.nodeKindLabels[selectedNode.data.nodeKind]}
             </span>
           </div>
 
           <div className="mt-4 grid gap-3">
             <div className="app-subpanel px-4 py-3">
-              <p className="muted-label">Node type</p>
+              <p className="muted-label">{messages.configPanel.nodeTypeEyebrow}</p>
               <p className="mt-2 text-sm font-semibold text-slate-900">
-                {selectedNode.data.nodeType}
+                {selectedNodeLabel}
               </p>
             </div>
             <div className="app-subpanel px-4 py-3">
-              <p className="muted-label">Connection</p>
+              <p className="muted-label">{messages.configPanel.connectionEyebrow}</p>
               <p className="mt-2 text-sm font-semibold text-slate-900">
-                {definition?.connectionType
-                  ? `${definition.connectionType} connection required`
-                  : 'No connection required'}
+                {connectionTypeLabel
+                  ? messages.configPanel.connectionRequired(connectionTypeLabel)
+                  : messages.configPanel.noConnectionRequired}
               </p>
             </div>
           </div>
@@ -316,15 +309,16 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
           {definition?.connectionType ? (
             <section className="app-subpanel-muted space-y-4 px-4 py-4">
               <div>
-                <p className="muted-label">Connection</p>
+                <p className="muted-label">{messages.configPanel.connectionEyebrow}</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Attach the {definition.connectionType} connection used by this
-                  node.
+                  {messages.configPanel.connectionSectionDescription(
+                    connectionTypeLabel ?? definition.connectionType,
+                  )}
                 </p>
               </div>
 
               <label className="block">
-                <span className="muted-label">Available connections</span>
+                <span className="muted-label">{messages.configPanel.availableConnections}</span>
                 <select
                   className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   data-testid="connection-select"
@@ -337,7 +331,9 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                   value={selectedNode.data.connectionId ?? ''}
                 >
                   <option value="">
-                    Select {definition.connectionType} connection
+                    {messages.configPanel.selectConnection(
+                      connectionTypeLabel ?? definition.connectionType,
+                    )}
                   </option>
                   {availableConnections.map((connection) => (
                     <option
@@ -349,7 +345,9 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                   ))}
                 </select>
                 <span className="mt-2 block text-xs leading-5 text-slate-500">
-                  Required type: {definition.connectionType}.
+                  {messages.configPanel.requiredType(
+                    connectionTypeLabel ?? definition.connectionType,
+                  )}
                 </span>
               </label>
 
@@ -360,35 +358,39 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                   onClick={() => setCreateDialogOpen(true)}
                   type="button"
                 >
-                  Create connection
+                  {messages.configPanel.createConnection}
                 </button>
                 <button
                   className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white"
                   onClick={() => void loadConnections().catch(() => undefined)}
                   type="button"
                 >
-                  Refresh connections
+                  {messages.configPanel.refreshConnections}
                 </button>
               </div>
 
               {!loading && availableConnections.length === 0 ? (
                 <EmptyState
-                  description={`No ${definition.connectionType} connection is available yet. Create one here to keep the workflow flow inside the UI.`}
-                  title={`No ${definition.connectionType} connections`}
+                  description={messages.configPanel.noConnectionsDescription(
+                    connectionTypeLabel ?? definition.connectionType,
+                  )}
+                  title={messages.configPanel.noConnectionsTitle(
+                    connectionTypeLabel ?? definition.connectionType,
+                  )}
                 />
               ) : null}
             </section>
           ) : (
             <div className="app-subpanel-muted px-4 py-4 text-sm leading-6 text-slate-600">
-              This node does not require a connection.
+              {messages.configPanel.noConnectionNeeded}
             </div>
           )}
 
           <section className="app-subpanel px-4 py-4">
             <div className="mb-4">
-              <p className="muted-label">Node settings</p>
+              <p className="muted-label">{messages.configPanel.nodeSettingsEyebrow}</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Configure how this step behaves inside the workflow chain.
+                {messages.configPanel.nodeSettingsDescription}
               </p>
             </div>
 
@@ -410,8 +412,8 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
           {loading ? (
             <LoadingState
               compact
-              description="The connection list is loading."
-              title="Loading connections..."
+              description={messages.configPanel.loadingConnectionsDescription}
+              title={messages.configPanel.loadingConnectionsTitle}
             />
           ) : null}
         </div>
@@ -423,7 +425,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
             onClick={() => setDeleteDialogOpen(true)}
             type="button"
           >
-            Delete Node
+            {messages.configPanel.deleteNode}
           </button>
         </div>
       </aside>
@@ -439,12 +441,14 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
 
       {deleteDialogOpen ? (
         <ConfirmationDialog
-          confirmLabel="Delete node"
+          confirmLabel={messages.configPanel.deleteNodeDialogConfirm}
           confirmTone="danger"
-          description={`Remove "${selectedNode.data.label}" from the workflow canvas and delete connected edges.`}
+          description={messages.configPanel.deleteNodeDialogDescription(
+            selectedNodeLabel,
+          )}
           onCancel={() => setDeleteDialogOpen(false)}
           onConfirm={handleDeleteNode}
-          title="Delete selected node?"
+          title={messages.configPanel.deleteNodeDialogTitle}
         />
       ) : null}
     </>

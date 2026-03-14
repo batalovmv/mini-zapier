@@ -885,3 +885,39 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - manual visual smoke на dashboard и editor через локальный `vite preview` + Playwright screenshots с mock API
+
+### TASK-034: Web UI language switcher (EN/RU)
+- **Статус**: `done`
+- **Цель**: добавить в `apps/web` переключение языка интерфейса между английским и русским без backend changes и без новой зависимости
+- **Что сделано**:
+  - добавлена лёгкая i18n-инфраструктура в `apps/web`: `LocaleProvider`, `useLocale`, словари `en`/`ru`, locale-aware formatters и persistence через `localStorage`
+  - в header добавлен переключатель `EN / RU`, выбранный язык сохраняется между перезагрузками
+  - user-facing copy вынесен из страниц, layout'ов, editor panels, config forms, empty/loading/error states и dialogs в централизованные словари
+  - форматирование дат, времени и длительностей привязано к выбранной локали
+  - текущее поведение роутинга, API и editor mechanics сохранено
+- **Не входит**:
+  - backend i18n
+  - локализация server-side API error messages
+  - third-party i18n library
+  - любые новые фичи кроме language switcher
+- **Файлы**:
+  - `apps/web/src/locale/*`
+  - `apps/web/src/main.tsx`
+  - `apps/web/src/components/AppHeader.tsx`
+  - `apps/web/src/pages/*`
+  - `apps/web/src/components/dashboard/*`
+  - `apps/web/src/components/execution/*`
+  - `apps/web/src/components/editor/*`
+  - `apps/web/src/components/ui/*`
+  - `apps/web/src/lib/api/client.ts`
+  - `apps/web/src/stores/workflow-editor.store.ts`
+- **Acceptance**:
+  - UI переключается между `EN` и `RU` без backend changes
+  - выбор языка сохраняется между reload
+  - user-facing copy централизован в словарях
+  - date/time formatting следует выбранной локали
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - headless smoke на локальном `vite preview` + mock API: login, dashboard, workflow editor, execution history, 404, empty states, header switcher + persistence
+

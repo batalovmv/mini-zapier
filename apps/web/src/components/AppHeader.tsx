@@ -1,20 +1,9 @@
 import toast from 'react-hot-toast';
 import { NavLink, useNavigate } from 'react-router-dom';
 
+import { useLocale } from '../locale/LocaleProvider';
 import { logout } from '../lib/api/auth';
 import { getApiErrorMessage } from '../lib/api/client';
-
-const navigationItems = [
-  {
-    to: '/',
-    label: 'Dashboard',
-    end: true,
-  },
-  {
-    to: '/workflows/new/edit',
-    label: 'Create Workflow',
-  },
-];
 
 function getNavLinkClassName(isActive: boolean): string {
   return [
@@ -27,13 +16,26 @@ function getNavLinkClassName(isActive: boolean): string {
 
 export function AppHeader() {
   const navigate = useNavigate();
+  const { locale, setLocale, messages } = useLocale();
+
+  const navigationItems = [
+    {
+      to: '/',
+      label: messages.header.navigation.dashboard,
+      end: true,
+    },
+    {
+      to: '/workflows/new/edit',
+      label: messages.header.navigation.createWorkflow,
+    },
+  ];
 
   async function handleLogout() {
     try {
       await logout();
       navigate('/login', { replace: true });
     } catch (err) {
-      toast.error(getApiErrorMessage(err));
+      toast.error(getApiErrorMessage(err, messages.errors));
     }
   }
 
@@ -49,15 +51,15 @@ export function AppHeader() {
           </span>
           <span className="min-w-0">
             <span className="block text-xs font-semibold uppercase tracking-[0.32em] text-amber-700">
-              Mini-Zapier
+              {messages.header.brandTitle}
             </span>
             <span className="block text-sm text-slate-500">
-              Workflow control center
+              {messages.header.brandSubtitle}
             </span>
           </span>
         </NavLink>
 
-        <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
           <nav className="app-subpanel flex min-w-0 flex-1 items-center gap-1.5 rounded-full px-1.5 py-1.5 sm:flex-none sm:gap-2">
             {navigationItems.map((item) => (
               <NavLink
@@ -70,12 +72,41 @@ export function AppHeader() {
               </NavLink>
             ))}
           </nav>
-          <button
-            onClick={handleLogout}
-            className="shrink-0 rounded-full border border-slate-900/10 bg-white/85 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
-          >
-            Logout
-          </button>
+
+          <div className="flex items-center justify-between gap-3 sm:justify-end">
+            <div
+              aria-label={messages.common.languageLabel}
+              className="app-subpanel flex items-center gap-1 rounded-full px-1.5 py-1.5"
+              role="group"
+            >
+              {(['en', 'ru'] as const).map((option) => {
+                const active = option === locale;
+
+                return (
+                  <button
+                    key={option}
+                    aria-pressed={active}
+                    className={[
+                      'rounded-full px-3 py-1.5 text-xs font-semibold transition',
+                      active
+                        ? 'bg-slate-950 text-white shadow-[0_10px_18px_-12px_rgba(15,23,42,0.7)]'
+                        : 'text-slate-600 hover:bg-white hover:text-slate-950',
+                    ].join(' ')}
+                    onClick={() => setLocale(option)}
+                    type="button"
+                  >
+                    {messages.common.localeOptions[option]}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="shrink-0 rounded-full border border-slate-900/10 bg-white/85 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+            >
+              {messages.header.logout}
+            </button>
+          </div>
         </div>
       </div>
     </header>

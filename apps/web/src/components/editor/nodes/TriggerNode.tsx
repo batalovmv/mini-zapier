@@ -1,6 +1,7 @@
 import type { NodeProps } from 'reactflow';
 import { Handle, Position } from 'reactflow';
 
+import { useLocale } from '../../../locale/LocaleProvider';
 import { getNodeDefinition, type WorkflowEditorNodeData } from '../editor-definitions';
 
 export function TriggerNode({
@@ -8,7 +9,9 @@ export function TriggerNode({
   data,
   selected,
 }: NodeProps<WorkflowEditorNodeData>) {
+  const { messages } = useLocale();
   const definition = getNodeDefinition(data.nodeKind, data.nodeType);
+  const copy = definition ? messages.editorDefinitions[definition.id] : undefined;
 
   return (
     <div
@@ -30,9 +33,9 @@ export function TriggerNode({
           </span>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-50/80">
-              Trigger
+              {messages.editorNodes.triggerBadge}
             </p>
-            <p className="text-sm font-semibold">{data.label}</p>
+            <p className="text-sm font-semibold">{copy?.label ?? data.label}</p>
           </div>
         </div>
       </div>
@@ -42,7 +45,7 @@ export function TriggerNode({
           {data.nodeType}
         </p>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          {definition?.description ?? 'Workflow trigger node.'}
+          {copy?.description ?? messages.editorNodes.fallbackTriggerDescription}
         </p>
       </div>
 

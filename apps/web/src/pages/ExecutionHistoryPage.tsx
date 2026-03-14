@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 
 import { ExecutionTable } from '../components/execution/ExecutionTable';
 import { StepLogViewer } from '../components/execution/StepLogViewer';
+import { useLocale } from '../locale/LocaleProvider';
 import { getApiErrorMessage } from '../lib/api/client';
 import { getExecution, listWorkflowExecutions } from '../lib/api/executions';
 import type {
@@ -38,6 +39,7 @@ function createEmptyExecutionResponse(page = 1): ExecutionListResponse {
 
 export function ExecutionHistoryPage() {
   const { id = 'new' } = useParams();
+  const { messages } = useLocale();
   const workflowId = id;
 
   const [page, setPage] = useState(1);
@@ -104,7 +106,7 @@ export function ExecutionHistoryPage() {
         return;
       }
 
-      setPageError(getApiErrorMessage(error));
+      setPageError(getApiErrorMessage(error, messages.errors));
 
       if (!background) {
         setExecutionsResponse(createEmptyExecutionResponse(targetPage));
@@ -150,7 +152,7 @@ export function ExecutionHistoryPage() {
         return;
       }
 
-      setDetailError(getApiErrorMessage(error));
+      setDetailError(getApiErrorMessage(error, messages.errors));
 
       if (!background) {
         setSelectedExecution(null);
@@ -188,7 +190,7 @@ export function ExecutionHistoryPage() {
     if (workflowId === 'new') {
       setListLoading(false);
       setExecutionsResponse(createEmptyExecutionResponse(1));
-      setPageError('Execution history is available only for saved workflows.');
+      setPageError(messages.executionHistoryPage.savedOnlyError);
       return;
     }
 
@@ -269,9 +271,9 @@ export function ExecutionHistoryPage() {
         <div className="border-b border-slate-900/10 px-8 py-8">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div>
-              <p className="muted-label">Execution History</p>
+              <p className="muted-label">{messages.executionHistoryPage.eyebrow}</p>
               <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-900">
-                Execution History
+                {messages.executionHistoryPage.title}
               </h1>
             </div>
           </div>
@@ -282,13 +284,13 @@ export function ExecutionHistoryPage() {
             className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
             to="/"
           >
-            Back to dashboard
+            {messages.executionHistoryPage.backToDashboard}
           </Link>
           <Link
             className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/50 hover:bg-amber-50"
             to={`/workflows/${workflowId}/edit`}
           >
-            Open editor
+            {messages.executionHistoryPage.openEditor}
           </Link>
         </div>
       </section>

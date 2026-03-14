@@ -5,6 +5,11 @@ interface ApiErrorPayload {
   error?: string;
 }
 
+interface ApiErrorMessageOptions {
+  unexpectedFrontendError: string;
+  apiRequestFailed: string;
+}
+
 export const apiClient = axios.create({
   baseURL: '/api',
   headers: {
@@ -13,11 +18,16 @@ export const apiClient = axios.create({
   withCredentials: true,
 });
 
-export function getApiErrorMessage(error: unknown): string {
+export function getApiErrorMessage(
+  error: unknown,
+  options?: Partial<ApiErrorMessageOptions>,
+): string {
+  const unexpectedFrontendError =
+    options?.unexpectedFrontendError ?? 'Unexpected frontend error.';
+  const apiRequestFailed = options?.apiRequestFailed ?? 'API request failed.';
+
   if (!axios.isAxiosError<ApiErrorPayload>(error)) {
-    return error instanceof Error
-      ? error.message
-      : 'Unexpected frontend error.';
+    return error instanceof Error ? error.message : unexpectedFrontendError;
   }
 
   const payload = error.response?.data;
@@ -34,5 +44,5 @@ export function getApiErrorMessage(error: unknown): string {
     return payload.error;
   }
 
-  return error.message || 'API request failed.';
+  return error.message || apiRequestFailed;
 }

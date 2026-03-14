@@ -3,6 +3,8 @@ import type {
   WorkflowExecutionDto,
 } from '@mini-zapier/shared';
 
+import { useLocale } from '../../locale/LocaleProvider';
+import type { EditorDefinitionId } from '../editor/editor-definitions';
 import { EmptyState } from '../ui/EmptyState';
 import { LoadingState } from '../ui/LoadingState';
 
@@ -41,41 +43,6 @@ function getStepStatusClasses(status: ExecutionStepLogDto['status']): string {
   }
 }
 
-function formatDateTime(value: string | null | undefined): string {
-  if (!value) {
-    return '-';
-  }
-
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value));
-}
-
-function formatDurationMs(durationMs: number): string {
-  if (durationMs < 1000) {
-    return `${durationMs} ms`;
-  }
-
-  const totalSeconds = Math.round(durationMs / 1000);
-
-  if (totalSeconds < 60) {
-    return `${totalSeconds} sec`;
-  }
-
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  if (minutes < 60) {
-    return `${minutes}m ${seconds}s`;
-  }
-
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-
-  return `${hours}h ${remainingMinutes}m`;
-}
-
 function formatJson(value: unknown): string {
   return JSON.stringify(value, null, 2);
 }
@@ -86,6 +53,27 @@ function truncateExecutionId(id: string): string {
   }
 
   return `${id.slice(0, 8)}...${id.slice(-4)}`;
+}
+
+function getStepDefinitionId(nodeType: string): EditorDefinitionId | null {
+  switch (nodeType) {
+    case 'WEBHOOK':
+      return 'trigger:WEBHOOK';
+    case 'CRON':
+      return 'trigger:CRON';
+    case 'HTTP_REQUEST':
+      return 'action:HTTP_REQUEST';
+    case 'EMAIL':
+      return 'action:EMAIL';
+    case 'TELEGRAM':
+      return 'action:TELEGRAM';
+    case 'DB_QUERY':
+      return 'action:DB_QUERY';
+    case 'DATA_TRANSFORM':
+      return 'action:DATA_TRANSFORM';
+    default:
+      return null;
+  }
 }
 
 function JsonDisclosure(props: { label: string; value: unknown }) {
@@ -112,6 +100,11 @@ function StepLogItem(props: {
   isLast: boolean;
 }) {
   const { step, index, isLast } = props;
+  const { messages, formatDateTime, formatDurationMs } = useLocale();
+  const definitionId = getStepDefinitionId(step.nodeType);
+  const stepLabel = definitionId
+    ? messages.editorDefinitions[definitionId].label
+    : step.nodeLabel;
 
   return (
     <li className="relative pl-10">
@@ -124,23 +117,23 @@ function StepLogItem(props: {
 
       <article
         className="rounded-3xl border border-slate-900/10 bg-white/80 p-5 shadow-panel"
-        data-step-label={step.nodeLabel}
+        data-step-label={stepLabel}
         data-testid="step-log-item"
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-3">
               <h3 className="text-lg font-semibold text-slate-900">
-                {step.nodeLabel}
+                {stepLabel}
               </h3>
               <span
                 className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${getStepStatusClasses(step.status)}`}
               >
-                {step.status}
+                {messages.common.stepStatusLabels[step.status]}
               </span>
               {step.truncated ? (
                 <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">
-                  Truncated
+                  {messages.stepLogViewer.truncated}
                 </span>
               ) : null}
             </div>
@@ -151,18 +144,22 @@ function StepLogItem(props: {
           <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
             <span className="rounded-full border border-slate-900/10 bg-slate-50 px-3 py-1">
               {step.durationMs === null || step.durationMs === undefined
-                ? 'Duration -'
-                : `Duration ${formatDurationMs(step.durationMs)}`}
+                ? messages.stepLogViewer.durationEmpty
+                : messages.stepLogViewer.duration(formatDurationMs(step.durationMs))}
             </span>
             <span className="rounded-full border border-slate-900/10 bg-slate-50 px-3 py-1">
-              Retry attempt {step.retryAttempt}
+              {messages.stepLogViewer.retryAttempt(step.retryAttempt)}
             </span>
           </div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-500">
-          <span>Started {formatDateTime(step.startedAt ?? step.createdAt)}</span>
-          <span>Completed {formatDateTime(step.completedAt)}</span>
+          <span>
+            {messages.stepLogViewer.started(
+              formatDateTime(step.startedAt ?? step.createdAt),
+            )}
+          </span>
+          <span>{messages.stepLogViewer.completed(formatDateTime(step.completedAt))}</span>
         </div>
 
         {step.errorMessage ? (
@@ -174,13 +171,13 @@ function StepLogItem(props: {
         <div className="mt-4 grid gap-4">
           {step.inputData !== undefined ? (
             <JsonDisclosure
-              label="Input data"
+              label={messages.stepLogViewer.inputData}
               value={step.inputData}
             />
           ) : null}
           {step.outputData !== undefined ? (
             <JsonDisclosure
-              label="Output data"
+              label={messages.stepLogViewer.outputData}
               value={step.outputData}
             />
           ) : null}
@@ -196,6 +193,7 @@ export function StepLogViewer({
   refreshing,
   error,
 }: StepLogViewerProps) {
+  const { messages, formatDateTime } = useLocale();
   const stepLogs = execution?.stepLogs ?? [];
 
   return (
@@ -203,20 +201,22 @@ export function StepLogViewer({
       <div className="border-b border-slate-900/10 px-6 py-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="muted-label">Step Logs</p>
+            <p className="muted-label">{messages.stepLogViewer.eyebrow}</p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-900">
               {execution
-                ? `Execution ${truncateExecutionId(execution.id)}`
-                : 'Select an execution'}
+                ? messages.stepLogViewer.executionTitle(
+                    truncateExecutionId(execution.id),
+                  )
+                : messages.stepLogViewer.emptyTitle}
             </h2>
           </div>
 
           <p className="text-sm text-slate-500">
             {refreshing && execution
-              ? 'Refreshing execution detail...'
+              ? messages.stepLogViewer.refreshing
               : execution
-                ? `${stepLogs.length} step${stepLogs.length === 1 ? '' : 's'} loaded`
-                : 'Choose a row to inspect the timeline'}
+                ? messages.stepLogViewer.loadedCount(stepLogs.length)
+                : messages.stepLogViewer.chooseRow}
           </p>
         </div>
       </div>
@@ -231,15 +231,15 @@ export function StepLogViewer({
         <div className="px-6 py-6">
           <LoadingState
             compact
-            description="The selected execution detail is loading."
-            title="Loading step logs..."
+            description={messages.stepLogViewer.loadingDescription}
+            title={messages.stepLogViewer.loadingTitle}
           />
         </div>
       ) : !execution ? (
         <div className="px-6 py-10">
           <EmptyState
-            description="Use the table on the left to open step logs for a specific run."
-            title="No execution selected"
+            description={messages.stepLogViewer.noExecutionDescription}
+            title={messages.stepLogViewer.noExecutionTitle}
           />
         </div>
       ) : (
@@ -252,10 +252,10 @@ export function StepLogViewer({
                     data-testid="selected-execution-status"
                     className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${getExecutionStatusClasses(execution.status)}`}
                   >
-                    {execution.status}
+                    {messages.common.executionStatusLabels[execution.status]}
                   </span>
                   <span className="rounded-full border border-slate-900/10 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-slate-600">
-                    Workflow v{execution.workflowVersion}
+                    {messages.stepLogViewer.workflowVersion(execution.workflowVersion)}
                   </span>
                 </div>
 
@@ -267,16 +267,20 @@ export function StepLogViewer({
               </div>
 
               <div className="space-y-2 text-sm text-slate-500">
-                <p>Started {formatDateTime(execution.startedAt ?? execution.createdAt)}</p>
-                <p>Completed {formatDateTime(execution.completedAt)}</p>
+                <p>
+                  {messages.stepLogViewer.started(
+                    formatDateTime(execution.startedAt ?? execution.createdAt),
+                  )}
+                </p>
+                <p>{messages.stepLogViewer.completed(formatDateTime(execution.completedAt))}</p>
               </div>
             </div>
           </div>
 
           {stepLogs.length === 0 ? (
             <EmptyState
-              description="Step logs will appear here once the worker records action input and output for this execution."
-              title="No step logs yet"
+              description={messages.stepLogViewer.noStepLogsDescription}
+              title={messages.stepLogViewer.noStepLogsTitle}
             />
           ) : (
             <ol className="space-y-5">

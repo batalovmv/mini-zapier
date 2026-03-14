@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import toast from 'react-hot-toast';
 import ReactFlow, {
   Background,
@@ -12,6 +12,7 @@ import ReactFlow, {
   type Viewport,
 } from 'reactflow';
 
+import { useLocale } from '../../locale/LocaleProvider';
 import { useWorkflowEditorStore } from '../../stores/workflow-editor.store';
 import {
   getNodeDefinition,
@@ -35,27 +36,6 @@ interface DroppedNodePayload {
 
 const defaultViewport: Viewport = { x: 0, y: 0, zoom: 1 };
 
-const emptyStateSteps = [
-  {
-    step: '1',
-    title: 'Pick one trigger first',
-    description:
-      'Webhook, Cron, or Email becomes the starting point for the workflow.',
-  },
-  {
-    step: '2',
-    title: 'Drop it on the canvas',
-    description:
-      'The canvas is the working surface where the linear flow gets assembled.',
-  },
-  {
-    step: '3',
-    title: 'Then add actions',
-    description:
-      'Chain actions after the trigger and configure each selected node in the right panel.',
-  },
-];
-
 declare global {
   interface Window {
     __MINI_ZAPIER_TEST__?: {
@@ -78,11 +58,12 @@ function readDroppedNodePayload(dataTransfer: DataTransfer): DroppedNodePayload 
   }
 }
 
-function hasDroppedNodePayload(event: React.DragEvent<HTMLDivElement>): boolean {
+function hasDroppedNodePayload(event: DragEvent<HTMLDivElement>): boolean {
   return Array.from(event.dataTransfer.types).includes(DRAG_DATA_KEY);
 }
 
 function FlowCanvasInner() {
+  const { messages } = useLocale();
   const workflowId = useWorkflowEditorStore((state) => state.workflowId);
   const workflowVersion = useWorkflowEditorStore((state) => state.workflowVersion);
   const nodes = useWorkflowEditorStore((state) => state.nodes);
@@ -106,13 +87,32 @@ function FlowCanvasInner() {
     [nodes],
   );
   const actionCount = nodes.length - triggerCount;
-  const selectedNodeLabel =
-    selectedNodeId !== null
-      ? nodes.find((node) => node.id === selectedNodeId)?.data.label ?? 'Node'
-      : null;
+  const selectedNodeLabel = useMemo(() => {
+    if (selectedNodeId === null) {
+      return null;
+    }
+
+    const selectedNode = nodes.find((node) => node.id === selectedNodeId);
+
+    if (!selectedNode) {
+      return null;
+    }
+
+    const definition = getNodeDefinition(
+      selectedNode.data.nodeKind,
+      selectedNode.data.nodeType,
+    );
+
+    return definition
+      ? messages.editorDefinitions[definition.id].label
+      : selectedNode.data.label;
+  }, [messages.editorDefinitions, nodes, selectedNodeId]);
   const dragPreviewDefinition = dragPreview
     ? getNodeDefinition(dragPreview.nodeKind, dragPreview.nodeType)
     : undefined;
+  const dragPreviewLabel = dragPreviewDefinition
+    ? messages.editorDefinitions[dragPreviewDefinition.id].label
+    : null;
   const isEmpty = nodes.length === 0;
   const needsTrigger = nodes.length > 0 && triggerCount === 0;
   const needsFirstAction = triggerCount === 1 && actionCount === 0;
@@ -186,7 +186,7 @@ function FlowCanvasInner() {
       ? `${workflowId}:${workflowVersion}`
       : 'draft-workflow';
 
-  function handleDragEnter(event: React.DragEvent<HTMLDivElement>) {
+  function handleDragEnter(event: DragEvent<HTMLDivElement>) {
     if (!hasDroppedNodePayload(event)) {
       return;
     }
@@ -197,7 +197,7 @@ function FlowCanvasInner() {
     setDragPreview(readDroppedNodePayload(event.dataTransfer));
   }
 
-  function handleDragLeave(event: React.DragEvent<HTMLDivElement>) {
+  function handleDragLeave(event: DragEvent<HTMLDivElement>) {
     if (!hasDroppedNodePayload(event)) {
       return;
     }
@@ -211,7 +211,7 @@ function FlowCanvasInner() {
     }
   }
 
-  function handleDragOver(event: React.DragEvent<HTMLDivElement>) {
+  function handleDragOver(event: DragEvent<HTMLDivElement>) {
     if (!hasDroppedNodePayload(event)) {
       return;
     }
@@ -228,7 +228,7 @@ function FlowCanvasInner() {
     }
   }
 
-  function handleDrop(event: React.DragEvent<HTMLDivElement>) {
+  function handleDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
 
     const payload = readDroppedNodePayload(event.dataTransfer);
@@ -250,7 +250,7 @@ function FlowCanvasInner() {
     });
 
     if (result === 'DUPLICATE_TRIGGER') {
-      toast.error('Only one trigger is allowed per workflow.');
+      toast.error(messages.flowCanvas.duplicateTrigger);
     }
   }
 
@@ -259,33 +259,35 @@ function FlowCanvasInner() {
       <div className="border-b border-slate-900/10 px-5 py-5">
         <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
           <div className="min-w-0">
-            <p className="muted-label">Workflow Canvas</p>
+            <p className="muted-label">{messages.flowCanvas.eyebrow}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
-                {isEmpty ? 'Start with one trigger' : 'Canvas workspace'}
+                {isEmpty ? messages.flowCanvas.emptyTitle : messages.flowCanvas.workspaceTitle}
               </h2>
               <span className="app-pill">
                 {isEmpty
-                  ? 'Step 1: trigger'
-                  : `${triggerCount} trigger${triggerCount === 1 ? '' : 's'} / ${actionCount} action${actionCount === 1 ? '' : 's'}`}
+                  ? messages.flowCanvas.stepCounterEmpty
+                  : messages.flowCanvas.stepCounter(triggerCount, actionCount)}
               </span>
             </div>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
               {isEmpty
-                ? 'Drop a trigger from the left library to anchor the workflow. After that, add actions that continue the chain.'
-                : 'Keep the flow linear: trigger first, then actions. Select any node to configure it in the inspector on the right.'}
+                ? messages.flowCanvas.emptyDescription
+                : messages.flowCanvas.workspaceDescription}
             </p>
           </div>
 
           <div className="app-subpanel px-4 py-4 2xl:max-w-[260px]">
-            <p className="muted-label">Inspector</p>
+            <p className="muted-label">{messages.flowCanvas.inspectorEyebrow}</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
-              {selectedNodeLabel ? `Editing: ${selectedNodeLabel}` : 'No node selected'}
+              {selectedNodeLabel
+                ? messages.flowCanvas.editing(selectedNodeLabel)
+                : messages.flowCanvas.noNodeSelected}
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-600">
               {selectedNodeLabel
-                ? 'The selected step can be configured in the right panel.'
-                : 'Select a node on the canvas to open its settings and connection controls.'}
+                ? messages.flowCanvas.inspectorSelectedDescription
+                : messages.flowCanvas.inspectorEmptyDescription}
             </p>
           </div>
         </div>
@@ -350,9 +352,9 @@ function FlowCanvasInner() {
         {isDropActive ? (
           <div className="pointer-events-none absolute inset-x-0 top-6 z-20 flex justify-center px-6">
             <div className="app-subpanel px-5 py-2 text-sm font-semibold text-slate-700 shadow-[0_18px_36px_-28px_rgba(15,23,42,0.45)]">
-              {dragPreviewDefinition
-                ? `Release to place ${dragPreviewDefinition.label} here.`
-                : 'Release to place the node on the canvas.'}
+              {dragPreviewLabel
+                ? messages.flowCanvas.dropSpecific(dragPreviewLabel)
+                : messages.flowCanvas.dropGeneric}
             </div>
           </div>
         ) : null}
@@ -368,18 +370,16 @@ function FlowCanvasInner() {
             >
               <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.8fr)]">
                 <div>
-                  <p className="muted-label">Empty editor</p>
+                  <p className="muted-label">{messages.flowCanvas.emptyEditorEyebrow}</p>
                   <h3 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
-                    Build the workflow from left to right
+                    {messages.flowCanvas.emptyEditorTitle}
                   </h3>
                   <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-                    The first step is always a trigger. Drop one from the left
-                    library to start the workflow, then continue the chain with
-                    actions and configure each selected node in the inspector.
+                    {messages.flowCanvas.emptyEditorDescription}
                   </p>
 
                   <div className="mt-5 grid gap-3">
-                    {emptyStateSteps.map((item) => (
+                    {messages.flowCanvas.steps.map((item) => (
                       <div
                         key={item.step}
                         className="app-subpanel-muted px-4 py-4"
@@ -403,16 +403,16 @@ function FlowCanvasInner() {
                 </div>
 
                 <div className="rounded-[30px] border border-dashed border-slate-900/18 bg-[rgba(250,246,239,0.82)] px-5 py-5">
-                  <p className="muted-label">Canvas drop zone</p>
+                  <p className="muted-label">{messages.flowCanvas.dropZoneEyebrow}</p>
                   <h3 className="mt-3 text-lg font-semibold tracking-tight text-slate-900">
                     {isDropActive
-                      ? 'Release to place the node'
-                      : 'This surface is the workspace'}
+                      ? messages.flowCanvas.dropZoneTitleActive
+                      : messages.flowCanvas.dropZoneTitleIdle}
                   </h3>
                   <p className="mt-3 text-sm leading-6 text-slate-600">
                     {isDropActive
-                      ? 'Drop the node anywhere here. You can move it after placement.'
-                      : 'Drag from the left rail into this area. Connections and selection still work the same as before.'}
+                      ? messages.flowCanvas.dropZoneDescriptionActive
+                      : messages.flowCanvas.dropZoneDescriptionIdle}
                   </p>
 
                   <div className="mt-5 space-y-3">
@@ -422,10 +422,10 @@ function FlowCanvasInner() {
                       </span>
                       <div>
                         <p className="text-sm font-semibold text-slate-900">
-                          Trigger starts the workflow
+                          {messages.flowCanvas.triggerCardTitle}
                         </p>
                         <p className="text-xs leading-5 text-slate-500">
-                          Choose exactly one starting node.
+                          {messages.flowCanvas.triggerCardDescription}
                         </p>
                       </div>
                     </div>
@@ -436,10 +436,10 @@ function FlowCanvasInner() {
                       </span>
                       <div>
                         <p className="text-sm font-semibold text-slate-900">
-                          Actions continue the chain
+                          {messages.flowCanvas.actionCardTitle}
                         </p>
                         <p className="text-xs leading-5 text-slate-500">
-                          Add follow-up steps after the trigger.
+                          {messages.flowCanvas.actionCardDescription}
                         </p>
                       </div>
                     </div>
@@ -453,8 +453,7 @@ function FlowCanvasInner() {
         {needsTrigger ? (
           <div className="pointer-events-none absolute inset-x-0 bottom-8 z-20 flex justify-center px-6">
             <div className="max-w-xl rounded-[26px] border border-amber-200/90 bg-white/94 px-5 py-4 text-sm leading-6 text-slate-700 shadow-[0_20px_44px_-34px_rgba(15,23,42,0.42)]">
-              This canvas still needs a trigger. Add one from the left library
-              so the workflow has a valid starting step.
+              {messages.flowCanvas.needsTrigger}
             </div>
           </div>
         ) : null}
@@ -462,8 +461,7 @@ function FlowCanvasInner() {
         {needsFirstAction ? (
           <div className="pointer-events-none absolute inset-x-0 bottom-8 z-20 flex justify-center px-6">
             <div className="max-w-xl rounded-[26px] border border-sky-200/90 bg-white/94 px-5 py-4 text-sm leading-6 text-slate-700 shadow-[0_20px_44px_-34px_rgba(15,23,42,0.42)]">
-              Trigger is in place. Next, drop an action from the left rail and
-              connect it to continue the workflow.
+              {messages.flowCanvas.needsFirstAction}
             </div>
           </div>
         ) : null}
@@ -479,3 +477,4 @@ export function FlowCanvas() {
     </ReactFlowProvider>
   );
 }
+
