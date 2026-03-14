@@ -101,7 +101,7 @@ export function HttpRequestConfig({
           />
         </div>
         <input
-          aria-label="HTTP request URL"
+          aria-label={messages.configForms.httpRequest.urlAriaLabel}
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
           onChange={(event) => {
             const value = event.target.value;
@@ -117,7 +117,7 @@ export function HttpRequestConfig({
       <label className="block">
         <span className="muted-label">{messages.configForms.httpRequest.method}</span>
         <select
-          aria-label="HTTP request method"
+          aria-label={messages.configForms.httpRequest.methodAriaLabel}
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
           onChange={(event) => {
             const value = event.target.value;
@@ -161,7 +161,7 @@ export function HttpRequestConfig({
             >
               <div className="flex items-center gap-2">
                 <input
-                  aria-label={`Header key ${index + 1}`}
+                  aria-label={messages.configForms.httpRequest.headerKeyAriaLabel(index + 1)}
                   className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) => updateHeaderKey(index, event.target.value)}
                   placeholder={messages.configForms.httpRequest.headerNamePlaceholder}
@@ -169,7 +169,7 @@ export function HttpRequestConfig({
                   value={key}
                 />
                 <button
-                  aria-label={`Remove header row ${index + 1}`}
+                  aria-label={messages.configForms.httpRequest.removeHeaderRowAriaLabel(index + 1)}
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
                   onClick={() => removeHeader(index)}
                   title={messages.configForms.httpRequest.remove}
@@ -181,7 +181,7 @@ export function HttpRequestConfig({
 
               <div className="flex items-center gap-2">
                 <input
-                  aria-label={`Header value ${index + 1}`}
+                  aria-label={messages.configForms.httpRequest.headerValueAriaLabel(index + 1)}
                   className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) => updateHeaderValue(index, event.target.value)}
                   placeholder={messages.configForms.httpRequest.headerValuePlaceholder}
@@ -224,7 +224,7 @@ export function HttpRequestConfig({
           />
         </div>
         <textarea
-          aria-label="HTTP request body"
+          aria-label={messages.configForms.httpRequest.bodyAriaLabel}
           className="mt-2 min-h-36 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
           onChange={(event) => {
             const value = event.target.value;

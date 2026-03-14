@@ -3,7 +3,7 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-034 — `Web UI language switcher (EN/RU)`
+- **Последнее изменение**: TASK-034 follow-up — `web localization copy cleanup`
 - **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–034 закрыты
 - **Что сделано в TASK-034**:
   - `apps/web/src/locale/*` — добавлены словари `en`/`ru`, shared locale helpers, `LocaleProvider` и `useLocale` без новой зависимости
@@ -14,6 +14,12 @@
   - **Проверки TASK-034**:
     - `pnpm --filter @mini-zapier/web build`
     - headless smoke на локальном `vite preview` + mock API: `login`, `dashboard`, `workflow editor`, `execution history`, `404`, `empty states`, `header switcher`, persistence после reload
+- **Follow-up после TASK-034**:
+  - `apps/web/src/components/editor/nodes/ActionNode.tsx`, `TriggerNode.tsx`, `apps/web/src/components/execution/StepLogViewer.tsx` — стандартные названия шагов (`HTTP Request`, и т.п.) сохранены как canonical labels, сырые enum-коды (`HTTP_REQUEST`, `DATA_TRANSFORM`) убраны из UI
+  - `apps/web/src/components/editor/config-forms/DataTransformConfig.tsx`, `HttpRequestConfig.tsx`, `apps/web/src/components/editor/ConnectionCreateDialog.tsx` — оставшиеся hardcoded `aria-label` и template placeholder вынесены в locale dictionaries
+  - `apps/web/src/locale/messages.ru.ts` — выправлены отдельные русские UI-строки (`Приостановить`, `Редактировать`, `сервером`) без перевода стандартных technical names
+  - **Проверки follow-up**:
+    - `pnpm --filter @mini-zapier/web build`
 - **Follow-up после TASK-033**:
   - `apps/web/src/components/AppHeader.tsx` — header переведён на responsive mobile layout: brand остаётся сверху, nav + logout занимают отдельную строку без horizontal overflow
   - **Проверки follow-up**:
@@ -352,4 +358,5 @@
 | TASK-033 | done | см. `git log` (`TASK-033: global visual polish and hierarchy pass`) | stronger global surface contrast, accent hierarchy, dashboard/editor desktop smoke screenshots |
 | TASK-033 follow-up | done | см. `git log` (`TASK-033: fix mobile header overflow`) | responsive AppHeader fix for narrow screens, 390px smoke recheck |
 | TASK-034 | done | см. `git log` (`TASK-034: web language switcher EN/RU`) | locale infrastructure, EN/RU switcher, centralized copy, locale-aware date/time formatting, build + preview smoke with mock API |
+| TASK-034 follow-up | done | см. `git log` (`TASK-034: localization copy cleanup`) | canonical node labels kept untranslated, raw enum labels removed from UI, leftover aria-labels localized, RU copy polished |
 

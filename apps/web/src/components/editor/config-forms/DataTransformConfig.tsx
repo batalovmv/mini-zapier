@@ -97,7 +97,7 @@ export function DataTransformConfig({
       <label className="block">
         <span className="muted-label">{messages.configForms.dataTransform.mode}</span>
         <select
-          aria-label="Data transform mode"
+          aria-label={messages.configForms.dataTransform.modeAriaLabel}
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
           onChange={(event) => {
             const value = event.target.value;
@@ -121,7 +121,7 @@ export function DataTransformConfig({
             />
           </div>
           <textarea
-            aria-label="Data transform template"
+            aria-label={messages.configForms.dataTransform.templateAriaLabel}
             className="mt-2 min-h-36 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
             onChange={(event) => {
               const value = event.target.value;
@@ -131,7 +131,7 @@ export function DataTransformConfig({
                 template: value,
               }));
             }}
-            placeholder='{"name":"{{input.name}}"}'
+            placeholder={messages.configForms.dataTransform.templatePlaceholder}
             ref={templateRef}
             value={typeof config.template === 'string' ? config.template : ''}
           />
@@ -166,7 +166,7 @@ export function DataTransformConfig({
               >
                 <div className="flex items-center gap-2">
                   <input
-                    aria-label={`Mapping key ${index + 1}`}
+                    aria-label={messages.configForms.dataTransform.mappingKeyAriaLabel(index + 1)}
                     className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                     onChange={(event) =>
                       updateMappingKey(index, event.target.value)
@@ -176,7 +176,7 @@ export function DataTransformConfig({
                     value={key}
                   />
                   <button
-                    aria-label={`Remove mapping row ${index + 1}`}
+                    aria-label={messages.configForms.dataTransform.removeMappingRowAriaLabel(index + 1)}
                     className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
                     onClick={() => removeMapping(index)}
                     title={messages.configForms.dataTransform.remove}
@@ -188,7 +188,7 @@ export function DataTransformConfig({
 
                 <div className="flex items-center gap-2">
                   <input
-                    aria-label={`Mapping value ${index + 1}`}
+                    aria-label={messages.configForms.dataTransform.mappingValueAriaLabel(index + 1)}
                     className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                     onChange={(event) =>
                       updateMappingValue(index, event.target.value)

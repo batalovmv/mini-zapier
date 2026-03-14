@@ -138,7 +138,7 @@ function StepLogItem(props: {
               ) : null}
             </div>
 
-            <p className="text-sm text-slate-500">{step.nodeType}</p>
+            <p className="text-sm text-slate-500">{stepLabel}</p>
           </div>
 
           <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">

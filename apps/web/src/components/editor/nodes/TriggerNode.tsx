@@ -42,7 +42,7 @@ export function TriggerNode({
 
       <div className="px-4 py-4">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
-          {data.nodeType}
+          {copy?.label ?? data.nodeType}
         </p>
         <p className="mt-2 text-sm leading-6 text-slate-600">
           {copy?.description ?? messages.editorNodes.fallbackTriggerDescription}

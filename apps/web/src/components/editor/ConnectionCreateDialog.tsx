@@ -175,7 +175,7 @@ export function ConnectionCreateDialog({
                 className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2"
               >
                 <input
-                  aria-label={`Connection field key ${index + 1}`}
+                  aria-label={messages.connectionCreateDialog.fieldKeyAriaLabel(index + 1)}
                   className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) => updateEntry(index, 'key', event.target.value)}
                   placeholder={messages.connectionCreateDialog.fieldPlaceholder}
@@ -183,7 +183,7 @@ export function ConnectionCreateDialog({
                   value={entry.key}
                 />
                 <input
-                  aria-label={`Connection field value ${index + 1}`}
+                  aria-label={messages.connectionCreateDialog.fieldValueAriaLabel(index + 1)}
                   className="rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) =>
                     updateEntry(index, 'value', event.target.value)
