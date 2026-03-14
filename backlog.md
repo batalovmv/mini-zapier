@@ -848,3 +848,40 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - manual visual smoke на dashboard workflow list
+
+### TASK-033: Global polish of spacing, contrast and accent hierarchy
+- **Статус**: `done`
+- **Цель**: сделать UI менее просто аккуратным и более собранным визуально, без редизайна и без изменения product scope
+- **Проблема**:
+  - слишком много поверхностей одинакового визуального веса
+  - белые панели и мягкие границы местами сливаются
+  - бренду и интерфейсу не хватает характера
+- **Что сделано**:
+  - обновлены глобальные color/surface tokens, border contrast и shadows для более явного разделения primary и secondary panels
+  - header, dashboard и editor workspace получили более собранную accent hierarchy без смены структуры и сценариев
+  - editor rails и canvas теперь лучше различаются по визуальному весу, а ключевые CTA выделены заметнее
+- **Не входит**:
+  - полный redesign
+  - новые UI features
+  - layout rewrite editor/dashboard
+  - backend/API changes
+- **Файлы**:
+  - `apps/web/src/index.css`
+  - `apps/web/src/components/AppHeader.tsx`
+  - `apps/web/src/layouts/AppLayout.tsx`
+  - `apps/web/src/pages/DashboardPage.tsx`
+  - `apps/web/src/components/dashboard/StatsOverview.tsx`
+  - `apps/web/src/components/dashboard/WorkflowList.tsx`
+  - `apps/web/src/components/dashboard/WorkflowCard.tsx`
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+  - `apps/web/src/components/editor/FlowCanvas.tsx`
+  - `apps/web/src/components/editor/NodeSidebar.tsx`
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+- **Acceptance**:
+  - поверхности и секции лучше различаются по визуальному весу
+  - primary actions и ключевые зоны считываются быстрее
+  - UI выглядит чуть более выразительным, но остаётся в текущем стиле
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - manual visual smoke на dashboard и editor через локальный `vite preview` + Playwright screenshots с mock API

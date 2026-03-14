@@ -30,23 +30,23 @@ export function WorkflowList({
   onDelete,
 }: WorkflowListProps) {
   return (
-    <section className="app-panel p-5 sm:p-6">
-      <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-4 lg:flex-row lg:items-end lg:justify-between">
+    <section className="app-panel overflow-hidden p-6 sm:p-7">
+      <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="muted-label">Workflow list</p>
-          <h2 className="mt-2 text-[1.7rem] font-semibold tracking-tight text-slate-900 sm:text-[1.95rem]">
+          <h2 className="mt-2 text-[1.8rem] font-semibold tracking-tight text-slate-900 sm:text-[2rem]">
             Scan workflow health and act quickly
           </h2>
         </div>
 
-        <p className="inline-flex w-fit items-center rounded-full border border-slate-900/10 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
+        <p className="app-chip w-fit">
           {refreshing && !loading
             ? 'Refreshing workflow cards and latest executions...'
             : `${workflows.length} workflow${workflows.length === 1 ? '' : 's'} loaded`}
         </p>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-5">
         {loading ? (
           <LoadingState
             compact
@@ -57,7 +57,7 @@ export function WorkflowList({
           <EmptyState
             action={
               <Link
-                className="inline-flex rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+                className="inline-flex rounded-full bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700"
                 to="/workflows/new/edit"
               >
                 Create Workflow
@@ -67,7 +67,7 @@ export function WorkflowList({
             title="Нет workflows"
           />
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {workflows.map((workflow) => (
               <WorkflowCard
                 key={workflow.id}

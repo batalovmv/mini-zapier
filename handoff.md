@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-032 — `Workflow cards density + status emphasis`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–032 закрыты
+- **Последнее изменение**: TASK-033 — `Global polish of spacing, contrast and accent hierarchy`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–033 закрыты
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -212,6 +212,14 @@
   - **Проверки TASK-032**:
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard workflow list через локальный `vite preview` + Playwright screenshot с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`
+- **Что сделано в TASK-033**:
+  - `apps/web/src/index.css` — усилены глобальные surface tokens, contrast borders, shadows и accent hierarchy для primary/secondary panels
+  - `apps/web/src/components/AppHeader.tsx`, `apps/web/src/layouts/AppLayout.tsx` — header и page shell получили более выразительный brand/accent framing без смены структуры маршрутов
+  - `apps/web/src/pages/DashboardPage.tsx`, `apps/web/src/components/dashboard/StatsOverview.tsx`, `apps/web/src/components/dashboard/WorkflowList.tsx`, `apps/web/src/components/dashboard/WorkflowCard.tsx` — dashboard секции, CTA и workflow cards разведены по визуальному весу и считываются быстрее
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`, `apps/web/src/components/editor/FlowCanvas.tsx`, `apps/web/src/components/editor/NodeSidebar.tsx`, `apps/web/src/components/editor/ConfigPanel.tsx` — canvas стал главной surface editor, rails и inspector ушли во вторичный вес, spacing и panel contrast выровнены
+  - **Проверки TASK-033**:
+    - `pnpm --filter @mini-zapier/web build`
+    - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
 Новых TASK в текущем `backlog.md` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
 
@@ -327,6 +335,8 @@
 | TASK-030 | done | см. `git log` (`TASK-030: dashboard visual hierarchy pass`) | compact hero, denser stats/workflow hierarchy, desktop smoke screenshot |
 | TASK-031 | done | см. `git log` (`TASK-031: editor empty-state and workspace guidance`) | guided empty canvas, stronger workspace rails, desktop smoke screenshot |
 | TASK-032 | done | см. `git log` (`TASK-032: workflow cards density and status emphasis`) | denser dashboard cards, stronger status/last execution emphasis, desktop smoke screenshot |
+| TASK-033 | done | см. `git log` (`TASK-033: global visual polish and hierarchy pass`) | stronger global surface contrast, accent hierarchy, dashboard/editor desktop smoke screenshots |
+
 
 
 

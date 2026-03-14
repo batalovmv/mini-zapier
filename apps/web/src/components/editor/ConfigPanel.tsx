@@ -222,31 +222,33 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
-          <section className="rounded-[30px] border border-slate-900/10 bg-slate-50/80 px-4 py-4 shadow-sm">
+          <section className="app-subpanel-muted px-4 py-4">
             <p className="muted-label">Workspace guidance</p>
             <div className="mt-4 space-y-3">
               {inspectorSteps.map((item) => (
                 <div
                   key={item.step}
-                  className="flex items-start gap-3 rounded-2xl border border-white/70 bg-white/90 px-3 py-3"
+                  className="rounded-2xl border border-white/70 bg-white/90 px-3 py-3 shadow-sm"
                 >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
-                    {item.step}
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
-                      {item.title}
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      {item.description}
-                    </p>
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
+                      {item.step}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {item.title}
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">
+                        {item.description}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           </section>
 
-          <section className="rounded-[30px] border border-slate-900/10 bg-white/85 px-4 py-4 shadow-sm">
+          <section className="app-subpanel px-4 py-4">
             <p className="text-sm font-semibold text-slate-900">
               What shows up here
             </p>
@@ -282,10 +284,10 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
               </p>
             </div>
             <span
-              className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${
+              className={`app-pill ${
                 selectedNode.data.nodeKind === 'trigger'
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : 'bg-sky-100 text-sky-700'
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                  : 'border-sky-200 bg-sky-50 text-sky-700'
               }`}
             >
               {selectedNode.data.nodeKind}
@@ -293,13 +295,13 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
           </div>
 
           <div className="mt-4 grid gap-3">
-            <div className="rounded-2xl border border-slate-900/10 bg-white/80 px-4 py-3 shadow-sm">
+            <div className="app-subpanel px-4 py-3">
               <p className="muted-label">Node type</p>
               <p className="mt-2 text-sm font-semibold text-slate-900">
                 {selectedNode.data.nodeType}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-900/10 bg-white/80 px-4 py-3 shadow-sm">
+            <div className="app-subpanel px-4 py-3">
               <p className="muted-label">Connection</p>
               <p className="mt-2 text-sm font-semibold text-slate-900">
                 {definition?.connectionType
@@ -312,7 +314,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
 
         <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
           {definition?.connectionType ? (
-            <section className="space-y-4 rounded-[30px] border border-slate-900/10 bg-slate-50/75 px-4 py-4 shadow-sm">
+            <section className="app-subpanel-muted space-y-4 px-4 py-4">
               <div>
                 <p className="muted-label">Connection</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -353,7 +355,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
 
               <div className="flex flex-wrap gap-3">
                 <button
-                  className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+                  className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white"
                   data-testid="create-connection-button"
                   onClick={() => setCreateDialogOpen(true)}
                   type="button"
@@ -361,7 +363,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                   Create connection
                 </button>
                 <button
-                  className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+                  className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white"
                   onClick={() => void loadConnections().catch(() => undefined)}
                   type="button"
                 >
@@ -377,12 +379,12 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
               ) : null}
             </section>
           ) : (
-            <div className="rounded-[30px] border border-slate-900/10 bg-slate-50/80 px-4 py-4 text-sm leading-6 text-slate-600 shadow-sm">
+            <div className="app-subpanel-muted px-4 py-4 text-sm leading-6 text-slate-600">
               This node does not require a connection.
             </div>
           )}
 
-          <section className="rounded-[30px] border border-slate-900/10 bg-white/90 px-4 py-4 shadow-sm">
+          <section className="app-subpanel px-4 py-4">
             <div className="mb-4">
               <p className="muted-label">Node settings</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -416,7 +418,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
 
         <div className="border-t border-slate-900/10 px-5 py-5">
           <button
-            className="w-full rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
+            className="w-full rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 shadow-sm transition hover:border-rose-300 hover:bg-rose-100"
             data-testid="delete-node-button"
             onClick={() => setDeleteDialogOpen(true)}
             type="button"

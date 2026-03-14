@@ -255,7 +255,7 @@ function FlowCanvasInner() {
   }
 
   return (
-    <div className="app-panel editor-rail relative flex h-full flex-col overflow-hidden">
+    <div className="app-panel editor-canvas-shell relative flex h-full flex-col overflow-hidden">
       <div className="border-b border-slate-900/10 px-5 py-5">
         <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
           <div className="min-w-0">
@@ -264,7 +264,7 @@ function FlowCanvasInner() {
               <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
                 {isEmpty ? 'Start with one trigger' : 'Canvas workspace'}
               </h2>
-              <span className="rounded-full border border-slate-900/10 bg-white/85 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 shadow-sm">
+              <span className="app-pill">
                 {isEmpty
                   ? 'Step 1: trigger'
                   : `${triggerCount} trigger${triggerCount === 1 ? '' : 's'} / ${actionCount} action${actionCount === 1 ? '' : 's'}`}
@@ -277,7 +277,7 @@ function FlowCanvasInner() {
             </p>
           </div>
 
-          <div className="rounded-[28px] border border-slate-900/10 bg-white/80 px-4 py-4 shadow-sm 2xl:max-w-[260px]">
+          <div className="app-subpanel px-4 py-4 2xl:max-w-[260px]">
             <p className="muted-label">Inspector</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
               {selectedNodeLabel ? `Editing: ${selectedNodeLabel}` : 'No node selected'}
@@ -301,7 +301,7 @@ function FlowCanvasInner() {
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        <div className="pointer-events-none absolute inset-4 z-10 rounded-[30px] border border-dashed border-slate-900/10" />
+        <div className="pointer-events-none absolute inset-4 z-10 rounded-[30px] border border-dashed border-slate-900/12" />
 
         <ReactFlow
           className="!bg-transparent"
@@ -342,14 +342,14 @@ function FlowCanvasInner() {
             size={1.5}
           />
           <Controls
-            className="!rounded-2xl !border !border-slate-900/10 !bg-white/90 !shadow-lg !backdrop-blur"
+            className="!rounded-2xl !border !border-slate-900/10 !bg-white/92 !shadow-lg !backdrop-blur"
             showInteractive={false}
           />
         </ReactFlow>
 
         {isDropActive ? (
           <div className="pointer-events-none absolute inset-x-0 top-6 z-20 flex justify-center px-6">
-            <div className="rounded-full border border-amber-500/40 bg-white/95 px-5 py-2 text-sm font-semibold text-slate-700 shadow-lg shadow-amber-900/10">
+            <div className="app-subpanel px-5 py-2 text-sm font-semibold text-slate-700 shadow-[0_18px_36px_-28px_rgba(15,23,42,0.45)]">
               {dragPreviewDefinition
                 ? `Release to place ${dragPreviewDefinition.label} here.`
                 : 'Release to place the node on the canvas.'}
@@ -360,10 +360,10 @@ function FlowCanvasInner() {
         {isEmpty ? (
           <div className="pointer-events-none absolute inset-0 z-20 flex items-start justify-center px-6 pb-10 pt-10 lg:pt-12">
             <div
-              className={`w-full max-w-4xl rounded-[34px] border px-6 py-6 shadow-2xl transition lg:px-7 lg:py-7 ${
+              className={`w-full max-w-4xl rounded-[34px] border px-6 py-6 shadow-[0_32px_72px_-42px_rgba(15,23,42,0.46)] transition lg:px-7 lg:py-7 ${
                 isDropActive
                   ? 'border-amber-500/40 bg-white/96 shadow-amber-900/10'
-                  : 'border-slate-900/10 bg-white/90 shadow-slate-900/10'
+                  : 'border-slate-900/12 bg-white/92'
               }`}
             >
               <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.8fr)]">
@@ -382,7 +382,7 @@ function FlowCanvasInner() {
                     {emptyStateSteps.map((item) => (
                       <div
                         key={item.step}
-                        className="rounded-[26px] border border-slate-900/10 bg-slate-50/75 px-4 py-4 shadow-sm"
+                        className="app-subpanel-muted px-4 py-4"
                       >
                         <div className="flex items-start gap-3">
                           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
@@ -402,7 +402,7 @@ function FlowCanvasInner() {
                   </div>
                 </div>
 
-                <div className="rounded-[30px] border border-dashed border-slate-900/15 bg-slate-50/80 px-5 py-5">
+                <div className="rounded-[30px] border border-dashed border-slate-900/18 bg-[rgba(250,246,239,0.82)] px-5 py-5">
                   <p className="muted-label">Canvas drop zone</p>
                   <h3 className="mt-3 text-lg font-semibold tracking-tight text-slate-900">
                     {isDropActive
@@ -416,7 +416,7 @@ function FlowCanvasInner() {
                   </p>
 
                   <div className="mt-5 space-y-3">
-                    <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-white/90 px-4 py-3">
+                    <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-white/92 px-4 py-3 shadow-sm">
                       <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-xs font-black tracking-[0.24em] text-white">
                         TR
                       </span>
@@ -430,7 +430,7 @@ function FlowCanvasInner() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-2xl border border-sky-200 bg-white/90 px-4 py-3">
+                    <div className="flex items-center gap-3 rounded-2xl border border-sky-200 bg-white/92 px-4 py-3 shadow-sm">
                       <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-600 text-xs font-black tracking-[0.24em] text-white">
                         AC
                       </span>
@@ -452,7 +452,7 @@ function FlowCanvasInner() {
 
         {needsTrigger ? (
           <div className="pointer-events-none absolute inset-x-0 bottom-8 z-20 flex justify-center px-6">
-            <div className="max-w-xl rounded-[26px] border border-amber-200 bg-white/92 px-5 py-4 text-sm leading-6 text-slate-700 shadow-lg">
+            <div className="max-w-xl rounded-[26px] border border-amber-200/90 bg-white/94 px-5 py-4 text-sm leading-6 text-slate-700 shadow-[0_20px_44px_-34px_rgba(15,23,42,0.42)]">
               This canvas still needs a trigger. Add one from the left library
               so the workflow has a valid starting step.
             </div>
@@ -461,7 +461,7 @@ function FlowCanvasInner() {
 
         {needsFirstAction ? (
           <div className="pointer-events-none absolute inset-x-0 bottom-8 z-20 flex justify-center px-6">
-            <div className="max-w-xl rounded-[26px] border border-sky-200 bg-white/92 px-5 py-4 text-sm leading-6 text-slate-700 shadow-lg">
+            <div className="max-w-xl rounded-[26px] border border-sky-200/90 bg-white/94 px-5 py-4 text-sm leading-6 text-slate-700 shadow-[0_20px_44px_-34px_rgba(15,23,42,0.42)]">
               Trigger is in place. Next, drop an action from the left rail and
               connect it to continue the workflow.
             </div>
@@ -479,4 +479,3 @@ export function FlowCanvas() {
     </ReactFlowProvider>
   );
 }
-

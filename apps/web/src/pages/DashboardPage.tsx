@@ -174,13 +174,13 @@ export function DashboardPage() {
     (loading || lastExecutionsLoading) && !(statsLoading || workflowsLoading);
 
   return (
-    <div className="space-y-6 xl:space-y-7">
-      <section className="app-panel overflow-hidden border-white/60 bg-white/70 shadow-[0_20px_50px_-38px_rgba(15,23,42,0.5)]">
+    <div className="space-y-7 xl:space-y-8">
+      <section className="app-panel app-panel-strong overflow-hidden">
         <div className="border-b border-slate-900/10 px-6 py-6 sm:px-7 sm:py-7">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div>
+            <div className="max-w-4xl">
               <p className="muted-label">Workflow operations</p>
-              <h1 className="mt-2 max-w-4xl text-3xl font-semibold tracking-tight text-slate-900 sm:text-[2.4rem] sm:leading-[1.08]">
+              <h1 className="mt-2 max-w-4xl text-3xl font-semibold tracking-tight text-slate-900 sm:text-[2.45rem] sm:leading-[1.06]">
                 Operate workflows, monitor execution health and launch manual runs.
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px]">
@@ -189,7 +189,7 @@ export function DashboardPage() {
             </div>
 
             <Link
-              className="inline-flex self-start rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 lg:self-end"
+              className="inline-flex self-start rounded-full bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_20px_32px_-20px_rgba(141,69,20,0.62)] transition hover:bg-amber-700 lg:self-end"
               data-testid="create-workflow-link"
               to="/workflows/new/edit"
             >

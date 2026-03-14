@@ -23,13 +23,13 @@ const sectionMeta = {
     title: 'Starting nodes',
     description: 'Pick exactly one node that kicks off the workflow.',
     badge: 'Step 1',
-    tone: 'border-emerald-200/80 bg-emerald-50/65',
+    tone: 'border-emerald-200/80 bg-emerald-50/70',
   },
   Actions: {
     title: 'Follow-up steps',
     description: 'Add actions that continue the chain after the trigger.',
     badge: 'Step 2',
-    tone: 'border-sky-200/80 bg-sky-50/50',
+    tone: 'border-sky-200/80 bg-sky-50/60',
   },
 } as const;
 
@@ -62,23 +62,25 @@ export function NodeSidebar() {
           actions to build the rest of the workflow.
         </p>
 
-        <div className="mt-4 rounded-[28px] border border-slate-900/10 bg-slate-50/80 px-4 py-4 shadow-sm">
+        <div className="app-subpanel-muted mt-4 px-4 py-4">
           <div className="space-y-3">
             {buildSteps.map((item) => (
               <div
                 key={item.step}
-                className="flex items-start gap-3 rounded-2xl border border-white/70 bg-white/85 px-3 py-3"
+                className="rounded-2xl border border-white/70 bg-white/88 px-3 py-3 shadow-sm"
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
-                  {item.step}
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {item.title}
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">
-                    {item.description}
-                  </p>
+                <div className="flex items-start gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
+                    {item.step}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {item.title}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      {item.description}
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -90,7 +92,7 @@ export function NodeSidebar() {
         {sections.map((section) => (
           <section
             key={section.title}
-            className={`rounded-[30px] border px-4 py-4 shadow-sm ${sectionMeta[section.title].tone}`}
+            className={`rounded-[30px] border px-4 py-4 shadow-[0_20px_40px_-34px_rgba(15,23,42,0.3)] ${sectionMeta[section.title].tone}`}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -102,7 +104,7 @@ export function NodeSidebar() {
                   {sectionMeta[section.title].description}
                 </p>
               </div>
-              <span className="rounded-full border border-slate-900/10 bg-white/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 shadow-sm">
+              <span className="app-pill">
                 {sectionMeta[section.title].badge}
               </span>
             </div>
@@ -111,7 +113,7 @@ export function NodeSidebar() {
               {section.items.map((item) => (
                 <button
                   key={item.id}
-                  className="group flex w-full cursor-grab items-start gap-3 rounded-[24px] border border-slate-900/10 bg-white/95 px-4 py-4 text-left shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-amber-500/40 hover:bg-white hover:shadow-md active:cursor-grabbing"
+                  className="group flex w-full cursor-grab items-start gap-3 rounded-[24px] border border-slate-900/10 bg-white/96 px-4 py-4 text-left shadow-[0_18px_34px_-30px_rgba(15,23,42,0.3)] transition duration-150 hover:-translate-y-0.5 hover:border-amber-500/40 hover:bg-white hover:shadow-md active:cursor-grabbing"
                   data-testid={`palette-item-${item.id}`}
                   draggable
                   onDragStart={(event) => handleDragStart(event, item)}

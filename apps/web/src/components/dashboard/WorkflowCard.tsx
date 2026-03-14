@@ -75,7 +75,7 @@ export function WorkflowCard({
       className="workflow-card-shell"
       data-workflow-status={workflow.status}
     >
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.9fr)] xl:items-start">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.9fr)] xl:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
@@ -95,7 +95,7 @@ export function WorkflowCard({
             {workflow.description?.trim() || 'No workflow description provided.'}
           </p>
 
-          <dl className="mt-4 grid gap-x-4 gap-y-3 text-xs text-slate-500 sm:grid-cols-2 xl:grid-cols-4">
+          <dl className="app-subpanel-muted mt-4 grid gap-x-4 gap-y-3 px-4 py-4 text-xs text-slate-500 sm:grid-cols-2 xl:grid-cols-4">
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Version
@@ -191,10 +191,10 @@ export function WorkflowCard({
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-900/10 pt-4">
+      <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-900/12 pt-4">
         <Link
           className={[
-            'rounded-full border border-slate-900/10 bg-white/85 px-3.5 py-2 text-[13px] font-semibold text-slate-700 transition hover:border-slate-900/20 hover:bg-slate-50',
+            'rounded-full border border-slate-900/10 bg-white/88 px-3.5 py-2 text-[13px] font-semibold text-slate-700 shadow-sm transition hover:border-slate-900/20 hover:bg-white',
             isBusy ? 'pointer-events-none opacity-60' : '',
           ].join(' ')}
           data-testid={`workflow-${workflow.id}-edit`}
@@ -204,7 +204,7 @@ export function WorkflowCard({
         </Link>
 
         <Link
-          className="rounded-full border border-slate-900/10 bg-white/85 px-3.5 py-2 text-[13px] font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+          className="rounded-full border border-slate-900/10 bg-white/88 px-3.5 py-2 text-[13px] font-semibold text-slate-700 shadow-sm transition hover:border-sky-400/40 hover:bg-sky-50"
           data-testid={`workflow-${workflow.id}-history`}
           to={`/workflows/${workflow.id}/history`}
         >
@@ -212,7 +212,7 @@ export function WorkflowCard({
         </Link>
 
         <button
-          className="rounded-full border border-slate-900/10 bg-white/85 px-3.5 py-2 text-[13px] font-semibold text-slate-700 transition hover:border-sky-400 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-full bg-slate-950 px-3.5 py-2 text-[13px] font-semibold text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.75)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
           data-testid={`workflow-${workflow.id}-run`}
           disabled={isBusy}
           onClick={() => onRun(workflow)}
@@ -222,7 +222,7 @@ export function WorkflowCard({
         </button>
 
         <button
-          className="rounded-full border border-slate-900/10 bg-white/85 px-3.5 py-2 text-[13px] font-semibold text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-full border border-amber-200 bg-amber-50/90 px-3.5 py-2 text-[13px] font-semibold text-amber-800 shadow-sm transition hover:border-amber-300 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
           data-testid={`workflow-${workflow.id}-status`}
           disabled={isBusy}
           onClick={() => onToggleStatus(workflow)}
@@ -234,7 +234,7 @@ export function WorkflowCard({
         </button>
 
         <button
-          className="rounded-full border border-rose-200 bg-rose-50/90 px-3.5 py-2 text-[13px] font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-full border border-rose-200 bg-rose-50/90 px-3.5 py-2 text-[13px] font-semibold text-rose-700 shadow-sm transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
           data-testid={`workflow-${workflow.id}-delete`}
           disabled={isBusy}
           onClick={() => onDelete(workflow)}
