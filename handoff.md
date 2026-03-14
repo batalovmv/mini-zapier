@@ -3,8 +3,14 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-038 — `editor rail parity + collapsible guidance`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–038 закрыты
+- **Последнее изменение**: TASK-039 — `inspector cleanup + compact flow-order hint`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–039 закрыты
+- **Что сделано в TASK-039**:
+  - `apps/web/src/components/editor/NodeSidebar.tsx` — collapsed `Порядок сборки` ужат в compact one-line cue с меньшим контейнером; expanded state оставляет полный flow-order affordance без постоянного vertical overhead
+  - `apps/web/src/components/editor/ConfigPanel.tsx` — правый inspector пересобран в более строгий rail: compact header, единый summary block, quieter empty state и calmer connection/settings sections без лишней вложенности
+  - `apps/web/src/pages/WorkflowEditorPage.tsx` — правый desktop rail слегка расширен, сохраняя приоритет левого toolbox
+  - **Проверки TASK-039**:
+    - `pnpm --filter @mini-zapier/web build`
 - **Что сделано в TASK-038**:
   - `apps/web/src/components/editor/NodeSidebar.tsx` — flow-order hint сделан collapsible; после появления узлов он автоматически схлопывается, но остаётся доступным вручную
   - `apps/web/src/components/editor/ConfigPanel.tsx` — правый inspector переработан в более современный rail-style и теперь ближе к левой библиотеке по header hierarchy, density и section composition
@@ -266,7 +272,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-Новых TASK в текущем `backlog.md` после `TASK-038` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
+Новых TASK в текущем `backlog.md` после `TASK-039` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -388,8 +394,5 @@
 | TASK-036 | done | см. `git log` (`TASK-036: editor rail visual cleanup`) | wider desktop rails, cleaner node library, simplified empty inspector state |
 | TASK-037 | done | см. `git log` (`TASK-037: node library rail redesign`) | left rail widened and rebuilt into a cleaner, more professional toolbox list |
 | TASK-038 | done | см. `git log` (`TASK-038: editor rail parity + collapsible guidance`) | left hint collapsible, right inspector redesigned to match the updated rail language |
-
-
-
-
+| TASK-039 | done | см. `git log` (`TASK-039: inspector cleanup + compact flow-order hint`) | compact flow-order cue in left rail, cleaner and denser right inspector hierarchy |
 

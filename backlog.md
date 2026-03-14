@@ -1026,3 +1026,28 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-039: Inspector cleanup + compact flow-order hint
+- **Статус**: `done`
+- **Цель**: сделать правый inspector визуально строже и современнее, а collapsed hint `Порядок сборки` в левой библиотеке действительно компактным
+- **Проблема**:
+  - collapsed state блока `Порядок сборки` оставался почти таким же высоким, как expanded version, и продолжал занимать лишнее место
+  - правый inspector всё ещё выглядел тяжелее и старее обновлённого левого rail из-за лишних вложенных surfaces и рыхлого header/meta layout
+- **Что сделано**:
+  - `NodeSidebar` — collapsed guidance переведён в compact one-line cue с отдельным smaller container; expanded state оставляет полный flow-order affordance без постоянного vertical overhead
+  - `ConfigPanel` — empty state упрощён до cleaner guidance section без stack из внутренних cards; selected state пересобран в compact header + single summary block + calmer connection/settings hierarchy
+  - `WorkflowEditorPage` — правый desktop rail слегка расширен, но левый toolbox остался primary
+- **Не входит**:
+  - новые editor features
+  - backend/API changes
+  - resizable/collapsible panels кроме уже существующего guidance toggle слева
+- **Файлы**:
+  - `apps/web/src/components/editor/NodeSidebar.tsx`
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+- **Acceptance**:
+  - collapsed `Порядок сборки` заметно ниже expanded state и не держит лишнюю высоту
+  - правый inspector визуально ближе к левому rail по плотности, hierarchy и modern toolbox feel
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
