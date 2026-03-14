@@ -452,6 +452,10 @@ export const en = {
         badge: 'Step 2',
       },
     },
+    flowOrderLabel: 'Flow order',
+    showFlowHint: 'Show hint',
+    hideFlowHint: 'Hide hint',
+    dragHint: 'Drag',
     startsWorkflow: 'Starts the workflow',
     runsAfterTrigger: 'Runs after the trigger',
   },
@@ -627,3 +631,4 @@ export const en = {
 };
 
 export type LocaleMessages = typeof en;
+

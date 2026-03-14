@@ -1,7 +1,7 @@
-import type { DragEvent } from 'react';
+import { useEffect, useState, type DragEvent } from 'react';
 
 import { useLocale } from '../../locale/LocaleProvider';
-
+import { useWorkflowEditorStore } from '../../stores/workflow-editor.store';
 import {
   createNodeSections,
   type EditorPaletteItem,
@@ -41,6 +41,14 @@ function handleDragStart(
 export function NodeSidebar() {
   const { messages } = useLocale();
   const sections = createNodeSections();
+  const nodeCount = useWorkflowEditorStore((state) => state.nodes.length);
+  const [flowHintCollapsed, setFlowHintCollapsed] = useState(nodeCount > 0);
+
+  useEffect(() => {
+    if (nodeCount > 0) {
+      setFlowHintCollapsed(true);
+    }
+  }, [nodeCount]);
 
   return (
     <aside className="app-panel editor-rail flex h-full min-h-0 flex-col overflow-hidden">
@@ -54,15 +62,37 @@ export function NodeSidebar() {
         </p>
 
         <div className="app-subpanel-muted mt-4 px-4 py-3.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-white/92 px-3 py-1 text-xs font-semibold text-emerald-700">
-              1. {messages.common.nodeKindLabels.trigger}
-            </span>
-            <span className="h-px w-5 bg-slate-300" />
-            <span className="inline-flex items-center rounded-full border border-sky-200 bg-white/92 px-3 py-1 text-xs font-semibold text-sky-700">
-              2. {messages.common.nodeKindLabels.action}
-            </span>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="muted-label">{messages.nodeSidebar.flowOrderLabel}</p>
+              {flowHintCollapsed ? (
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  1. {messages.common.nodeKindLabels.trigger} -&gt; 2. {messages.common.nodeKindLabels.action}
+                </p>
+              ) : null}
+            </div>
+            <button
+              className="rounded-full border border-slate-900/10 bg-white/92 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-500/30 hover:text-slate-900"
+              onClick={() => setFlowHintCollapsed((value) => !value)}
+              type="button"
+            >
+              {flowHintCollapsed
+                ? messages.nodeSidebar.showFlowHint
+                : messages.nodeSidebar.hideFlowHint}
+            </button>
           </div>
+
+          {!flowHintCollapsed ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-full border border-emerald-200 bg-white/92 px-3 py-1 text-xs font-semibold text-emerald-700">
+                1. {messages.common.nodeKindLabels.trigger}
+              </span>
+              <span className="h-px w-5 bg-slate-300" />
+              <span className="inline-flex items-center rounded-full border border-sky-200 bg-white/92 px-3 py-1 text-xs font-semibold text-sky-700">
+                2. {messages.common.nodeKindLabels.action}
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -112,8 +142,13 @@ export function NodeSidebar() {
                         {item.icon}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold text-slate-900">
-                          {copy.label}
+                        <span className="flex items-start justify-between gap-3">
+                          <span className="block text-sm font-semibold text-slate-900">
+                            {copy.label}
+                          </span>
+                          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 transition group-hover:text-slate-500">
+                            {messages.nodeSidebar.dragHint}
+                          </span>
                         </span>
                         <span className="mt-1 block text-[13px] leading-5 text-slate-600">
                           {copy.description}
@@ -132,3 +167,4 @@ export function NodeSidebar() {
 }
 
 export { DRAG_DATA_KEY };
+

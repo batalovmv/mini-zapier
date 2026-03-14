@@ -205,41 +205,40 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
   if (!selectedNode) {
     return (
       <aside className="app-panel editor-rail flex h-full min-h-0 flex-col overflow-hidden">
-        <div className="border-b border-slate-900/10 px-4 py-4">
+        <div className="border-b border-slate-900/10 px-5 py-5">
           <p className="muted-label">{messages.configPanel.emptyEyebrow}</p>
-          <h2 className="mt-2 text-[1.45rem] font-semibold tracking-tight text-slate-900">
-            {messages.configPanel.emptyTitle}
-          </h2>
-          <p className="mt-2.5 text-sm leading-6 text-slate-600">
-            {messages.configPanel.emptyDescription}
-          </p>
+          <div className="mt-3 flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[1.05rem] bg-slate-950 text-[11px] font-black uppercase tracking-[0.28em] text-white shadow-[0_16px_28px_-18px_rgba(15,23,42,0.52)]">
+              IN
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-[1.58rem] font-semibold tracking-tight text-slate-900">
+                {messages.configPanel.emptyTitle}
+              </h2>
+              <p className="mt-2.5 text-sm leading-6 text-slate-600">
+                {messages.configPanel.emptyDescription}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
-          <section className="rounded-[28px] border border-slate-900/10 bg-white/90 px-4 py-4 shadow-[0_20px_36px_-30px_rgba(15,23,42,0.26)]">
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[1.1rem] bg-slate-950 text-[11px] font-black uppercase tracking-[0.28em] text-white shadow-[0_16px_28px_-18px_rgba(15,23,42,0.52)]">
-                IN
-              </span>
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
+          <section className="app-subpanel-muted px-4 py-4">
+            <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="muted-label">{messages.configPanel.workspaceGuidanceEyebrow}</p>
-                <h3 className="mt-2 text-lg font-semibold tracking-tight text-slate-900">
-                  {messages.configPanel.emptyTitle}
-                </h3>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {messages.configPanel.emptyDescription}
+                  {messages.configPanel.whatShowsUpDescription}
                 </p>
               </div>
+              <span className="app-pill">{messages.configPanel.inspectorSteps.length}</span>
             </div>
-          </section>
 
-          <section className="app-subpanel-muted px-4 py-4">
-            <p className="muted-label">{messages.configPanel.workspaceGuidanceEyebrow}</p>
-            <ol className="mt-4 space-y-3">
+            <ol className="mt-4 space-y-2.5">
               {messages.configPanel.inspectorSteps.map((item) => (
                 <li
                   key={item.step}
-                  className="flex items-start gap-3 border-b border-slate-900/8 pb-3 last:border-b-0 last:pb-0"
+                  className="flex items-start gap-3 rounded-[18px] border border-white/70 bg-white/88 px-3.5 py-3 shadow-[0_12px_24px_-22px_rgba(15,23,42,0.18)]"
                 >
                   <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
                     {item.step}
@@ -257,7 +256,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
             </ol>
           </section>
 
-          <section className="app-subpanel px-4 py-4">
+          <section className="rounded-[24px] border border-slate-900/10 bg-white/92 px-4 py-4 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.18)]">
             <p className="muted-label">{messages.configPanel.whatShowsUpTitle}</p>
             <p className="mt-2 text-sm leading-6 text-slate-600">
               {messages.configPanel.whatShowsUpDescription}
@@ -267,6 +266,21 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
       </aside>
     );
   }
+
+  const selectedNodeTone =
+    selectedNode.data.nodeKind === 'trigger'
+      ? {
+          short: 'TR',
+          icon: 'bg-emerald-600 text-white',
+          chip: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+          meta: 'border-emerald-200/70 bg-emerald-50/55',
+        }
+      : {
+          short: 'AC',
+          icon: 'bg-sky-600 text-white',
+          chip: 'border-sky-200 bg-sky-50 text-sky-700',
+          meta: 'border-sky-200/70 bg-sky-50/55',
+        };
 
   const availableConnections =
     definition?.connectionType === null
@@ -278,36 +292,39 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
   return (
     <>
       <aside className="app-panel editor-rail flex h-full min-h-0 flex-col overflow-hidden">
-        <div className="border-b border-slate-900/10 px-4 py-4">
-          <p className="muted-label">{messages.configPanel.panelEyebrow}</p>
-          <div className="mt-2 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h2 className="text-[1.35rem] font-semibold tracking-tight text-slate-900">
-                {selectedNodeLabel}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {selectedNodeDescription}
-              </p>
-            </div>
+        <div className="border-b border-slate-900/10 px-5 py-5">
+          <div className="flex items-start gap-3">
             <span
-              className={`app-pill ${
-                selectedNode.data.nodeKind === 'trigger'
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                  : 'border-sky-200 bg-sky-50 text-sky-700'
-              }`}
+              className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-[1.05rem] text-[11px] font-black uppercase tracking-[0.28em] shadow-[0_16px_28px_-18px_rgba(15,23,42,0.36)] ${selectedNodeTone.icon}`}
             >
-              {messages.common.nodeKindLabels[selectedNode.data.nodeKind]}
+              {selectedNodeTone.short}
             </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="muted-label">{messages.configPanel.panelEyebrow}</p>
+                  <h2 className="mt-2 text-[1.48rem] font-semibold tracking-tight text-slate-900">
+                    {selectedNodeLabel}
+                  </h2>
+                  <p className="mt-2.5 text-sm leading-6 text-slate-600">
+                    {selectedNodeDescription}
+                  </p>
+                </div>
+                <span className={`app-pill ${selectedNodeTone.chip}`}>
+                  {messages.common.nodeKindLabels[selectedNode.data.nodeKind]}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-4 grid gap-3">
-            <div className="app-subpanel px-3.5 py-3">
+          <div className="mt-4 grid gap-2.5">
+            <div className={`rounded-[18px] border px-4 py-3 ${selectedNodeTone.meta}`}>
               <p className="muted-label">{messages.configPanel.nodeTypeEyebrow}</p>
               <p className="mt-2 text-sm font-semibold text-slate-900">
                 {selectedNodeLabel}
               </p>
             </div>
-            <div className="app-subpanel px-3.5 py-3">
+            <div className={`rounded-[18px] border px-4 py-3 ${selectedNodeTone.meta}`}>
               <p className="muted-label">{messages.configPanel.connectionEyebrow}</p>
               <p className="mt-2 text-sm font-semibold text-slate-900">
                 {connectionTypeLabel
@@ -318,22 +335,29 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
           </div>
         </div>
 
-        <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
           {definition?.connectionType ? (
-            <section className="app-subpanel-muted space-y-4 px-3.5 py-3.5">
+            <section className="app-subpanel-muted space-y-4 px-4 py-4">
               <div>
-                <p className="muted-label">{messages.configPanel.connectionEyebrow}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {messages.configPanel.connectionSectionDescription(
-                    connectionTypeLabel ?? definition.connectionType,
-                  )}
-                </p>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="muted-label">{messages.configPanel.connectionEyebrow}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      {messages.configPanel.connectionSectionDescription(
+                        connectionTypeLabel ?? definition.connectionType,
+                      )}
+                    </p>
+                  </div>
+                  <span className="app-pill">
+                    {availableConnections.length}
+                  </span>
+                </div>
               </div>
 
               <label className="block">
                 <span className="muted-label">{messages.configPanel.availableConnections}</span>
                 <select
-                  className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                  className="mt-2 w-full rounded-[18px] border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   data-testid="connection-select"
                   onChange={(event) =>
                     updateNodeMeta(selectedNode.id, {
@@ -394,12 +418,12 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
               ) : null}
             </section>
           ) : (
-            <div className="app-subpanel-muted px-3.5 py-3.5 text-sm leading-6 text-slate-600">
+            <div className="rounded-[24px] border border-slate-900/10 bg-white/92 px-4 py-4 text-sm leading-6 text-slate-600 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.16)]">
               {messages.configPanel.noConnectionNeeded}
             </div>
           )}
 
-          <section className="app-subpanel px-3.5 py-3.5">
+          <section className="app-subpanel px-4 py-4">
             <div className="mb-4">
               <p className="muted-label">{messages.configPanel.nodeSettingsEyebrow}</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -417,7 +441,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
           </section>
 
           {connectionsError ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
               {connectionsError}
             </div>
           ) : null}
@@ -431,9 +455,9 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
           ) : null}
         </div>
 
-        <div className="border-t border-slate-900/10 px-4 py-4">
+        <div className="border-t border-slate-900/10 px-5 py-5">
           <button
-            className="w-full rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 shadow-sm transition hover:border-rose-300 hover:bg-rose-100"
+            className="w-full rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 shadow-sm transition hover:border-rose-300 hover:bg-rose-100"
             data-testid="delete-node-button"
             onClick={() => setDeleteDialogOpen(true)}
             type="button"

@@ -482,6 +482,10 @@ export const ru = {
         badge: 'Шаг 2',
       },
     },
+    flowOrderLabel: 'Порядок сборки',
+    showFlowHint: 'Показать',
+    hideFlowHint: 'Скрыть',
+    dragHint: 'Тянуть',
     startsWorkflow: 'Запускает сценарий',
     runsAfterTrigger: 'Выполняется после триггера',
   },
@@ -657,3 +661,4 @@ export const ru = {
       'Соедините все узлы в одну цепочку, которая начинается от триггера.',
   } as Record<WorkflowValidationCode, string>,
 } satisfies LocaleMessages;
+

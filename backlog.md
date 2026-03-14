@@ -999,3 +999,30 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-038: Editor rail parity + collapsible guidance
+- **Статус**: `done`
+- **Цель**: убрать постоянный visual overhead от guidance в левой библиотеке и привести правый inspector к тому же современному rail-style, что и левая панель
+- **Проблема**:
+  - flow-order hint в левой библиотеке всегда занимал место, даже когда пользователь уже собрал часть сценария
+  - правая панель выглядела визуально слабее и старее обновлённого левого rail
+- **Что сделано**:
+  - `NodeSidebar` получил collapsible flow-order hint, который автоматически схлопывается после появления узлов и может быть раскрыт вручную
+  - `ConfigPanel` переработан в более современный rail-style как для empty state, так и для выбранного узла: cleaner header, flatter sections, tighter meta blocks и более собранная hierarchy
+  - desktop editor grid скорректирован так, чтобы правый inspector получил чуть больше пространства, не отбирая приоритет у node library
+- **Не входит**:
+  - новые editor features
+  - changes в workflow logic
+  - backend/API changes
+- **Файлы**:
+  - `apps/web/src/components/editor/NodeSidebar.tsx`
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - guidance в левой библиотеке можно свернуть и она не держит лишнюю высоту постоянно
+  - правый inspector визуально соответствует левому rail по стилю и иерархии
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`

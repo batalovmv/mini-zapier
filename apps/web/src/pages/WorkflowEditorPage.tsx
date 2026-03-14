@@ -263,7 +263,7 @@ export function WorkflowEditorPage() {
         ) : null}
       </section>
 
-      <section className="grid min-h-0 flex-1 gap-5 overflow-hidden xl:grid-cols-[336px_minmax(0,1fr)_304px] xl:grid-rows-[minmax(0,1fr)] 2xl:grid-cols-[352px_minmax(0,1fr)_320px]">
+      <section className="grid min-h-0 flex-1 gap-5 overflow-hidden xl:grid-cols-[336px_minmax(0,1fr)_320px] xl:grid-rows-[minmax(0,1fr)] 2xl:grid-cols-[352px_minmax(0,1fr)_336px]">
         <div className="min-h-0 overflow-hidden">
           <NodeSidebar />
         </div>
@@ -286,6 +286,7 @@ export function WorkflowEditorPage() {
     </div>
   );
 }
+
 
 
 
