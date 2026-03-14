@@ -5,6 +5,11 @@
 ## Текущее состояние
 - **Последнее изменение**: TASK-033 — `Global polish of spacing, contrast and accent hierarchy`
 - **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–033 закрыты
+- **Follow-up после TASK-033**:
+  - `apps/web/src/components/AppHeader.tsx` — header переведён на responsive mobile layout: brand остаётся сверху, nav + logout занимают отдельную строку без horizontal overflow
+  - **Проверки follow-up**:
+    - `pnpm --filter @mini-zapier/web build`
+    - mobile smoke dashboard/editor на `390px` через локальный `vite preview` + Playwright mock API (`scrollWidth === innerWidth`)
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -336,6 +341,8 @@
 | TASK-031 | done | см. `git log` (`TASK-031: editor empty-state and workspace guidance`) | guided empty canvas, stronger workspace rails, desktop smoke screenshot |
 | TASK-032 | done | см. `git log` (`TASK-032: workflow cards density and status emphasis`) | denser dashboard cards, stronger status/last execution emphasis, desktop smoke screenshot |
 | TASK-033 | done | см. `git log` (`TASK-033: global visual polish and hierarchy pass`) | stronger global surface contrast, accent hierarchy, dashboard/editor desktop smoke screenshots |
+| TASK-033 follow-up | done | см. `git log` (`TASK-033: fix mobile header overflow`) | responsive AppHeader fix for narrow screens, 390px smoke recheck |
+
 
 
 
