@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-030 — `Dashboard visual hierarchy pass`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–030 закрыты
+- **Последнее изменение**: TASK-031 — `Editor empty-state and workspace guidance`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–031 закрыты
 - **Что сделано в TASK-018**:
   - **Deploy конфигурация**:
     - `deploy/Dockerfile.api` — multi-stage build с `pnpm deploy --legacy`, Prisma CLI, pg_isready, wget
@@ -196,6 +196,14 @@
   - **Проверки TASK-030**:
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard через локальный `vite preview` + Playwright mock API
+- **Что сделано в TASK-031**:
+  - `apps/web/src/components/editor/FlowCanvas.tsx` — canvas empty state переработан в более явный onboarding: шаги `trigger -> actions`, drop-zone framing, stronger drag-over hint и промежуточные подсказки после первого шага
+  - `apps/web/src/components/editor/NodeSidebar.tsx` — левая библиотека стала более похожа на tool rail: build-order guidance, усиленные section cards для triggers/actions, stronger draggable item hierarchy
+  - `apps/web/src/components/editor/ConfigPanel.tsx` — правый inspector получил более явный empty state, workspace guidance и более структурированную иерархию выбранной ноды
+  - `apps/web/src/index.css` — добавлены editor-specific surface styles для rail/canvas background hierarchy без изменения editor mechanics
+  - **Проверки TASK-031**:
+    - `pnpm --filter @mini-zapier/web build`
+    - desktop visual smoke empty editor через локальный `vite preview` + Playwright screenshot с mock `GET /api/auth/me` и `GET /api/connections`
 ## Следующий шаг
 Новых TASK в текущем `backlog.md` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
 
@@ -309,11 +317,6 @@
 | TASK-028 | done | см. `git log` (`TASK-028: execution history status filters + counters`) | History tabs/counters + API status filter/counts |
 | TASK-029 | done | см. `git log` (`TASK-029: workflow editor full-width workspace layout`) | shared header + wide editor layout + viewport-aware canvas sizing |
 | TASK-030 | done | см. `git log` (`TASK-030: dashboard visual hierarchy pass`) | compact hero, denser stats/workflow hierarchy, desktop smoke screenshot |
-
-
-
-
-
-
+| TASK-031 | done | см. `git log` (`TASK-031: editor empty-state and workspace guidance`) | guided empty canvas, stronger workspace rails, desktop smoke screenshot |
 
 

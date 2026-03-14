@@ -59,6 +59,35 @@ select {
     @apply rounded-3xl border border-slate-900/10 bg-white/80 shadow-panel backdrop-blur;
   }
 
+  .editor-rail {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.84) 100%),
+      radial-gradient(circle at top, rgba(255, 255, 255, 0.68), transparent 52%);
+    box-shadow:
+      0 24px 60px -42px rgba(15, 23, 42, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+
+  .editor-canvas-surface {
+    background:
+      radial-gradient(circle at top, rgba(198, 106, 27, 0.08), transparent 30%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(248, 250, 252, 0.9) 100%);
+  }
+
+  .editor-canvas-surface-empty {
+    background:
+      radial-gradient(circle at top, rgba(198, 106, 27, 0.14), transparent 30%),
+      radial-gradient(circle at 16% 82%, rgba(14, 165, 233, 0.08), transparent 26%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.98) 100%);
+  }
+
+  .editor-canvas-surface-active {
+    background:
+      radial-gradient(circle at top, rgba(198, 106, 27, 0.18), transparent 30%),
+      radial-gradient(circle at 82% 20%, rgba(14, 165, 233, 0.12), transparent 24%),
+      linear-gradient(180deg, rgba(255, 252, 245, 0.98) 0%, rgba(255, 255, 255, 1) 100%);
+  }
+
   .status-pill {
     @apply inline-flex items-center rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-slate-600;
   }

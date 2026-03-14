@@ -788,3 +788,33 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - manual visual smoke на dashboard в desktop width
+
+### TASK-031: Editor empty-state and workspace guidance
+- **Статус**: `done`
+- **Цель**: сделать пустой editor более направляющим и менее стерильным без изменения product scope
+- **Проблема**:
+  - пустой canvas выглядел как большая белая плоскость
+  - слабый сигнал, с чего начать
+  - sidebar и config panel воспринимались как пассивные колонны
+- **Что сделано**:
+  - empty state canvas переработан в более явный onboarding с акцентом на `trigger -> actions`
+  - усилен визуальный drop affordance canvas без изменения editor mechanics
+  - sidebar и config panel получили более явную workspace hierarchy и guidance copy
+- **Не входит**:
+  - новые editor features
+  - drag-and-drop redesign
+  - resizable/collapsible panels
+  - backend/API changes
+- **Файлы**:
+  - `apps/web/src/components/editor/FlowCanvas.tsx`
+  - `apps/web/src/components/editor/NodeSidebar.tsx`
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/index.css`
+- **Acceptance**:
+  - пустой editor лучше объясняет, что делать первым шагом
+  - canvas в empty state выглядит менее пустым и более intentional
+  - sidebar и config panel визуально лучше поддерживают workspace feel
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - desktop visual smoke empty editor через локальный `vite preview` + Playwright screenshot с mock auth/connections

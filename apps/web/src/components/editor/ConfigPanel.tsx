@@ -26,6 +26,24 @@ interface ConfigPanelProps {
   workflowId: string | null;
 }
 
+const inspectorSteps = [
+  {
+    step: '1',
+    title: 'Drop or select a node',
+    description: 'The canvas controls what appears in this inspector.',
+  },
+  {
+    step: '2',
+    title: 'Configure its settings',
+    description: 'Forms for the selected trigger or action open here.',
+  },
+  {
+    step: '3',
+    title: 'Attach a connection when needed',
+    description: 'Nodes that use secrets get their connection controls here too.',
+  },
+];
+
 export type ConfigUpdater = (
   updater: (prev: Record<string, unknown>) => Record<string, unknown>,
 ) => void;
@@ -192,15 +210,51 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
 
   if (!selectedNode) {
     return (
-      <aside className="app-panel flex h-full flex-col justify-between overflow-hidden">
-        <div className="px-5 py-5">
+      <aside className="app-panel editor-rail flex h-full flex-col overflow-hidden">
+        <div className="border-b border-slate-900/10 px-5 py-5">
           <p className="muted-label">Config Panel</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
-            Select a node
+            Inspector waits for a node
           </h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            Select a node on the canvas to configure it.
+            Select a trigger or action on the canvas to configure it here.
           </p>
+        </div>
+
+        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          <section className="rounded-[30px] border border-slate-900/10 bg-slate-50/80 px-4 py-4 shadow-sm">
+            <p className="muted-label">Workspace guidance</p>
+            <div className="mt-4 space-y-3">
+              {inspectorSteps.map((item) => (
+                <div
+                  key={item.step}
+                  className="flex items-start gap-3 rounded-2xl border border-white/70 bg-white/90 px-3 py-3"
+                >
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
+                    {item.step}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {item.title}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-[30px] border border-slate-900/10 bg-white/85 px-4 py-4 shadow-sm">
+            <p className="text-sm font-semibold text-slate-900">
+              What shows up here
+            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Connection selectors for nodes that need credentials, node-specific
+              settings, and the remove control for the selected step.
+            </p>
+          </section>
         </div>
       </aside>
     );
@@ -215,11 +269,11 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
 
   return (
     <>
-      <aside className="app-panel flex h-full flex-col overflow-hidden">
+      <aside className="app-panel editor-rail flex h-full flex-col overflow-hidden">
         <div className="border-b border-slate-900/10 px-5 py-5">
           <p className="muted-label">Config Panel</p>
           <div className="mt-2 flex items-start justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
                 {selectedNode.data.label}
               </h2>
@@ -237,13 +291,38 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
               {selectedNode.data.nodeKind}
             </span>
           </div>
+
+          <div className="mt-4 grid gap-3">
+            <div className="rounded-2xl border border-slate-900/10 bg-white/80 px-4 py-3 shadow-sm">
+              <p className="muted-label">Node type</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">
+                {selectedNode.data.nodeType}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-900/10 bg-white/80 px-4 py-3 shadow-sm">
+              <p className="muted-label">Connection</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">
+                {definition?.connectionType
+                  ? `${definition.connectionType} connection required`
+                  : 'No connection required'}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
           {definition?.connectionType ? (
-            <div className="space-y-4">
+            <section className="space-y-4 rounded-[30px] border border-slate-900/10 bg-slate-50/75 px-4 py-4 shadow-sm">
+              <div>
+                <p className="muted-label">Connection</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Attach the {definition.connectionType} connection used by this
+                  node.
+                </p>
+              </div>
+
               <label className="block">
-                <span className="muted-label">Connection</span>
+                <span className="muted-label">Available connections</span>
                 <select
                   className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   data-testid="connection-select"
@@ -296,20 +375,29 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                   title={`No ${definition.connectionType} connections`}
                 />
               ) : null}
-            </div>
+            </section>
           ) : (
-            <div className="rounded-2xl border border-slate-900/10 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            <div className="rounded-[30px] border border-slate-900/10 bg-slate-50/80 px-4 py-4 text-sm leading-6 text-slate-600 shadow-sm">
               This node does not require a connection.
             </div>
           )}
 
-          {renderConfigForm({
-            workflowId,
-            nodeKind: selectedNode.data.nodeKind,
-            nodeType: selectedNode.data.nodeType,
-            config: selectedNode.data.config,
-            onChange: (updater) => updateNodeConfig(selectedNode.id, updater),
-          })}
+          <section className="rounded-[30px] border border-slate-900/10 bg-white/90 px-4 py-4 shadow-sm">
+            <div className="mb-4">
+              <p className="muted-label">Node settings</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Configure how this step behaves inside the workflow chain.
+              </p>
+            </div>
+
+            {renderConfigForm({
+              workflowId,
+              nodeKind: selectedNode.data.nodeKind,
+              nodeType: selectedNode.data.nodeType,
+              config: selectedNode.data.config,
+              onChange: (updater) => updateNodeConfig(selectedNode.id, updater),
+            })}
+          </section>
 
           {connectionsError ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
