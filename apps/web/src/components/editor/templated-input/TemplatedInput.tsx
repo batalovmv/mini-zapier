@@ -200,8 +200,11 @@ export const TemplatedInput = forwardRef<
 
         const sel = document.getSelection();
 
-        // Try to restore saved range
-        if (savedRangeRef.current && el.contains(savedRangeRef.current.startContainer)) {
+        // Only restore saved range if the current selection is NOT already
+        // inside the editable (e.g., replace flow pre-positions the caret).
+        const selAlreadyInside = sel && sel.rangeCount > 0 && el.contains(sel.anchorNode);
+
+        if (!selAlreadyInside && savedRangeRef.current && el.contains(savedRangeRef.current.startContainer)) {
           sel?.removeAllRanges();
           sel?.addRange(savedRangeRef.current);
         }

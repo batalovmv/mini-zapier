@@ -296,12 +296,14 @@ export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: Fi
     }
   }
 
-  // Refetch on open transition (for controlled mode)
-  if (open && !prevOpenRef.current) {
-    refetch();
-  }
+  // Refetch on controlled open transition (moved to useEffect to avoid side-effects during render)
+  useEffect(() => {
+    if (isControlled && open && !prevOpenRef.current) {
+      refetch();
+    }
 
-  prevOpenRef.current = open;
+    prevOpenRef.current = open;
+  }, [open, isControlled, refetch]);
 
   const chainPosition =
     selectedNodeId !== null
