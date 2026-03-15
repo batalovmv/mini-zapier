@@ -35,6 +35,9 @@ export function RawJsonFallback({
         setRaw(incoming);
         setError(null);
       }
+      // Clear after each effect so the guard only suppresses the immediate
+      // echo from our own onChange call, not future external changes.
+      lastPushedRef.current = null;
     }
   }, [open, config]);
 
