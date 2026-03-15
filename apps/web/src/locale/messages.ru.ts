@@ -667,6 +667,18 @@ export const ru = {
       body: 'Body',
       bodyAriaLabel: 'Тело HTTP Request',
       bodyPlaceholder: '{"orderId":"{{input.id}}"}',
+      bodyKeyPlaceholder: 'имя поля',
+      bodyValuePlaceholder: 'значение',
+      bodyKeyAriaLabel: (index: number) => `Ключ поля body ${index}`,
+      bodyValueAriaLabel: (index: number) => `Значение поля body ${index}`,
+      removeBodyRowAriaLabel: (index: number) =>
+        `Удалить поле body ${index}`,
+      addBodyField: 'Добавить поле',
+      editBodyAsJson: 'Редактировать как JSON',
+      editBodyAsFields: 'Редактировать как поля',
+      contentTypeHint: 'Content-Type: application/json будет добавлен автоматически',
+      showJson: 'Показать JSON',
+      hideJson: 'Скрыть JSON',
       remove: 'Удалить',
     },
     telegram: {

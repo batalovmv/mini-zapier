@@ -635,6 +635,18 @@ export const en = {
       body: 'Body',
       bodyAriaLabel: 'HTTP Request body',
       bodyPlaceholder: '{"orderId":"{{input.id}}"}',
+      bodyKeyPlaceholder: 'field name',
+      bodyValuePlaceholder: 'value',
+      bodyKeyAriaLabel: (index: number) => `Body field key ${index}`,
+      bodyValueAriaLabel: (index: number) => `Body field value ${index}`,
+      removeBodyRowAriaLabel: (index: number) =>
+        `Remove body field ${index}`,
+      addBodyField: 'Add field',
+      editBodyAsJson: 'Edit as JSON',
+      editBodyAsFields: 'Edit as fields',
+      contentTypeHint: 'Content-Type: application/json will be added automatically',
+      showJson: 'Show as JSON',
+      hideJson: 'Hide JSON',
       remove: 'Remove',
     },
     telegram: {

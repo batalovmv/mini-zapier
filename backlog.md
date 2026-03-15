@@ -1393,7 +1393,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-050: HTTP Request visual builder
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: сделать HTTP Request action удобным для нетехнического пользователя без потери полного контроля
 - **Проблема**:
   - текущая форма уже лучше raw JSON, но body по сути остаётся большой строкой
