@@ -648,6 +648,10 @@ export const en = {
       showJson: 'Show as JSON',
       hideJson: 'Hide JSON',
     },
+    rawJson: {
+      mustBeObject: 'Must be a JSON object',
+      invalidJson: 'Invalid JSON',
+    },
     templatedInput: {
       editAsCode: 'Edit as code',
       visualMode: 'Visual mode',

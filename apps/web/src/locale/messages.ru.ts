@@ -680,6 +680,10 @@ export const ru = {
       showJson: 'Показать как JSON',
       hideJson: 'Скрыть JSON',
     },
+    rawJson: {
+      mustBeObject: 'Должен быть JSON-объектом',
+      invalidJson: 'Невалидный JSON',
+    },
     templatedInput: {
       editAsCode: 'Редактировать как код',
       visualMode: 'Визуальный режим',

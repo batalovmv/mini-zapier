@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
+import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
 
 interface RawJsonFallbackProps {
@@ -19,29 +20,34 @@ export function RawJsonFallback({
   showLabel,
   hideLabel,
 }: RawJsonFallbackProps) {
+  const { messages } = useLocale();
+  const t = messages.configForms.rawJson;
   const [raw, setRaw] = useState(() => JSON.stringify(config, null, 2));
   const [error, setError] = useState<string | null>(null);
+  const isLocalEdit = useRef(false);
 
-  // Sync from config → raw when config changes externally
+  // Sync from config → raw when config changes externally (e.g. node switch)
   useEffect(() => {
-    if (open) {
+    if (open && !isLocalEdit.current) {
       setRaw(JSON.stringify(config, null, 2));
       setError(null);
     }
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+    isLocalEdit.current = false;
+  }, [open, config]);
 
   function handleRawChange(value: string) {
     setRaw(value);
+    isLocalEdit.current = true;
     try {
       const parsed = JSON.parse(value) as Record<string, unknown>;
       if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-        setError('Must be a JSON object');
+        setError(t.mustBeObject);
         return;
       }
       setError(null);
       onChange(() => parsed);
     } catch {
-      setError('Invalid JSON');
+      setError(t.invalidJson);
     }
   }
 
