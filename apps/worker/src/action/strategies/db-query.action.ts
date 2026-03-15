@@ -102,8 +102,13 @@ export class DbQueryAction implements ActionStrategy {
 
       ensureSignalNotAborted(signal);
 
+      // Sanitize rows: pg returns Date, Buffer, BigInt etc. that are not
+      // JSON-serializable.  A JSON round-trip converts them to strings/null
+      // which keeps the downstream payload safe.
+      const rows = JSON.parse(JSON.stringify(result.rows));
+
       return {
-        rows: result.rows,
+        rows,
         rowCount: result.rowCount,
       };
     } finally {
