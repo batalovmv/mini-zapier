@@ -10,14 +10,14 @@ interface CronConfigProps {
   onChange: ConfigUpdater;
 }
 
-type Preset = 'every_minute' | 'every_hour' | 'every_day' | 'every_week' | 'custom';
+type Preset = 'none' | 'every_minute' | 'every_hour' | 'every_day' | 'every_week' | 'custom';
 
 const DAY_BITS = [1, 2, 3, 4, 5, 6, 0] as const; // Mon–Sun (cron: 1=Mon … 0=Sun)
 
 function detectPreset(cron: string): { preset: Preset; hour: string; minute: string; days: number[] } {
   const defaults = { hour: '09', minute: '00', days: [1, 2, 3, 4, 5] };
 
-  if (!cron || cron.trim() === '') return { preset: 'every_minute', ...defaults };
+  if (!cron || cron.trim() === '') return { preset: 'none', ...defaults };
 
   const parts = cron.trim().split(/\s+/);
   if (parts.length !== 5) return { preset: 'custom', ...defaults };
@@ -42,7 +42,7 @@ function detectPreset(cron: string): { preset: Preset; hour: string; minute: str
   }
 
   if (/^\d+$/.test(min) && /^\d+$/.test(hr) && dom === '*' && mon === '*' && /^[\d,]+$/.test(dow)) {
-    const days = dow.split(',').map(Number);
+    const days = dow.split(',').map(Number).map((d) => (d === 7 ? 0 : d));
     return {
       preset: 'every_week',
       hour: hr.padStart(2, '0'),
@@ -56,6 +56,8 @@ function detectPreset(cron: string): { preset: Preset; hour: string; minute: str
 
 function buildCron(preset: Preset, hour: string, minute: string, days: number[]): string {
   switch (preset) {
+    case 'none':
+      return '';
     case 'every_minute':
       return '* * * * *';
     case 'every_hour':
@@ -111,7 +113,7 @@ export function CronConfig({ config, onChange }: CronConfigProps) {
   const detected = useMemo(() => detectPreset(cronStr), [cronStr]);
 
   const [mode, setMode] = useState<'visual' | 'code'>(
-    detected.preset === 'custom' && cronStr !== '' ? 'code' : 'visual',
+    detected.preset === 'custom' ? 'code' : 'visual',
   );
   const [preset, setPreset] = useState<Preset>(detected.preset);
   const [hour, setHour] = useState(detected.hour);
