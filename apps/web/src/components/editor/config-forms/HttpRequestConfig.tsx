@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
@@ -43,7 +43,13 @@ function tryParseBodyAsKv(body: unknown): [string, string][] | null {
   }
 }
 
-/** Serialize key-value pairs back to a JSON body string. */
+/** Check if body is parseable as flat KV. */
+function isBodyKvCompatible(body: unknown): boolean {
+  if (typeof body !== 'string' || body.trim() === '') return true; // empty = compatible
+  return tryParseBodyAsKv(body) !== null;
+}
+
+/** Serialize key-value pairs back to a JSON body string (only non-empty keys). */
 function kvToBody(entries: [string, string][]): string {
   const obj: Record<string, string> = {};
   for (const [k, v] of entries) {
@@ -81,22 +87,44 @@ export function HttpRequestConfig({
   const t = messages.configForms.httpRequest;
 
   const [showJson, setShowJson] = useState(false);
-  const [bodyMode, setBodyMode] = useState<'fields' | 'json'>(() => {
-    // Default to fields mode if body is empty or parseable as flat KV
-    const body = config.body;
-    if (typeof body !== 'string' || body.trim() === '') return 'fields';
-    return tryParseBodyAsKv(body) !== null ? 'fields' : 'json';
-  });
+  const [bodyMode, setBodyMode] = useState<'fields' | 'json'>(() =>
+    isBodyKvCompatible(config.body) ? 'fields' : 'json',
+  );
+
+  // Track extra empty placeholder rows (local UI state, not persisted).
+  const [extraBodyRows, setExtraBodyRows] = useState(0);
+
+  // Re-sync bodyMode when body changes externally (e.g. node switch, RawJsonFallback edit).
+  // If body becomes incompatible with fields mode, force switch to json.
+  // If body becomes compatible while in json mode, keep json (user chose it).
+  const prevBodyRef = useRef(config.body);
+  useEffect(() => {
+    if (config.body !== prevBodyRef.current) {
+      prevBodyRef.current = config.body;
+      if (bodyMode === 'fields' && !isBodyKvCompatible(config.body)) {
+        setBodyMode('json');
+      }
+      // Reset extra rows on external body change
+      setExtraBodyRows(0);
+    }
+  }, [config.body, bodyMode]);
 
   const method = typeof config.method === 'string' ? config.method : 'POST';
   const hasBody = BODY_METHODS.has(method);
   const headerEntries = getHeaderEntries(config);
 
-  // --- Body key-value state ---
+  // --- Body key-value entries (persisted fields + local empty placeholders) ---
   const bodyKv: [string, string][] = (() => {
     const parsed = tryParseBodyAsKv(config.body);
-    if (parsed !== null && parsed.length > 0) return parsed;
-    return [['', '']];
+    const persisted: [string, string][] =
+      parsed !== null && parsed.length > 0 ? parsed : [];
+    // Append local-only empty placeholder rows
+    const result = [...persisted];
+    for (let i = 0; i < extraBodyRows; i++) {
+      result.push(['', '']);
+    }
+    // Always show at least one row
+    return result.length > 0 ? result : [['', '']];
   })();
 
   // --- Header helpers ---
@@ -143,50 +171,72 @@ export function HttpRequestConfig({
   }
 
   // --- Body KV helpers ---
+  // Count of persisted (non-empty-key) entries for index math
+  function getPersistedCount(): number {
+    const parsed = tryParseBodyAsKv(config.body);
+    return parsed !== null ? parsed.length : 0;
+  }
+
   function updateBodyKey(index: number, newKey: string) {
+    const persistedCount = getPersistedCount();
+
+    if (index >= persistedCount) {
+      // This row was a local placeholder — now it has a key, so persist it
+      setExtraBodyRows((r) => Math.max(0, r - 1));
+    }
+
     onChange((prev) => {
       const parsed = tryParseBodyAsKv(prev.body);
       const entries: [string, string][] =
-        parsed && parsed.length > 0 ? [...parsed] : [['', '']];
+        parsed && parsed.length > 0 ? [...parsed] : [];
+      // If editing a placeholder row beyond current entries, extend
+      while (entries.length <= index) {
+        entries.push(['', '']);
+      }
       entries[index] = [newKey, entries[index]?.[1] ?? ''];
       return { ...prev, body: kvToBody(entries) };
     });
   }
 
   function updateBodyValue(index: number, newValue: string) {
+    const persistedCount = getPersistedCount();
+
+    if (index >= persistedCount) {
+      // Placeholder row — value edit alone doesn't persist (key is still empty)
+      // Just keep it local for now; kvToBody will strip empty keys anyway
+      return;
+    }
+
     onChange((prev) => {
       const parsed = tryParseBodyAsKv(prev.body);
       const entries: [string, string][] =
-        parsed && parsed.length > 0 ? [...parsed] : [['', '']];
+        parsed && parsed.length > 0 ? [...parsed] : [];
       entries[index] = [entries[index]?.[0] ?? '', newValue];
       return { ...prev, body: kvToBody(entries) };
     });
   }
 
   function removeBodyField(index: number) {
+    const persistedCount = getPersistedCount();
+
+    if (index >= persistedCount) {
+      // Remove a local placeholder row
+      setExtraBodyRows((r) => Math.max(0, r - 1));
+      return;
+    }
+
     onChange((prev) => {
       const parsed = tryParseBodyAsKv(prev.body);
       const entries: [string, string][] =
-        parsed && parsed.length > 0 ? [...parsed] : [['', '']];
+        parsed && parsed.length > 0 ? [...parsed] : [];
       const next = entries.filter((_, i) => i !== index);
       return { ...prev, body: kvToBody(next) };
     });
   }
 
   function addBodyField() {
-    onChange((prev) => {
-      const parsed = tryParseBodyAsKv(prev.body);
-      const entries: [string, string][] =
-        parsed && parsed.length > 0 ? [...parsed] : [];
-      entries.push(['', '']);
-      // We need to keep the empty-key entry temporarily for the UI
-      // kvToBody strips empties, so store as raw JSON with empty key
-      const obj: Record<string, string> = {};
-      for (const [k, v] of entries) {
-        obj[k] = v;
-      }
-      return { ...prev, body: JSON.stringify(obj, null, 2) };
-    });
+    // Add a local-only empty row — not persisted until key is filled
+    setExtraBodyRows((r) => r + 1);
   }
 
   // --- Content-Type auto-suggest ---
@@ -298,9 +348,10 @@ export function HttpRequestConfig({
             <span className="muted-label">{t.body}</span>
             <button
               className="text-xs text-slate-400 transition hover:text-slate-600"
-              onClick={() =>
-                setBodyMode((prev) => (prev === 'fields' ? 'json' : 'fields'))
-              }
+              onClick={() => {
+                setBodyMode((prev) => (prev === 'fields' ? 'json' : 'fields'));
+                setExtraBodyRows(0);
+              }}
               type="button"
             >
               {bodyMode === 'fields' ? t.editBodyAsJson : t.editBodyAsFields}
@@ -311,7 +362,7 @@ export function HttpRequestConfig({
             <div className="mt-3 space-y-3">
               {bodyKv.map(([key, value], index) => (
                 <div
-                  key={`b-${key}-${index}`}
+                  key={`b-${index}`}
                   className="space-y-2 rounded-2xl border border-slate-900/10 bg-slate-50/60 p-3"
                 >
                   <div className="flex items-center gap-2">
