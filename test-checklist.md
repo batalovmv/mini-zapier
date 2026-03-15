@@ -97,3 +97,14 @@
 - [ ] Сохранить, активировать
 - [ ] curl webhook с X-Webhook-Secret → execution appears in history
 - [ ] Step logs показывают input/output
+## Срез 7: Shared workspace auth
+
+### Registration + Session Auth
+- [ ] `POST /api/auth/register` создаёт пользователя в БД и ставит `mz_session`
+- [ ] повторная регистрация с тем же email возвращает 409
+- [ ] `POST /api/auth/login` с валидными данными из БД возвращает 200 + cookie
+- [ ] `POST /api/auth/login` с невалидным паролем возвращает 401
+- [ ] `GET /api/auth/me` с cookie возвращает текущего пользователя
+- [ ] protected routes без cookie возвращают 401 / redirect на `/login`
+- [ ] `pnpm --filter @mini-zapier/api build` проходит
+- [ ] `pnpm --filter @mini-zapier/web build` проходит

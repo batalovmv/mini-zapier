@@ -3,17 +3,17 @@ import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { useLocale } from '../locale/LocaleProvider';
-import { getMe, login } from '../lib/api/auth';
+import { getMe, register } from '../lib/api/auth';
 import { getApiErrorMessage } from '../lib/api/client';
 
-export function LoginPage() {
+export function RegisterPage() {
   const navigate = useNavigate();
   const { messages } = useLocale();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [loginError, setLoginError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
 
   useEffect(() => {
     getMe()
@@ -24,13 +24,13 @@ export function LoginPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setLoginError(null);
+    setRegisterError(null);
     try {
-      await login(email, password);
+      await register(email, password);
       navigate('/', { replace: true });
     } catch (err) {
       const message = getApiErrorMessage(err, messages.errors);
-      setLoginError(message);
+      setRegisterError(message);
       toast.error(message);
     } finally {
       setLoading(false);
@@ -52,14 +52,14 @@ export function LoginPage() {
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-600 text-lg font-black uppercase tracking-[0.28em] text-white shadow-lg shadow-amber-900/20">
             MZ
           </div>
-          <h1 className="text-xl font-bold text-slate-900">{messages.loginPage.brandTitle}</h1>
-          <p className="mt-1 text-sm text-slate-500">{messages.loginPage.subtitle}</p>
+          <h1 className="text-xl font-bold text-slate-900">{messages.registerPage.brandTitle}</h1>
+          <p className="mt-1 text-sm text-slate-500">{messages.registerPage.subtitle}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">
-              {messages.loginPage.email}
+              {messages.registerPage.email}
             </label>
             <input
               id="email"
@@ -68,7 +68,7 @@ export function LoginPage() {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                setLoginError(null);
+                setRegisterError(null);
               }}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
               autoFocus
@@ -77,24 +77,26 @@ export function LoginPage() {
 
           <div>
             <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-              {messages.loginPage.password}
+              {messages.registerPage.password}
             </label>
             <input
               id="password"
               type="password"
               required
+              minLength={8}
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                setLoginError(null);
+                setRegisterError(null);
               }}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
             />
+            <p className="mt-1 text-xs text-slate-500">{messages.registerPage.passwordHint}</p>
           </div>
 
-          {loginError ? (
+          {registerError ? (
             <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-              {loginError}
+              {registerError}
             </div>
           ) : null}
 
@@ -103,14 +105,14 @@ export function LoginPage() {
             disabled={loading}
             className="w-full rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-amber-900/20 transition-colors hover:bg-amber-700 disabled:opacity-50"
           >
-            {loading ? messages.loginPage.signingIn : messages.loginPage.signIn}
+            {loading ? messages.registerPage.creatingAccount : messages.registerPage.createAccount}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-slate-500">
-          {messages.loginPage.registerPrompt}{' '}
-          <Link to="/register" className="font-semibold text-amber-700 hover:text-amber-800">
-            {messages.loginPage.registerAction}
+          {messages.registerPage.loginPrompt}{' '}
+          <Link to="/login" className="font-semibold text-amber-700 hover:text-amber-800">
+            {messages.registerPage.loginAction}
           </Link>
         </p>
       </div>

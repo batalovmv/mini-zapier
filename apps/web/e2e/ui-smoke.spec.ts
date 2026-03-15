@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 const DEFAULT_ECHO_URL =
   process.env.MINI_ZAPIER_E2E_ECHO_URL || 'https://postman-echo.com/post';
-const E2E_USERNAME = process.env.MINI_ZAPIER_E2E_USERNAME ?? 'admin';
+const E2E_EMAIL = process.env.MINI_ZAPIER_E2E_EMAIL ?? process.env.MINI_ZAPIER_E2E_USERNAME ?? 'admin@example.com';
 const E2E_PASSWORD = process.env.MINI_ZAPIER_E2E_PASSWORD;
 
 async function signIn(page: Page): Promise<void> {
@@ -13,7 +13,7 @@ async function signIn(page: Page): Promise<void> {
   await page.goto('/login');
   await expect(page.getByRole('heading', { name: 'Mini-Zapier' })).toBeVisible();
 
-  await page.getByLabel('Username').fill(E2E_USERNAME);
+  await page.getByLabel('Email').fill(E2E_EMAIL);
   await page.getByLabel('Password').fill(E2E_PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();
 
@@ -441,3 +441,4 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     }
   }
 });
+

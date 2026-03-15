@@ -58,6 +58,13 @@
 ## DEC-013: App-level rate limiting via @nestjs/throttler
 **Решение**: `@nestjs/throttler` для rate limiting на уровне приложения. Per-route декораторы, storage в памяти.
 **Причина**: минимальная зависимость, нативная интеграция с NestJS guards, достаточно для single-instance deploy.
-**Scope**: login (5 req/60s), webhook (30 req/60s), inbound-email (30 req/60s). Остальные endpoints без throttle.
+**Scope**: register/login (5 req/60s), webhook (30 req/60s), inbound-email (30 req/60s). Остальные endpoints без throttle.
 **Proxy awareness**: `app.set('trust proxy', 1)` для корректного извлечения client IP из `X-Forwarded-For` за nginx.
 **Альтернатива**: nginx rate limiting — мощнее, но требует host-level конфигурации и не даёт per-route гранулярности в app коде.
+
+## DEC-014: Shared-workspace auth
+**Решение**: базовая регистрация и логин пользователей через email/password в таблице User. Сессия хранится в signed httpOnly cookie mz_session (HMAC-SHA256).
+**Причина**: нужен доступ нескольких пользователей к одному внутреннему workspace без внедрения полного multi-tenant слоя.
+**Границы**: все зарегистрированные пользователи видят один и тот же набор workflows/connections/executions. Roles, invitations, password reset и owner-based ACL не входят в этот срез.
+**Пароли**: хэшируются встроенным Node.js scrypt, без новой внешней зависимости.
+

@@ -1175,3 +1175,44 @@
   - step log содержит корректные сериализованные значения
   - существующие тесты проходят
 - **Проверка**: `pnpm --filter @mini-zapier/worker build && pnpm --filter @mini-zapier/worker test`
+---
+
+## Срез 7: Shared workspace auth
+
+### TASK-045: Shared-workspace user registration
+- **Статус**: `done`
+- **Цель**: добавить регистрацию и логин пользователей через БД, сохранив текущую модель общего workspace без multi-tenant isolation
+- **Проблема**:
+  - текущий auth завязан на одну env-пару `AUTH_USERNAME` / `AUTH_PASSWORD`, поэтому пользователь не может зарегистрировать собственный аккаунт
+  - в продукте уже есть protected routes, но нет таблицы пользователей и self-service регистрации
+- **Что сделано**:
+  - добавлена модель `User` в Prisma и миграция для хранения email + passwordHash
+  - `apps/api/src/auth/*` переведён на регистрацию и логин по email/password с signed cookie session `mz_session`
+  - пароли хэшируются встроенным Node.js `scrypt`, без новой зависимости
+  - `apps/web` получил отдельную страницу `/register`, обновлённую `/login` и новый client API для регистрации
+  - принято явное допущение: это shared workspace, поэтому ownership workflow/connection и роли не добавляются
+- **Не входит**:
+  - RBAC, роли, приглашения
+  - password reset, email verification
+  - owner-based isolation workflows/connections/executions
+- **Файлы**:
+  - `apps/api/prisma/schema.prisma`
+  - `apps/api/prisma/migrations/*`
+  - `apps/api/src/auth/`
+  - `apps/api/src/common/validate-env.ts`
+  - `apps/web/src/App.tsx`
+  - `apps/web/src/lib/api/auth.ts`
+  - `apps/web/src/pages/LoginPage.tsx`
+  - `apps/web/src/pages/RegisterPage.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - `POST /api/auth/register` создаёт нового пользователя, ставит cookie и не требует env-логина
+  - `POST /api/auth/login` работает по данным из БД
+  - `GET /api/auth/me` возвращает текущего пользователя по cookie
+  - в UI доступны отдельные страницы `Login` и `Register`
+  - `pnpm --filter @mini-zapier/api build` и `pnpm --filter @mini-zapier/web build` проходят
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/api run prisma:migrate -- --name add_user_auth`
+  - `pnpm --filter @mini-zapier/api build`
+  - `pnpm --filter @mini-zapier/web build`

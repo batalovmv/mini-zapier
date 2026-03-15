@@ -257,10 +257,23 @@ export const ru = {
   loginPage: {
     brandTitle: 'Mini-Zapier',
     subtitle: 'Войдите, чтобы продолжить',
-    username: 'Логин',
+    email: 'Email',
     password: 'Пароль',
     signIn: 'Войти',
     signingIn: 'Вход...',
+    registerPrompt: 'Нужен аккаунт?',
+    registerAction: 'Зарегистрироваться',
+  },
+  registerPage: {
+    brandTitle: 'Mini-Zapier',
+    subtitle: 'Создайте аккаунт, чтобы работать в общем workspace',
+    email: 'Email',
+    password: 'Пароль',
+    passwordHint: 'Используйте не меньше 8 символов.',
+    createAccount: 'Создать аккаунт',
+    creatingAccount: 'Создание аккаунта...',
+    loginPrompt: 'Уже есть аккаунт?',
+    loginAction: 'Войти',
   },
   notFoundPage: {
     eyebrow: '404',
@@ -730,3 +743,4 @@ export const ru = {
       'Соедините все узлы в одну цепочку, которая начинается от триггера.',
   } as Record<WorkflowValidationCode, string>,
 } satisfies LocaleMessages;
+

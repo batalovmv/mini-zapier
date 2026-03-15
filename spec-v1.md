@@ -3,7 +3,7 @@
 > Этот документ заморожен. Изменения scope только через явное обновление этого файла с обоснованием.
 
 ## Продукт
-Платформа автоматизации workflow (мини-Zapier). Single-tenant internal tool. Линейные workflow (один trigger → цепочка actions). Не публичный SaaS.
+Платформа автоматизации workflow (мини-Zapier). Shared-workspace internal tool. Линейные workflow (один trigger → цепочка actions). Не публичный SaaS.
 
 ## Стек
 - **apps/api**: NestJS + Prisma + Swagger (REST API, CRUD, triggers, cron registration)
@@ -29,10 +29,11 @@
 - Dedupe через TriggerEvent с idempotencyKey
 - definitionSnapshot + workflowVersion для воспроизводимости
 - REST API + Swagger документация
+- Базовая регистрация и логин пользователей по email/password (shared workspace, без ролей и owner isolation)
 - Линейная валидация workflow (1 trigger → chain, без branching/loops)
 
 ### НЕ включено в v1
-- RBAC, встроенный auth, OAuth
+- RBAC, OAuth, invitation flow, owner-based isolation данных
 - Marketplace, публичные шаблоны
 - Arbitrary JS execution (isolated-vm, vm2)
 - IMAP polling для email
@@ -80,6 +81,12 @@
 - **Email inbound**: проверка HMAC-подписи провайдера через signing secret из Connection. Без валидной подписи → 401
 - **Cron**: внутренний trigger, security не требуется
 
+### Auth model
+- Open self-registration по email/password
+- Session auth через signed httpOnly cookie `mz_session` с HMAC-SHA256
+- Все зарегистрированные пользователи работают в одном общем workspace
+- Workflow/Connection ownership и роли в v1 отсутствуют
+
 ### Версионирование
 - Workflow.version++ только при PUT /workflows/:id (изменение definition)
 - PATCH status НЕ меняет version
@@ -91,7 +98,7 @@
 - triggerData: max 64KB, без отдельного флага (ограничение v1)
 - Redaction применяется до записи в БД
 
-## Database Schema (7 моделей)
+## Database Schema (8 моделей)
 
 ### Enums
 ```
@@ -104,13 +111,14 @@ ConnectionType:  SMTP | TELEGRAM | POSTGRESQL | WEBHOOK
 ```
 
 ### Models
-1. **Workflow**: id, name, description, status, version, timezone, viewport, timestamps
-2. **WorkflowNode**: id, workflowId, positionX/Y, nodeKind, nodeType, label, config(JSON), connectionId?, retryCount, retryBackoff, timeoutMs, timestamps
-3. **WorkflowEdge**: id, workflowId, sourceNodeId, targetNodeId, handles, @@unique([source,target])
-4. **Connection**: id, name, type, credentials(encrypted JSON), timestamps
-5. **WorkflowExecution**: id, workflowId, workflowVersion, status, triggerData, definitionSnapshot, startedAt, completedAt, errorMessage
-6. **ExecutionStepLog**: id, executionId, nodeId(no FK), nodeLabel, nodeType, status, inputData, outputData, errorMessage, retryAttempt, truncated, startedAt, completedAt, durationMs
-7. **TriggerEvent**: id, workflowId, source, idempotencyKey, processed, @@unique([workflowId, source, idempotencyKey])
+1. **User**: id, email(unique), passwordHash, timestamps
+2. **Workflow**: id, name, description, status, version, timezone, viewport, timestamps
+3. **WorkflowNode**: id, workflowId, positionX/Y, nodeKind, nodeType, label, config(JSON), connectionId?, retryCount, retryBackoff, timeoutMs, timestamps
+4. **WorkflowEdge**: id, workflowId, sourceNodeId, targetNodeId, handles, @@unique([source,target])
+5. **Connection**: id, name, type, credentials(encrypted JSON), timestamps
+6. **WorkflowExecution**: id, workflowId, workflowVersion, status, triggerData, definitionSnapshot, startedAt, completedAt, errorMessage
+7. **ExecutionStepLog**: id, executionId, nodeId(no FK), nodeLabel, nodeType, status, inputData, outputData, errorMessage, retryAttempt, truncated, startedAt, completedAt, durationMs
+8. **TriggerEvent**: id, workflowId, source, idempotencyKey, processed, @@unique([workflowId, source, idempotencyKey])
 
 ## API Endpoints
 
@@ -138,12 +146,20 @@ ConnectionType:  SMTP | TELEGRAM | POSTGRESQL | WEBHOOK
 - `POST /api/webhooks/:workflowId` — webhook receiver (secret check + dedupe)
 - `POST /api/inbound-email/:workflowId` — email inbound webhook
 
+### Auth
+- `POST /api/auth/register` — create user and issue session cookie
+- `POST /api/auth/login` — issue session cookie
+- `POST /api/auth/logout` — clear session cookie
+- `GET /api/auth/me` — auth-aware current user
+
 ### Stats
 - `GET /api/stats` — totalWorkflows, activeWorkflows, totalExecutions, successRate
 
 ## Frontend
 
 ### Pages
+- **Login**: email/password sign-in
+- **Register**: self-registration for shared workspace access
 - **Dashboard**: stats cards, workflow list, CRUD actions
 - **Workflow Editor**: React Flow canvas, node sidebar, config panel, save/load
 - **Execution History**: execution table, step log viewer (timeline + JSON)
@@ -163,4 +179,5 @@ ConnectionType:  SMTP | TELEGRAM | POSTGRESQL | WEBHOOK
 - queue.add() вне DB-транзакции → compensating cleanup (outbox pattern в будущем)
 - triggerData truncation без отдельного флага
 - Polling вместо WebSocket
-- Нет auth (single-tenant, доступ через VPN/reverse proxy)
+- Auth intentionally stays minimal: self-registration + shared workspace cookie sessions, без ролей и owner isolation
+

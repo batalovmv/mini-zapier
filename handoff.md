@@ -3,8 +3,20 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-044 — `DB_QUERY serialization fix`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–044 закрыты
+- **Последнее изменение**: TASK-045 — `shared-workspace user registration`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–045 закрыты
+- **Что сделано в TASK-045**:
+  - `apps/api/prisma/schema.prisma`, `apps/api/prisma/migrations/20260315123000_add_user_auth/migration.sql` — добавлена модель `User` и migration SQL под email/password auth
+  - `apps/api/src/auth/auth.service.ts`, `auth.controller.ts`, `auth.guard.ts`, `apps/api/src/auth/dto/*` — env-based admin login заменён на регистрацию/логин через БД, signed cookie по `userId`, `scrypt` hashing и `GET /api/auth/me` с user payload
+  - `apps/web/src/pages/LoginPage.tsx`, `apps/web/src/pages/RegisterPage.tsx`, `apps/web/src/lib/api/auth.ts`, `apps/web/src/App.tsx` — добавлены `/register`, email-based login, client registration API и auto-login после регистрации
+  - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts`, `apps/web/e2e/ui-smoke.spec.ts` — обновлены locale strings и smoke login selector под `Email`
+  - `spec-v1.md`, `decisions.md`, `backlog.md`, `test-checklist.md`, `deploy/.env.production.example` — scope/docs/env examples синхронизированы под shared-workspace auth
+  - **Проверки TASK-045**:
+    - `pnpm --filter @mini-zapier/api build`
+    - `pnpm --filter @mini-zapier/worker build`
+    - `pnpm --filter @mini-zapier/web build`
+  - **Ограничения проверки TASK-045**:
+    - локальный `prisma migrate dev` и auth integration smoke не запускались, потому что на машине не подняты PostgreSQL/Docker daemon; migration SQL добавлен вручную
 - **Что сделано в TASK-043**:
   - `apps/web/src/pages/ConnectionsPage.tsx` — добавлен отдельный раздел `/connections` с grouped catalog по типам подключений, create/edit/delete actions и reuse-oriented UI copy
   - `apps/web/src/components/connections/ConnectionFormDialog.tsx` — добавлен отдельный диалог создания/редактирования подключений; rename-only edit не требует повторного ввода секретов, а полная замена credentials требует ввести весь набор заново
@@ -295,10 +307,11 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-Новых TASK в текущем `backlog.md` после `TASK-044` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
+TASK-045 закрыт. Следующий шаг — если нужен не общий workspace, а изоляция данных между пользователями, добавить отдельный TASK на ownership / RBAC / invitations; иначе формировать следующий backlog-срез под новую продуктовую задачу.
 
 ## Блокеры
-- На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
+- На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с новым email-login сценарием не запускался.
+- Docker daemon / локальный PostgreSQL на `5434` сейчас не подняты, поэтому `pnpm --filter @mini-zapier/api run prisma:migrate -- --name add_user_auth` локально не прогонялся; migration SQL добавлен вручную.
 
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`), а порт `5173` — внешним Vite-процессом (`D:\TZ\Finance_tracker\client`). Для smoke-проверок использовались `3001`, `5174`, `5175`, `5176`, `5177`, `5178`.
 - `apps/web/package.json` использует `"@mini-zapier/shared": "file:../../packages/shared"` как обход зависающего `pnpm install` и несовместимости `npm` с `workspace:*`.
@@ -308,6 +321,7 @@
 - Workflow node ids в create/update payload теперь трактуются только как client-local references для связи nodes ↔ edges; persisted ids генерируются сервером и приходят обратно в API response
 - Для `apps/web` Vite proxy по умолчанию шлёт `/api/*` на `http://localhost:3000`; для локального smoke можно переопределить target через `VITE_API_PROXY_TARGET`
 - `apps/web/playwright.config.ts` по умолчанию ждёт `MINI_ZAPIER_E2E_BASE_URL=http://127.0.0.1:5179`; если прогоняешь e2e на другом порту, передай env явно
+- `apps/web/e2e/ui-smoke.spec.ts` теперь логинится по `MINI_ZAPIER_E2E_EMAIL` (есть fallback на legacy `MINI_ZAPIER_E2E_USERNAME`) + `MINI_ZAPIER_E2E_PASSWORD`
 - В `ExecutionTable` колонка `trigger` сейчас показывает короткий preview из `triggerData`, потому что текущий `WorkflowExecutionDto` не содержит отдельного поля `source`; backend contract не менялся в рамках `TASK-016`
 - В `apps/web/package.json` scripts вызывают локальные бинарники через `node ./node_modules/...`, потому что Windows `.bin` shims в этом окружении срабатывали нестабильно
 - Для `ConnectionModule` и webhook secret-check нужен `APP_ENCRYPTION_KEY` в env процесса API; в smoke-проверке он передавался явно при запуске на `3001`
@@ -323,8 +337,9 @@
 - Для `TASK-008` `HTTP_REQUEST` реализован без новой dependency: используется встроенный Node `fetch`, но контракт strategy сохранён (`{ status, headers, data }`), non-2xx ответы считаются ошибкой
 - После `pnpm install --prefer-offline` `pnpm-lock.yaml` снова является источником истины для workspace; отдельный npm-installed state для `apps/web` больше не нужен
 - После следующего изменения `apps/api/prisma/schema.prisma` запускай `pnpm --filter @mini-zapier/api run prisma:migrate -- --name <migration_name>`
-- **Auth**: signed cookie HMAC-SHA256, env vars: `AUTH_USERNAME`, `AUTH_PASSWORD`, `AUTH_SESSION_SECRET`; cookie name `mz_session`, Max-Age 7 дней
-- **Public endpoints** (не требуют auth): `POST /api/auth/login`, `GET /api/health`, `GET /api/readiness`, `POST /api/webhooks/:workflowId`, `POST /api/inbound-email/:workflowId`, `GET /api/auth/me` (auth-aware: 200/401)
+- **Auth**: `POST /api/auth/register` создаёт пользователя в таблице `User`, пароль хэшируется встроенным `scrypt`; env vars: `AUTH_SESSION_SECRET`; cookie name `mz_session`, Max-Age 7 дней
+- **Public endpoints** (не требуют auth): `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/health`, `GET /api/readiness`, `POST /api/webhooks/:workflowId`, `POST /api/inbound-email/:workflowId`, `GET /api/auth/me` (auth-aware: 200/401)
+- **Shared workspace auth**: ownership у workflows/connections/executions пока нет; любой зарегистрированный пользователь видит общий набор данных
 - **Swagger** отключен при `NODE_ENV=production`; доступен только в dev
 - **CORS**: origin из `CORS_ORIGIN` env (comma-separated), fallback `http://localhost:5173`; `credentials: true`
 - **Docker**: `deploy/docker-compose.prod.yml` использует `build.context: ..`, поэтому на VPS нужен весь репозиторий, а не только папка `deploy`; порт API привязан к `127.0.0.1:3000` (loopback only) и не доступен извне
@@ -423,3 +438,8 @@
 | TASK-042 | done | см. `git log` (`TASK-042: inspector connection semantics clarity`) | inspector now shows explicit connection states and availability instead of ambiguous numeric count badges |
 | TASK-043 | done | см. `git log` (`TASK-043: connections management page`) | dedicated `/connections` section, reusable connection catalog, standalone create/edit/delete dialog |
 | TASK-044 | done | `7f2ada5` (`TASK-044: fix DB_QUERY serialization`) | JSON.parse(JSON.stringify()) sanitizes Date/BigInt/Buffer in pg result.rows; deployed & verified on VPS |
+| TASK-045 | done | см. git log (TASK-045: shared workspace user registration) | User model + DB-backed register/login + /register page; shared workspace auth without owner isolation |
+
+
+
+

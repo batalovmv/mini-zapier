@@ -7,7 +7,6 @@ export function validateApiEnv(): void {
   const required: string[] = [
     'DATABASE_URL',
     'APP_ENCRYPTION_KEY',
-    'AUTH_PASSWORD',
     'AUTH_SESSION_SECRET',
   ];
 

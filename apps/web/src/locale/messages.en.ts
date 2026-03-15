@@ -241,10 +241,23 @@ export const en = {
   loginPage: {
     brandTitle: 'Mini-Zapier',
     subtitle: 'Sign in to continue',
-    username: 'Username',
+    email: 'Email',
     password: 'Password',
     signIn: 'Sign in',
     signingIn: 'Signing in...',
+    registerPrompt: 'Need an account?',
+    registerAction: 'Register',
+  },
+  registerPage: {
+    brandTitle: 'Mini-Zapier',
+    subtitle: 'Create an account to use the shared workspace',
+    email: 'Email',
+    password: 'Password',
+    passwordHint: 'Use at least 8 characters.',
+    createAccount: 'Create account',
+    creatingAccount: 'Creating account...',
+    loginPrompt: 'Already have an account?',
+    loginAction: 'Sign in',
   },
   notFoundPage: {
     eyebrow: '404',
@@ -700,3 +713,4 @@ export const en = {
 };
 
 export type LocaleMessages = typeof en;
+

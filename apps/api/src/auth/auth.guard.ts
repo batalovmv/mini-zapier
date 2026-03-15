@@ -16,7 +16,7 @@ export class AuthGuard implements CanActivate {
     private readonly authService: AuthService,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -33,7 +33,7 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Authentication required');
     }
 
-    this.authService.verify(cookieValue);
+    request.authUser = await this.authService.getAuthenticatedUser(cookieValue);
     return true;
   }
 }
