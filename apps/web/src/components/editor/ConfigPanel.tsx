@@ -462,7 +462,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
               </p>
             </div>
 
-            <div className="mt-4">
+            <div key={selectedNode.id} className="mt-4">
               {renderConfigForm({
                 workflowId,
                 nodeKind: selectedNode.data.nodeKind,
