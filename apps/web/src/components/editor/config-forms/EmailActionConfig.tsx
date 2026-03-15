@@ -1,5 +1,8 @@
+import { useState } from 'react';
+
 import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
+import { RawJsonFallback } from './RawJsonFallback';
 import { TemplatedField } from '../templated-input';
 
 interface EmailActionConfigProps {
@@ -12,32 +15,43 @@ export function EmailActionConfig({
   onChange,
 }: EmailActionConfigProps) {
   const { messages } = useLocale();
+  const t = messages.configForms.emailAction;
+  const [showJson, setShowJson] = useState(false);
 
   return (
     <div className="space-y-5">
       <TemplatedField
         config={config}
         configKey="to"
-        label={messages.configForms.emailAction.to}
+        label={t.to}
         onChange={onChange}
-        placeholder={messages.configForms.emailAction.toPlaceholder}
+        placeholder={t.toPlaceholder}
       />
 
       <TemplatedField
         config={config}
         configKey="subject"
-        label={messages.configForms.emailAction.subject}
+        label={t.subject}
         onChange={onChange}
-        placeholder={messages.configForms.emailAction.subjectPlaceholder}
+        placeholder={t.subjectPlaceholder}
       />
 
       <TemplatedField
         config={config}
         configKey="body"
-        label={messages.configForms.emailAction.body}
+        label={t.body}
         multiline
         onChange={onChange}
-        placeholder={messages.configForms.emailAction.bodyPlaceholder}
+        placeholder={t.bodyPlaceholder}
+      />
+
+      <RawJsonFallback
+        config={config}
+        onChange={onChange}
+        open={showJson}
+        onToggle={() => setShowJson((v) => !v)}
+        showLabel={t.showJson}
+        hideLabel={t.hideJson}
       />
     </div>
   );

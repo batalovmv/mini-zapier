@@ -1359,7 +1359,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-049: Email + Telegram no-code action forms
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: довести Email и Telegram actions до состояния "понятно без JSON и без template syntax по умолчанию"
 - **Проблема**:
   - формально визуальные поля уже есть, но они всё ещё больше похожи на thin wrapper над raw config

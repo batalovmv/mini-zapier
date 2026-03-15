@@ -608,6 +608,8 @@ export const en = {
       subjectPlaceholder: 'New order {{input.id}}',
       body: 'Body',
       bodyPlaceholder: 'Hello, {{input.customerName}}',
+      showJson: 'Show as JSON',
+      hideJson: 'Hide JSON',
     },
     emailTrigger: {
       info:
@@ -638,8 +640,13 @@ export const en = {
     telegram: {
       chatId: 'Chat ID',
       chatIdPlaceholder: '-1001234567890',
+      chatIdHelper: 'How to get your Chat ID',
+      chatIdHelperSteps:
+        '1. Open Telegram and find @userinfobot\n2. Send /start to the bot\n3. It will reply with your Chat ID\n4. Paste it above',
       message: 'Message',
       messagePlaceholder: 'Order {{input.id}} is ready.',
+      showJson: 'Show as JSON',
+      hideJson: 'Hide JSON',
     },
     templatedInput: {
       editAsCode: 'Edit as code',
