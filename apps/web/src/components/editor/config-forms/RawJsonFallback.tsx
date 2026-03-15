@@ -24,20 +24,22 @@ export function RawJsonFallback({
   const t = messages.configForms.rawJson;
   const [raw, setRaw] = useState(() => JSON.stringify(config, null, 2));
   const [error, setError] = useState<string | null>(null);
-  const isLocalEdit = useRef(false);
+  const lastPushedRef = useRef<string | null>(null);
 
   // Sync from config → raw when config changes externally (e.g. node switch)
+  // Skip if config matches what we last pushed via onChange (our own edit echo)
   useEffect(() => {
-    if (open && !isLocalEdit.current) {
-      setRaw(JSON.stringify(config, null, 2));
-      setError(null);
+    if (open) {
+      const incoming = JSON.stringify(config, null, 2);
+      if (incoming !== lastPushedRef.current) {
+        setRaw(incoming);
+        setError(null);
+      }
     }
-    isLocalEdit.current = false;
   }, [open, config]);
 
   function handleRawChange(value: string) {
     setRaw(value);
-    isLocalEdit.current = true;
     try {
       const parsed = JSON.parse(value) as Record<string, unknown>;
       if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
@@ -45,6 +47,7 @@ export function RawJsonFallback({
         return;
       }
       setError(null);
+      lastPushedRef.current = JSON.stringify(parsed, null, 2);
       onChange(() => parsed);
     } catch {
       setError(t.invalidJson);
