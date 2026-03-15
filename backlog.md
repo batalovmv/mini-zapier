@@ -1153,3 +1153,25 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+---
+
+## Баги / Hotfixes
+
+### TASK-044: DB_QUERY action — сериализация результатов PostgreSQL
+- **Статус**: `done`
+- **Цель**: fix "Payload must contain only JSON-serializable values" при выполнении DB_QUERY
+- **Проблема**: `result.rows` из `pg` содержит нативные JS-объекты (`Date`, `BigInt`, `Buffer`), которые не сериализуются в JSON. При записи step log workflow падает с ошибкой
+- **Воспроизведение**: создать workflow с DB_QUERY action, query = `SELECT now() as ts`, выполнить → ОШИБКА
+- **Root cause**: `apps/worker/src/action/strategies/db-query.action.ts`, строки 105-108 — `result.rows` возвращается без санитизации
+- **Фикс**: обернуть rows в `JSON.parse(JSON.stringify(rows))` или явно маппить типы (Date → ISO string, BigInt → string, Buffer → hex)
+- **Scope**: только файл `db-query.action.ts`, возможно утилита-санитайзер в `packages/server-utils`
+- **Не входит**: изменения API, frontend, схемы БД
+- **Файлы**:
+  - `apps/worker/src/action/strategies/db-query.action.ts`
+  - опционально `packages/server-utils/src/sanitize.ts`
+- **Acceptance**:
+  - workflow с `SELECT now(), 123::bigint, 'hello'::text` выполняется без ошибок
+  - step log содержит корректные сериализованные значения
+  - существующие тесты проходят
+- **Проверка**: `pnpm --filter @mini-zapier/worker build && pnpm --filter @mini-zapier/worker test`

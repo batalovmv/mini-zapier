@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-043 — `connections management page`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–043 закрыты
+- **Последнее изменение**: TASK-044 — `DB_QUERY serialization fix`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–044 закрыты
 - **Что сделано в TASK-043**:
   - `apps/web/src/pages/ConnectionsPage.tsx` — добавлен отдельный раздел `/connections` с grouped catalog по типам подключений, create/edit/delete actions и reuse-oriented UI copy
   - `apps/web/src/components/connections/ConnectionFormDialog.tsx` — добавлен отдельный диалог создания/редактирования подключений; rename-only edit не требует повторного ввода секретов, а полная замена credentials требует ввести весь набор заново
@@ -295,7 +295,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-Новых TASK в текущем `backlog.md` после `TASK-043` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
+Новых TASK в текущем `backlog.md` после `TASK-044` не осталось. Следующий шаг — добавить новый TASK или новый backlog-срез.
 
 ## Блокеры
 - На текущей машине не задан env `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с login-сценарием сейчас не запускается.
@@ -422,3 +422,4 @@
 | TASK-041 | done | см. `git log` (`TASK-041: inspector empty-state rhythm + editor toolbar alignment`) | inspector empty state starts directly under the header, and the top editor controls now read as one aligned action bar |
 | TASK-042 | done | см. `git log` (`TASK-042: inspector connection semantics clarity`) | inspector now shows explicit connection states and availability instead of ambiguous numeric count badges |
 | TASK-043 | done | см. `git log` (`TASK-043: connections management page`) | dedicated `/connections` section, reusable connection catalog, standalone create/edit/delete dialog |
+| TASK-044 | done | `7f2ada5` (`TASK-044: fix DB_QUERY serialization`) | JSON.parse(JSON.stringify()) sanitizes Date/BigInt/Buffer in pg result.rows; deployed & verified on VPS |
