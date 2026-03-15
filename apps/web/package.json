@@ -12,6 +12,7 @@
   "dependencies": {
     "@mini-zapier/shared": "file:../../packages/shared",
     "axios": "^1.13.6",
+    "cron-parser": "^5.5.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.6.0",

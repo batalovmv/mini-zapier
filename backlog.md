@@ -1328,7 +1328,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-048: Cron visual schedule builder
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: убрать необходимость вручную писать cron-строку для типовых расписаний
 - **Проблема**:
   - текущий `CronConfig` — это только raw input `cronExpression`
