@@ -263,9 +263,13 @@ function TreeNodeItem({ node, depth, onSelect, messages }: TreeNodeItemProps) {
 
 interface FieldPickerProps {
   onSelect: (field: string) => void;
+  /** Controlled open state. When provided, FieldPicker delegates open/close to parent. */
+  open?: boolean;
+  /** Called when FieldPicker wants to change open state. Required when `open` is provided. */
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function FieldPicker({ onSelect }: FieldPickerProps) {
+export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: FieldPickerProps) {
   const { messages } = useLocale();
   const workflowId = useWorkflowEditorStore((s) => s.workflowId);
   const workflowVersion = useWorkflowEditorStore((s) => s.workflowVersion);
@@ -277,8 +281,27 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
   );
 
   const { data, loading, refetch } = useAvailableFields(workflowId);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const prevOpenRef = useRef(false);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  function setOpen(next: boolean) {
+    if (isControlled) {
+      onOpenChange?.(next);
+    } else {
+      setInternalOpen(next);
+    }
+  }
+
+  // Refetch on open transition (for controlled mode)
+  if (open && !prevOpenRef.current) {
+    refetch();
+  }
+
+  prevOpenRef.current = open;
 
   const chainPosition =
     selectedNodeId !== null
@@ -309,7 +332,11 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
     if (open) {
       setOpen(false);
     } else {
-      refetch();
+      if (!isControlled) {
+        // In uncontrolled mode, refetch here (controlled mode refetches via transition above)
+        refetch();
+      }
+
       setOpen(true);
     }
   }

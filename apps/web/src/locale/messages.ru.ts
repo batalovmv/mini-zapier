@@ -653,6 +653,13 @@ export const ru = {
       message: 'Сообщение',
       messagePlaceholder: 'Заказ {{input.id}} готов.',
     },
+    templatedInput: {
+      editAsCode: 'Редактировать как код',
+      visualMode: 'Визуальный режим',
+      fieldPath: 'Путь поля',
+      replaceField: 'Заменить',
+      deleteField: 'Удалить',
+    },
     webhook: {
       urlLabel: 'Webhook URL',
       saveWorkflowPlaceholder:

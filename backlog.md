@@ -1297,7 +1297,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-047: Reusable templated text control with chips
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: дать всем interpolation-полям единый компонент, где `{{input.path}}` отображается как визуальный чип, а не как сырой текст
 - **Проблема**:
   - сейчас даже с `FieldPicker` пользователь видит обычную строку `{{input.rows.0.source}}`, которую трудно быстро сканировать и править

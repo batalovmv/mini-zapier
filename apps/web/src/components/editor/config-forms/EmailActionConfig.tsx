@@ -1,8 +1,6 @@
-import { useRef } from 'react';
-
 import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
-import { FieldPicker, insertAtCursor } from '../FieldPicker';
+import { TemplatedField } from '../templated-input';
 
 interface EmailActionConfigProps {
   config: Record<string, unknown>;
@@ -14,76 +12,33 @@ export function EmailActionConfig({
   onChange,
 }: EmailActionConfigProps) {
   const { messages } = useLocale();
-  const toRef = useRef<HTMLInputElement>(null);
-  const subjectRef = useRef<HTMLInputElement>(null);
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   return (
     <div className="space-y-5">
-      <div className="block">
-        <div className="flex items-center justify-between">
-          <span className="muted-label">{messages.configForms.emailAction.to}</span>
-          <FieldPicker
-            onSelect={(f) =>
-              insertAtCursor(toRef, f, 'to', config, onChange)
-            }
-          />
-        </div>
-        <input
-          className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-          onChange={(event) => {
-            const value = event.target.value;
-            onChange((prev) => ({ ...prev, to: value }));
-          }}
-          placeholder={messages.configForms.emailAction.toPlaceholder}
-          ref={toRef}
-          type="text"
-          value={typeof config.to === 'string' ? config.to : ''}
-        />
-      </div>
+      <TemplatedField
+        config={config}
+        configKey="to"
+        label={messages.configForms.emailAction.to}
+        onChange={onChange}
+        placeholder={messages.configForms.emailAction.toPlaceholder}
+      />
 
-      <div className="block">
-        <div className="flex items-center justify-between">
-          <span className="muted-label">{messages.configForms.emailAction.subject}</span>
-          <FieldPicker
-            onSelect={(f) =>
-              insertAtCursor(subjectRef, f, 'subject', config, onChange)
-            }
-          />
-        </div>
-        <input
-          className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-          onChange={(event) => {
-            const value = event.target.value;
-            onChange((prev) => ({ ...prev, subject: value }));
-          }}
-          placeholder={messages.configForms.emailAction.subjectPlaceholder}
-          ref={subjectRef}
-          type="text"
-          value={typeof config.subject === 'string' ? config.subject : ''}
-        />
-      </div>
+      <TemplatedField
+        config={config}
+        configKey="subject"
+        label={messages.configForms.emailAction.subject}
+        onChange={onChange}
+        placeholder={messages.configForms.emailAction.subjectPlaceholder}
+      />
 
-      <div className="block">
-        <div className="flex items-center justify-between">
-          <span className="muted-label">{messages.configForms.emailAction.body}</span>
-          <FieldPicker
-            onSelect={(f) =>
-              insertAtCursor(bodyRef, f, 'body', config, onChange)
-            }
-          />
-        </div>
-        <textarea
-          className="mt-2 min-h-40 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-          onChange={(event) => {
-            const value = event.target.value;
-            onChange((prev) => ({ ...prev, body: value }));
-          }}
-          placeholder={messages.configForms.emailAction.bodyPlaceholder}
-          ref={bodyRef}
-          value={typeof config.body === 'string' ? config.body : ''}
-        />
-      </div>
+      <TemplatedField
+        config={config}
+        configKey="body"
+        label={messages.configForms.emailAction.body}
+        multiline
+        onChange={onChange}
+        placeholder={messages.configForms.emailAction.bodyPlaceholder}
+      />
     </div>
   );
 }

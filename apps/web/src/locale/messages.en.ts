@@ -621,6 +621,13 @@ export const en = {
       message: 'Message',
       messagePlaceholder: 'Order {{input.id}} is ready.',
     },
+    templatedInput: {
+      editAsCode: 'Edit as code',
+      visualMode: 'Visual mode',
+      fieldPath: 'Field path',
+      replaceField: 'Replace',
+      deleteField: 'Delete',
+    },
     webhook: {
       urlLabel: 'Webhook URL',
       saveWorkflowPlaceholder: 'Save workflow to generate webhook URL',

@@ -2,7 +2,8 @@ import { useRef } from 'react';
 
 import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
-import { FieldPicker, insertAtCursor, insertAtCursorRecord } from '../FieldPicker';
+import { FieldPicker, insertAtCursorRecord } from '../FieldPicker';
+import { TemplatedField } from '../templated-input';
 
 function toStringRecord(value: unknown): Record<string, string> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -26,7 +27,6 @@ export function DataTransformConfig({
   onChange,
 }: DataTransformConfigProps) {
   const { messages } = useLocale();
-  const templateRef = useRef<HTMLTextAreaElement>(null);
   const mappingValueRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const mode = config.mode === 'mapping' ? 'mapping' : 'template';
@@ -111,31 +111,15 @@ export function DataTransformConfig({
       </label>
 
       {mode === 'template' ? (
-        <div className="block">
-          <div className="flex items-center justify-between">
-            <span className="muted-label">{messages.configForms.dataTransform.template}</span>
-            <FieldPicker
-              onSelect={(f) =>
-                insertAtCursor(templateRef, f, 'template', config, onChange)
-              }
-            />
-          </div>
-          <textarea
-            aria-label={messages.configForms.dataTransform.templateAriaLabel}
-            className="mt-2 min-h-36 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-            onChange={(event) => {
-              const value = event.target.value;
-              onChange((prev) => ({
-                ...prev,
-                mode: 'template',
-                template: value,
-              }));
-            }}
-            placeholder={messages.configForms.dataTransform.templatePlaceholder}
-            ref={templateRef}
-            value={typeof config.template === 'string' ? config.template : ''}
-          />
-        </div>
+        <TemplatedField
+          ariaLabel={messages.configForms.dataTransform.templateAriaLabel}
+          config={config}
+          configKey="template"
+          label={messages.configForms.dataTransform.template}
+          multiline
+          onChange={onChange}
+          placeholder={messages.configForms.dataTransform.templatePlaceholder}
+        />
       ) : (
         <div>
           <div className="flex items-center justify-between gap-3">

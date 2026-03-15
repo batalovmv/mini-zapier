@@ -1,8 +1,6 @@
-import { useRef } from 'react';
-
 import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
-import { FieldPicker, insertAtCursor, insertAtCursorRecord } from '../FieldPicker';
+import { TemplatedField } from '../templated-input';
 
 function toStringRecord(value: unknown): Record<string, string> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -26,9 +24,6 @@ export function HttpRequestConfig({
   onChange,
 }: HttpRequestConfigProps) {
   const { messages } = useLocale();
-  const urlRef = useRef<HTMLInputElement>(null);
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
-  const headerValueRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const headers = toStringRecord(config.headers);
   const headerEntries =
@@ -91,28 +86,14 @@ export function HttpRequestConfig({
 
   return (
     <div className="space-y-5">
-      <div className="block">
-        <div className="flex items-center justify-between">
-          <span className="muted-label">{messages.configForms.httpRequest.url}</span>
-          <FieldPicker
-            onSelect={(f) =>
-              insertAtCursor(urlRef, f, 'url', config, onChange)
-            }
-          />
-        </div>
-        <input
-          aria-label={messages.configForms.httpRequest.urlAriaLabel}
-          className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-          onChange={(event) => {
-            const value = event.target.value;
-            onChange((prev) => ({ ...prev, url: value }));
-          }}
-          placeholder={messages.configForms.httpRequest.urlPlaceholder}
-          ref={urlRef}
-          type="text"
-          value={typeof config.url === 'string' ? config.url : ''}
-        />
-      </div>
+      <TemplatedField
+        ariaLabel={messages.configForms.httpRequest.urlAriaLabel}
+        config={config}
+        configKey="url"
+        label={messages.configForms.httpRequest.url}
+        onChange={onChange}
+        placeholder={messages.configForms.httpRequest.urlPlaceholder}
+      />
 
       <label className="block">
         <span className="muted-label">{messages.configForms.httpRequest.method}</span>
@@ -179,62 +160,38 @@ export function HttpRequestConfig({
                 </button>
               </div>
 
-              <div className="flex items-center gap-2">
+              {key.trim().length > 0 ? (
+                <TemplatedField
+                  ariaLabel={messages.configForms.httpRequest.headerValueAriaLabel(index + 1)}
+                  label=""
+                  onValueChange={(v) => updateHeaderValue(index, v)}
+                  placeholder={messages.configForms.httpRequest.headerValuePlaceholder}
+                  value={value}
+                />
+              ) : (
                 <input
                   aria-label={messages.configForms.httpRequest.headerValueAriaLabel(index + 1)}
-                  className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                  className="w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   onChange={(event) => updateHeaderValue(index, event.target.value)}
                   placeholder={messages.configForms.httpRequest.headerValuePlaceholder}
-                  ref={(el) => {
-                    headerValueRefs.current[index] = el;
-                  }}
                   type="text"
                   value={value}
                 />
-                {key.trim().length > 0 ? (
-                  <FieldPicker
-                    onSelect={(f) =>
-                      insertAtCursorRecord(
-                        headerValueRefs.current[index],
-                        f,
-                        'headers',
-                        key,
-                        config,
-                        onChange,
-                        toStringRecord,
-                      )
-                    }
-                  />
-                ) : (
-                  <div className="h-6 w-6 shrink-0" />
-                )}
-              </div>
+              )}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="block">
-        <div className="flex items-center justify-between">
-          <span className="muted-label">{messages.configForms.httpRequest.body}</span>
-          <FieldPicker
-            onSelect={(f) =>
-              insertAtCursor(bodyRef, f, 'body', config, onChange)
-            }
-          />
-        </div>
-        <textarea
-          aria-label={messages.configForms.httpRequest.bodyAriaLabel}
-          className="mt-2 min-h-36 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-          onChange={(event) => {
-            const value = event.target.value;
-            onChange((prev) => ({ ...prev, body: value }));
-          }}
-          placeholder={messages.configForms.httpRequest.bodyPlaceholder}
-          ref={bodyRef}
-          value={typeof config.body === 'string' ? config.body : ''}
-        />
-      </div>
+      <TemplatedField
+        ariaLabel={messages.configForms.httpRequest.bodyAriaLabel}
+        config={config}
+        configKey="body"
+        label={messages.configForms.httpRequest.body}
+        multiline
+        onChange={onChange}
+        placeholder={messages.configForms.httpRequest.bodyPlaceholder}
+      />
     </div>
   );
 }
