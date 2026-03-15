@@ -140,6 +140,7 @@ model WorkflowExecution {
   workflowVersion    Int
   status             ExecutionStatus   @default(PENDING)
   triggerData        Json?
+  triggerDataSchema  Json?
   definitionSnapshot Json
   startedAt          DateTime?
   completedAt        DateTime?
@@ -160,9 +161,10 @@ model ExecutionStepLog {
   nodeType     String
   status       StepStatus        @default(PENDING)
   inputData    Json?
-  outputData   Json?
-  errorMessage String?
-  retryAttempt Int               @default(0)
+  outputData       Json?
+  outputDataSchema Json?
+  errorMessage     String?
+  retryAttempt     Int               @default(0)
   truncated    Boolean           @default(false)
   startedAt    DateTime?
   completedAt  DateTime?

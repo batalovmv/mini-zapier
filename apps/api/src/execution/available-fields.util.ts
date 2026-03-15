@@ -178,3 +178,30 @@ export function parseSnapshotForChain(
 
   return { nodes, edges };
 }
+
+interface TreeNodeLike {
+  path: string;
+  children?: TreeNodeLike[];
+}
+
+/**
+ * Flattens a field tree into dot-notation paths.
+ * Collects ALL node paths (branches and leaves), matching extractFieldPaths behavior.
+ */
+export function flattenTreePaths(tree: TreeNodeLike[]): string[] {
+  const paths: string[] = [];
+
+  function walk(nodes: TreeNodeLike[]): void {
+    for (const node of nodes) {
+      paths.push(node.path);
+
+      if (node.children) {
+        walk(node.children);
+      }
+    }
+  }
+
+  walk(tree);
+
+  return paths;
+}

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { redactCredentials, truncatePayload } from '@mini-zapier/server-utils';
+import { buildFieldTree, redactCredentials, truncatePayload } from '@mini-zapier/server-utils';
 import { Prisma, StepStatus } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
@@ -54,13 +54,16 @@ export class LogService {
       throw new Error(`ExecutionStepLog "${stepLogId}" not found.`);
     }
 
-    const outputPayload = this.preparePayload(outputData);
+    const redacted = redactCredentials(outputData);
+    const outputDataSchema = buildFieldTree(redacted);
+    const outputPayload = this.preparePayloadFromRedacted(redacted);
 
     await this.prisma.executionStepLog.update({
       where: { id: stepLogId },
       data: {
         status: StepStatus.SUCCESS,
         outputData: outputPayload.value,
+        outputDataSchema: outputDataSchema as unknown as Prisma.InputJsonValue,
         truncated: existingStepLog.truncated || outputPayload.truncated,
         completedAt: new Date(),
         durationMs,
@@ -92,6 +95,14 @@ export class LogService {
     truncated: boolean;
   } {
     const redactedValue = redactCredentials(value);
+
+    return this.preparePayloadFromRedacted(redactedValue);
+  }
+
+  private preparePayloadFromRedacted(redactedValue: unknown): {
+    value: Prisma.InputJsonValue | typeof Prisma.JsonNull;
+    truncated: boolean;
+  } {
     const truncatedPayload = truncatePayload(redactedValue);
 
     return {

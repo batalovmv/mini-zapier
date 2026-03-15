@@ -1,6 +1,7 @@
 import type {
   ConnectionDto,
   ConnectionType,
+  FieldTreeNode,
   WorkflowDto,
   WorkflowExecutionDto,
   WorkflowStatus,
@@ -9,6 +10,7 @@ import type {
 export type {
   ConnectionDto,
   ConnectionType,
+  FieldTreeNode,
   WorkflowDto,
   WorkflowExecutionDto,
   WorkflowStatus,
@@ -82,6 +84,7 @@ export interface StatsResponse {
 export interface AvailableFieldsPosition {
   position: number;
   fields: string[];
+  tree: FieldTreeNode[];
 }
 
 export type AvailableFieldsEmptyState =

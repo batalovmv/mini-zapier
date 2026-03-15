@@ -450,6 +450,7 @@ export const ru = {
     credentialsRequired: 'Добавьте хотя бы одно поле credentials.',
   },
   fieldPicker: {
+    insertField: '+ Вставить поле',
     insertFieldReference: 'Вставить ссылку на поле',
     loading: 'Загрузка…',
     saveWorkflowToUpdate: 'Сохраните сценарий, чтобы обновить доступные поля.',
@@ -461,6 +462,12 @@ export const ru = {
     versionMismatch: (sourceVersion: number, currentVersion: number | null) =>
       `Поля из v${sourceVersion}, текущая v${currentVersion ?? '—'}`,
     noFieldsForPosition: 'Для этой позиции доступных полей нет.',
+    typeObject: 'obj',
+    typeArray: 'arr',
+    typeString: 'str',
+    typeNumber: 'num',
+    typeBoolean: 'bool',
+    typeNull: 'null',
   },
   flowCanvas: {
     steps: [

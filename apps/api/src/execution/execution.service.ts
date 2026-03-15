@@ -6,10 +6,12 @@ import {
 } from '@nestjs/common';
 import {
   ExecutionStatus,
+  FieldTreeNode,
   StepStatus,
   TriggerType,
   WorkflowExecutionDto,
 } from '@mini-zapier/shared';
+import { buildFieldTree, redactCredentials } from '@mini-zapier/server-utils';
 import {
   ExecutionStepLog as PrismaExecutionStepLog,
   Prisma,
@@ -23,7 +25,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { QueueService } from '../queue/queue.service';
 import {
   computeChainSignature,
-  extractFieldPaths,
+  flattenTreePaths,
   parseSnapshotForChain,
   resolveChainPositions,
 } from './available-fields.util';
@@ -376,12 +378,16 @@ export class ExecutionService {
         snapshot.edges,
       );
 
-      const positions: { position: number; fields: string[] }[] = [];
+      const positions: { position: number; fields: string[]; tree: FieldTreeNode[] }[] = [];
       let hasAnyFields = false;
 
       // Position 0: trigger data
-      const triggerFields = extractFieldPaths(execution.triggerData);
-      positions.push({ position: 0, fields: triggerFields });
+      const triggerTree = this.resolveFieldTree(
+        execution.triggerDataSchema,
+        execution.triggerData,
+      );
+      const triggerFields = flattenTreePaths(triggerTree);
+      positions.push({ position: 0, fields: triggerFields, tree: triggerTree });
 
       if (triggerFields.length > 0) {
         hasAnyFields = true;
@@ -393,11 +399,12 @@ export class ExecutionService {
         const stepLog = snapshotNodeId
           ? execution.stepLogs.find((sl) => sl.nodeId === snapshotNodeId)
           : undefined;
-        const fields = stepLog
-          ? extractFieldPaths(stepLog.outputData)
+        const tree = stepLog
+          ? this.resolveFieldTree(stepLog.outputDataSchema, stepLog.outputData)
           : [];
+        const fields = flattenTreePaths(tree);
 
-        positions.push({ position: i + 1, fields });
+        positions.push({ position: i + 1, fields, tree });
 
         if (fields.length > 0) {
           hasAnyFields = true;
@@ -428,6 +435,21 @@ export class ExecutionService {
         : 'NO_EXECUTIONS',
       positions: [],
     };
+  }
+
+  /**
+   * Resolves a field tree from a stored schema snapshot, falling back to
+   * building one from raw data (with redaction) for legacy executions.
+   */
+  private resolveFieldTree(
+    storedSchema: unknown,
+    rawData: unknown,
+  ): FieldTreeNode[] {
+    if (Array.isArray(storedSchema) && storedSchema.length > 0) {
+      return storedSchema as FieldTreeNode[];
+    }
+
+    return buildFieldTree(redactCredentials(rawData));
   }
 
   private async cleanupFailedEnqueue(

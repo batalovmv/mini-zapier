@@ -14,13 +14,21 @@ export function EmailActionConfig({
   onChange,
 }: EmailActionConfigProps) {
   const { messages } = useLocale();
+  const toRef = useRef<HTMLInputElement>(null);
   const subjectRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   return (
     <div className="space-y-5">
-      <label className="block">
-        <span className="muted-label">{messages.configForms.emailAction.to}</span>
+      <div className="block">
+        <div className="flex items-center justify-between">
+          <span className="muted-label">{messages.configForms.emailAction.to}</span>
+          <FieldPicker
+            onSelect={(f) =>
+              insertAtCursor(toRef, f, 'to', config, onChange)
+            }
+          />
+        </div>
         <input
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
           onChange={(event) => {
@@ -28,10 +36,11 @@ export function EmailActionConfig({
             onChange((prev) => ({ ...prev, to: value }));
           }}
           placeholder={messages.configForms.emailAction.toPlaceholder}
-          type="email"
+          ref={toRef}
+          type="text"
           value={typeof config.to === 'string' ? config.to : ''}
         />
-      </label>
+      </div>
 
       <div className="block">
         <div className="flex items-center justify-between">

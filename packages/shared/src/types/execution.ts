@@ -1,3 +1,10 @@
+export interface FieldTreeNode {
+  key: string;
+  path: string;
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'null';
+  children?: FieldTreeNode[];
+}
+
 export enum ExecutionStatus {
   PENDING = 'PENDING',
   RUNNING = 'RUNNING',

@@ -9,7 +9,7 @@ import {
 
 import { useLocale } from '../../locale/LocaleProvider';
 import { getAvailableFields } from '../../lib/api/executions';
-import type { AvailableFieldsResponse } from '../../lib/api/types';
+import type { AvailableFieldsResponse, FieldTreeNode } from '../../lib/api/types';
 import {
   computeChainPosition,
   computeStructuralFingerprint,
@@ -163,6 +163,104 @@ export function insertAtCursorRecord(
   });
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  object: 'typeObject',
+  array: 'typeArray',
+  string: 'typeString',
+  number: 'typeNumber',
+  boolean: 'typeBoolean',
+  null: 'typeNull',
+};
+
+function getTypeLabel(
+  type: string,
+  messages: Record<string, string>,
+): string {
+  const key = TYPE_LABELS[type];
+
+  return key ? (messages[key] ?? type) : type;
+}
+
+interface TreeNodeItemProps {
+  node: FieldTreeNode;
+  depth: number;
+  onSelect: (path: string) => void;
+  messages: Record<string, string>;
+}
+
+function TreeNodeItem({ node, depth, onSelect, messages }: TreeNodeItemProps) {
+  const [expanded, setExpanded] = useState(false);
+  const isBranch = node.children && node.children.length > 0;
+  const typeLabel = getTypeLabel(node.type, messages);
+
+  return (
+    <li>
+      <div
+        className="flex items-center gap-1 pr-2"
+        style={{ paddingLeft: depth * 12 + 8 }}
+      >
+        {isBranch ? (
+          <button
+            className="flex h-5 w-5 shrink-0 items-center justify-center text-xs text-slate-400"
+            onClick={() => setExpanded((v) => !v)}
+            type="button"
+          >
+            {expanded ? '▾' : '▸'}
+          </button>
+        ) : (
+          <span className="inline-block h-5 w-5 shrink-0" />
+        )}
+
+        <button
+          className={
+            isBranch
+              ? 'flex-1 truncate py-1 text-left font-mono text-xs text-slate-500 transition hover:text-slate-700'
+              : 'flex-1 truncate py-1 text-left font-mono text-xs text-slate-700 transition hover:bg-amber-50'
+          }
+          onClick={() => {
+            if (isBranch) {
+              setExpanded((v) => !v);
+            } else {
+              onSelect(node.path);
+            }
+          }}
+          type="button"
+        >
+          {node.key}
+          <span className="ml-1.5 font-sans text-[10px] text-slate-400">
+            {typeLabel}
+          </span>
+        </button>
+
+        {isBranch ? (
+          <button
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-amber-600 transition hover:bg-amber-50"
+            onClick={() => onSelect(node.path)}
+            title={messages.insertFieldReference ?? ''}
+            type="button"
+          >
+            <span className="text-[10px]">⚡</span>
+          </button>
+        ) : null}
+      </div>
+
+      {isBranch && expanded ? (
+        <ul>
+          {node.children!.map((child) => (
+            <TreeNodeItem
+              key={child.path}
+              depth={depth + 1}
+              messages={messages}
+              node={child}
+              onSelect={onSelect}
+            />
+          ))}
+        </ul>
+      ) : null}
+    </li>
+  );
+}
+
 interface FieldPickerProps {
   onSelect: (field: string) => void;
 }
@@ -204,6 +302,7 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
   const positionData = data?.positions.find(
     (p) => p.position === chainPosition,
   );
+  const tree = positionData?.tree ?? [];
   const fields = positionData?.fields ?? [];
 
   function handleToggle() {
@@ -215,8 +314,8 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
     }
   }
 
-  function handleSelect(field: string) {
-    onSelect(`{{input.${field}}}`);
+  function handleSelect(path: string) {
+    onSelect(`{{input.${path}}}`);
     setOpen(false);
   }
 
@@ -229,6 +328,8 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
     }
   }
 
+  const fpMessages = messages.fieldPicker as unknown as Record<string, string>;
+
   return (
     <div
       className="relative"
@@ -237,16 +338,16 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
       tabIndex={-1}
     >
       <button
-        className="flex h-6 w-6 items-center justify-center rounded-lg text-amber-600 transition hover:bg-amber-50"
+        className="rounded-lg px-2 py-0.5 text-xs font-medium text-amber-600 transition hover:bg-amber-50"
         onClick={handleToggle}
         title={messages.fieldPicker.insertFieldReference}
         type="button"
       >
-        <span className="text-sm">⚡</span>
+        {messages.fieldPicker.insertField}
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-8 z-50 w-64 rounded-xl border border-slate-200 bg-white shadow-lg">
+        <div className="absolute right-0 top-8 z-50 w-72 rounded-xl border border-slate-200 bg-white shadow-lg">
           {loading ? (
             <div className="px-4 py-3 text-xs text-slate-400">{messages.fieldPicker.loading}</div>
           ) : hasUnsavedChanges ? (
@@ -262,7 +363,7 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
                   : messages.fieldPicker.runAtLeastOnce}
             </div>
           ) : (
-            <div className="max-h-60 overflow-y-auto">
+            <div className="max-h-72 overflow-y-auto">
               {versionMismatch ? (
                 <div className="border-b border-slate-100 px-4 py-2 text-xs text-amber-600">
                   {messages.fieldPicker.versionMismatch(
@@ -271,7 +372,19 @@ export function FieldPicker({ onSelect }: FieldPickerProps) {
                   )}
                 </div>
               ) : null}
-              {fields.length === 0 ? (
+              {tree.length > 0 ? (
+                <ul className="py-1">
+                  {tree.map((node) => (
+                    <TreeNodeItem
+                      key={node.path}
+                      depth={0}
+                      messages={fpMessages}
+                      node={node}
+                      onSelect={handleSelect}
+                    />
+                  ))}
+                </ul>
+              ) : fields.length === 0 ? (
                 <div className="px-4 py-3 text-xs text-slate-400">
                   {messages.fieldPicker.noFieldsForPosition}
                 </div>

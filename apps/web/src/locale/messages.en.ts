@@ -431,6 +431,7 @@ export const en = {
     credentialsRequired: 'Add at least one credentials field.',
   },
   fieldPicker: {
+    insertField: '+ Insert field',
     insertFieldReference: 'Insert field reference',
     loading: 'Loading…',
     saveWorkflowToUpdate: 'Save workflow to update available fields.',
@@ -442,6 +443,12 @@ export const en = {
     versionMismatch: (sourceVersion: number, currentVersion: number | null) =>
       `Fields from v${sourceVersion}, current v${currentVersion ?? '—'}`,
     noFieldsForPosition: 'No fields available for this position.',
+    typeObject: 'obj',
+    typeArray: 'arr',
+    typeString: 'str',
+    typeNumber: 'num',
+    typeBoolean: 'bool',
+    typeNull: 'null',
   },
   flowCanvas: {
     steps: [

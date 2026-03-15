@@ -1,5 +1,29 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+class FieldTreeNodeDto {
+  @ApiProperty({ example: 'name', description: 'Key segment of this node.' })
+  key!: string;
+
+  @ApiProperty({
+    example: 'customer.name',
+    description: 'Full dot-notation path.',
+  })
+  path!: string;
+
+  @ApiProperty({
+    example: 'string',
+    description: 'Inferred JS type of the value.',
+  })
+  type!: string;
+
+  @ApiProperty({
+    type: [FieldTreeNodeDto],
+    required: false,
+    description: 'Child nodes for object/array types.',
+  })
+  children?: FieldTreeNodeDto[];
+}
+
 class PositionFieldsDto {
   @ApiProperty({ example: 0, description: 'Chain position index.' })
   position!: number;
@@ -9,6 +33,12 @@ class PositionFieldsDto {
     description: 'Available field paths in dot-notation.',
   })
   fields!: string[];
+
+  @ApiProperty({
+    type: [FieldTreeNodeDto],
+    description: 'Tree structure of available fields.',
+  })
+  tree!: FieldTreeNodeDto[];
 }
 
 export const AVAILABLE_FIELDS_EMPTY_STATES = [

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { decrypt } from '@mini-zapier/server-utils';
+import { buildFieldTree, decrypt, redactCredentials } from '@mini-zapier/server-utils';
 import { ExecutionStatus, WorkflowStatus } from '@mini-zapier/shared';
 
 import { ActionService } from '../action/action.service';
@@ -60,6 +60,10 @@ export class ExecutionEngine {
       return;
     }
 
+    const triggerDataRaw =
+      execution.triggerData === null ? undefined : execution.triggerData;
+    const triggerDataSchema = buildFieldTree(redactCredentials(triggerDataRaw));
+
     await this.prisma.workflowExecution.update({
       where: { id: executionId },
       data: {
@@ -67,13 +71,16 @@ export class ExecutionEngine {
         startedAt: new Date(),
         completedAt: null,
         errorMessage: null,
+        triggerDataSchema:
+          triggerDataSchema.length > 0
+            ? (triggerDataSchema as object[])
+            : undefined,
       },
     });
 
     try {
       const actionNodes = this.chainResolver.resolve(execution.definitionSnapshot);
-      let dataContext: unknown =
-        execution.triggerData === null ? undefined : execution.triggerData;
+      let dataContext: unknown = triggerDataRaw;
 
       for (const actionNode of actionNodes) {
         const stepStartedAt = Date.now();

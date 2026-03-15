@@ -1254,3 +1254,358 @@
   - `pnpm --filter @mini-zapier/api build`
   - `pnpm --filter @mini-zapier/worker build`
   - `pnpm --filter @mini-zapier/web build`
+
+---
+
+## Срез 8: No-code configuration UX
+
+> Принцип среза: один интерфейс по умолчанию = визуальная форма. Для продвинутых остаётся локальная ссылка `Редактировать как код` или `Показать как JSON` у конкретного поля/блока, без глобального переключателя режима редактора.
+> Контекст: `TASK-025` уже дал assistive `FieldPicker` с плоским списком полей из последнего совместимого execution. Задачи ниже развивают это решение до schema/tree-driven UX и визуальных builders для нетехнических пользователей.
+
+### TASK-046: Schema-backed field tree for next-step inputs
+- **Статус**: `done`
+- **Цель**: заменить плоский список полей на устойчивое schema/tree-представление выходных данных предыдущего шага, которое можно переиспользовать в editor UX
+- **Проблема**:
+  - текущий `TASK-025` извлекает только плоские dot-paths из последнего совместимого `SUCCESS` execution
+  - этого достаточно для assistive dropdown, но недостаточно для древовидного выбора, чипов, step test-run и более дружелюбной визуальной формы
+  - новые UX-фазы завязаны на одном ядре: editor должен понимать структуру предыдущего шага (`rows.0.source`, `status`, `data.json.name`), а не только набор строк
+- **Scope**:
+  - backend: строить и сохранять лёгкий schema snapshot для `triggerData` и `outputData` шагов после реального выполнения workflow; snapshot хранит путь/тип/вложенность и не содержит секреты или полные credentials values
+  - backend: расширить API доступных полей так, чтобы editor получал не только плоские `fields[]`, но и древовидную структуру для текущей позиции цепочки + `sourceExecutionId` / `sourceWorkflowVersion`
+  - frontend: обновить `FieldPicker` из маленькой `⚡`-иконки в явный affordance `+ Вставить поле` с tree dropdown
+  - frontend: подтянуть новый picker во все interpolation surfaces из `TASK-025`, плюс поле `to` в email action
+- **Не входит**:
+  - token/chip rendering внутри текстовых полей
+  - отдельный step test-run
+  - полноценная поддержка формального JSON Schema draft-стандарта
+  - `DbQueryConfig` JSON params editor
+- **Файлы**:
+  - `apps/api/src/execution/*`
+  - `apps/web/src/components/editor/FieldPicker.tsx`
+  - `apps/web/src/lib/api/executions.ts`
+  - `apps/web/src/lib/api/types.ts`
+  - `apps/web/src/components/editor/config-forms/*`
+- **Acceptance**:
+  - после успешного запуска workflow picker показывает дерево полей предыдущего шага, а не только плоский список строк
+  - первый action после trigger видит структуру `triggerData`; action N видит структуру output предыдущего action
+  - manual input `{{input.*}}` остаётся доступным и ничем не блокируется
+  - secrets не попадают в schema snapshot и API response
+- **Проверка**:
+  - выполнить workflow с вложенным JSON payload
+  - открыть editor следующего шага и убедиться, что `+ Вставить поле` показывает дерево с dot-path insert
+  - `pnpm --filter @mini-zapier/api build`
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-047: Reusable templated text control with chips
+- **Статус**: `todo`
+- **Цель**: дать всем interpolation-полям единый компонент, где `{{input.path}}` отображается как визуальный чип, а не как сырой текст
+- **Проблема**:
+  - сейчас даже с `FieldPicker` пользователь видит обычную строку `{{input.rows.0.source}}`, которую трудно быстро сканировать и править
+  - нет единого reusable control для Email, Telegram, HTTP и Data Transform
+  - принцип "визуально по умолчанию, код для продвинутых" пока не реализован на уровне самих текстовых полей
+- **Scope**:
+  - создать общий `TemplatedTextInput` / `TemplatedTextarea` поверх raw string config
+  - разбирать `{{input.*}}` в inline chips, оставляя остальной текст обычным контентом
+  - клик по чипу открывает compact inspector: путь поля, замена, удаление
+  - добавить локальную ссылку `Редактировать как код` для конкретного поля с roundtrip без потери данных
+  - интегрировать компонент в Email subject/body/to, Telegram message, HTTP url/body/header values, Data Transform template field
+- **Не входит**:
+  - visual builders для HTTP body / mapping tables
+  - preview значений из последнего запуска
+  - валидация существования поля на save
+- **Файлы**:
+  - `apps/web/src/components/editor/`
+  - `apps/web/src/components/editor/config-forms/*`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - `{{input.name}}` и другие references отображаются как цветные chips
+  - клик по chip показывает путь и позволяет заменить/удалить reference
+  - `Редактировать как код` возвращает raw text и обратно без порчи значения
+  - один и тот же control переиспользуется минимум в Email, Telegram и HTTP form
+- **Проверка**:
+  - визуально проверить roundtrip chip mode ↔ raw mode на нескольких формах
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-048: Cron visual schedule builder
+- **Статус**: `todo`
+- **Цель**: убрать необходимость вручную писать cron-строку для типовых расписаний
+- **Проблема**:
+  - текущий `CronConfig` — это только raw input `cronExpression`
+  - нетехнический пользователь не понимает cron-синтаксис и не видит ближайший запуск
+- **Scope**:
+  - visual presets: `Каждую минуту`, `Каждый час`, `Каждый день`, `Каждую неделю`, `Своё`
+  - для daily/weekly показать time picker, для weekly ещё и выбор дней недели
+  - всегда показывать `Следующий запуск` в timezone workflow
+  - raw cron field оставить как локальный advanced escape hatch `Редактировать как код`
+- **Не входит**:
+  - natural language parser
+  - несколько расписаний для одного trigger
+  - календарные/monthly/yearly builders
+- **Файлы**:
+  - `apps/web/src/components/editor/config-forms/CronConfig.tsx`
+  - `apps/web/src/lib/*`
+  - опционально `apps/api/src/trigger/*` если preview удобнее считать сервером
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - пользователь может собрать daily/weekly schedule без знания cron
+  - generated cronExpression сохраняется в существующий node config
+  - под формой всегда показан следующий запуск с учётом timezone workflow
+  - custom cron по-прежнему доступен
+- **Проверка**:
+  - собрать daily и weekly расписания в UI
+  - убедиться, что raw cron корректно заполняется и сохраняется
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-049: Email + Telegram no-code action forms
+- **Статус**: `todo`
+- **Цель**: довести Email и Telegram actions до состояния "понятно без JSON и без template syntax по умолчанию"
+- **Проблема**:
+  - формально визуальные поля уже есть, но они всё ещё больше похожи на thin wrapper над raw config
+  - Email action не даёт вставлять поля в `to`
+  - Telegram action не помогает пользователю получить свой `chatId`
+  - у продвинутого пользователя нет явного локального raw fallback внутри конкретной формы
+- **Scope**:
+  - Email: `to`, `subject`, `body` перевести на reusable templated controls из `TASK-047`, добавить `+ Вставить поле` на все три поля
+  - Email: внизу формы добавить локальную ссылку `Показать как JSON` с raw config preview/edit
+  - Telegram: `chatId` + helper `Получить мой ID` с inline инструкцией `/start` → `обновить`
+  - Telegram: `message` перевести на reusable templated control + `+ Вставить поле`
+  - Telegram: локальная ссылка `Показать как JSON`
+- **Не входит**:
+  - message preview
+  - test send
+  - отдельная onboarding flow для Telegram bot setup
+- **Файлы**:
+  - `apps/web/src/components/editor/config-forms/EmailActionConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/TelegramConfig.tsx`
+  - `apps/web/src/components/editor/*`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - во всех email fields можно вставить поле из picker
+  - Telegram form подсказывает как получить `chatId`
+  - raw JSON fallback доступен внутри обеих форм
+  - базовый happy-path setup Email/Telegram выполняется без ручного чтения структуры config
+- **Проверка**:
+  - открыть Email и Telegram action в editor
+  - проверить insert field, helper copy и raw JSON fallback
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-050: HTTP Request visual builder
+- **Статус**: `todo`
+- **Цель**: сделать HTTP Request action удобным для нетехнического пользователя без потери полного контроля
+- **Проблема**:
+  - текущая форма уже лучше raw JSON, но body по сути остаётся большой строкой
+  - нет простого visual режима "поля тела запроса как key-value"
+  - advanced escape hatch нужен на уровне body, а не всего editor
+- **Scope**:
+  - URL перевести на reusable templated control
+  - Method оставить dropdown
+  - Headers оставить таблицей key-value, но values перевести на templated control
+  - Body: default visual builder key-value для JSON body + локальная ссылка `Редактировать как JSON`
+  - при выборе `POST` / `PUT` / `PATCH` автоматически предлагать `Content-Type: application/json`, если header не задан
+  - сохранить совместимость с текущим worker contract
+- **Не входит**:
+  - OAuth/auth presets
+  - multipart/form-data builder
+  - отдельный query params builder
+- **Файлы**:
+  - `apps/web/src/components/editor/config-forms/HttpRequestConfig.tsx`
+  - `apps/web/src/components/editor/*`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - можно собрать типичный JSON POST без ручного написания большого raw body
+  - values в headers/body поддерживают field insertion и templated chips
+  - raw JSON mode остаётся доступным для продвинутых
+- **Проверка**:
+  - собрать POST request через visual body builder
+  - переключиться в JSON mode и обратно без потери данных
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-051: Data Transform visual mapping builder
+- **Статус**: `todo`
+- **Цель**: сделать Data Transform понятным через явную таблицу "выходное поле ← источник"
+- **Проблема**:
+  - текущий mapping mode всё ещё требует вручную писать `{{input.*}}` в value
+  - нет прямого выбора source field из dropdown/tree для правой колонки
+  - template mode нужен продвинутым, но не должен быть стартовой точкой для нетехнических пользователей
+- **Scope**:
+  - default UI: таблица из двух колонок `Имя поля на выходе` / `Откуда взять`
+  - правая колонка использует field selector из `TASK-046`, а не ручной template input
+  - поддержать add/remove rows и сохранение текущего mapping contract
+  - существующий raw mapping/template оставить доступным через локальную ссылку `Редактировать как JSON` или `Редактировать как код`
+- **Не входит**:
+  - arbitrary JS
+  - JSONPath/filter expressions
+  - multi-source expressions в visual mode
+- **Файлы**:
+  - `apps/web/src/components/editor/config-forms/DataTransformConfig.tsx`
+  - `apps/web/src/components/editor/FieldPicker.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - пользователь может собрать mapping вида `клиент <- input.rows.0.name` без ручного ввода template syntax
+  - raw mode остаётся доступным для сложных случаев
+  - сохранённый config остаётся совместим с текущим worker transform strategy
+- **Проверка**:
+  - собрать mapping с несколькими полями через visual table
+  - проверить raw fallback
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-052: DB Query metadata introspection + read builder
+- **Статус**: `todo`
+- **Цель**: начать no-code DB Query c безопасного сценария чтения данных
+- **Проблема**:
+  - текущий `DB_QUERY` — это raw SQL textarea + params JSON, практически непригодно для нетехнических пользователей
+  - full CRUD builder слишком большой для одного безопасного среза
+- **Scope**:
+  - backend: endpoint(ы) introspection таблиц и колонок для выбранного PostgreSQL connection текущего пользователя
+  - frontend: visual builder для `Прочитать данные` с выбором таблицы, колонок, фильтров, сортировки и лимита
+  - read-only preview сгенерированного SQL
+  - кнопка `Тест` для выполнения select и показа результата
+  - raw SQL fallback остаётся доступным
+- **Не входит**:
+  - INSERT / UPDATE / DELETE builders
+  - joins, aggregations, group by, transactions
+  - schema migration tooling
+- **Файлы**:
+  - `apps/api/src/connection/*` или новый introspection module
+  - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx`
+  - `apps/web/src/lib/api/*`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - пользователь может визуально собрать простой `SELECT`
+  - таблицы и колонки подгружаются из connection
+  - `Тест` показывает результат без перехода в history page
+  - raw SQL fallback остаётся доступным
+- **Проверка**:
+  - подключить PostgreSQL connection с таблицей
+  - собрать и протестировать `SELECT`
+  - `pnpm --filter @mini-zapier/api build`
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-053: DB Query write/update/delete builder
+- **Статус**: `todo`
+- **Цель**: расширить visual DB Query builder на mutation-сценарии после безопасного read-only среза
+- **Проблема**:
+  - после `TASK-052` no-code пользователь всё ещё не сможет собирать `INSERT`, `UPDATE`, `DELETE`
+  - mutation flows требуют отдельных UX-ограничений и более осторожного generated SQL preview
+- **Scope**:
+  - visual operation switch: `Записать`, `Обновить`, `Удалить`
+  - формы полей/значений для insert/update
+  - conditions builder для update/delete
+  - SQL preview и existing raw SQL fallback
+  - тестовое выполнение через тот же preview surface
+- **Не входит**:
+  - joins/subqueries
+  - transaction batches
+  - safety approvals beyond existing confirmation inside form
+- **Файлы**:
+  - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx`
+  - `apps/api/src/*` для mutation preview/test endpoints при необходимости
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - пользователь может собрать простые `INSERT`, `UPDATE`, `DELETE` без ручного SQL
+  - generated SQL preview всегда виден перед тестом
+  - raw SQL fallback не убран
+- **Проверка**:
+  - собрать и протестировать mutation scenarios
+  - `pnpm --filter @mini-zapier/api build`
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-054: Step test-run infrastructure
+- **Статус**: `todo`
+- **Цель**: дать editor кнопку `Тест` на уровне конкретного шага и использовать этот результат для обновления field schema
+- **Проблема**:
+  - сейчас проверить конфигурацию можно только через полный workflow run или manual execute
+  - Phase 0 и previews становятся заметно полезнее, если editor умеет прогонять один шаг и сразу обновлять доступные поля
+- **Scope**:
+  - backend/API: endpoint для test-run конкретного node с mock data или output предыдущего test-run
+  - worker/service: single-step execution path без full workflow mutation
+  - frontend: кнопка `Тест` в inspector выбранного node, показ результата прямо в editor
+  - интеграция с schema snapshot из `TASK-046`, чтобы тест тоже обновлял available field tree
+- **Не входит**:
+  - full test-suite orchestration по всей цепочке
+  - background job history redesign
+  - production-facing draft/publish separation
+- **Файлы**:
+  - `apps/api/src/execution/*`
+  - `apps/worker/src/engine/*`
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/lib/api/*`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - у выбранного шага есть кнопка `Тест`
+  - шаг можно выполнить с mock data или данными предыдущего теста
+  - результат виден в editor и обновляет доступные поля для следующего шага
+- **Проверка**:
+  - протестировать один action без полного workflow run
+  - убедиться, что picker/schema обновились
+  - `pnpm --filter @mini-zapier/api build`
+  - `pnpm --filter @mini-zapier/worker build`
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-055: Built-in workflow starter templates
+- **Статус**: `todo`
+- **Цель**: ускорить старт за счёт готовых внутренних шаблонов workflow без внедрения marketplace
+- **Проблема**:
+  - даже с лучшими формами новый пользователь всё ещё начинает с пустого canvas
+  - в `spec-v1` исключены marketplace и публичные шаблоны, но маленький набор встроенных starter templates остаётся допустимым post-v1 улучшением
+- **Scope**:
+  - добавить ограниченный набор built-in templates: `Webhook → Telegram notification`, `Cron → Email report`
+  - UI выбора шаблона при создании workflow
+  - prompt-only setup для пользовательских credentials/configs поверх готовой структуры
+  - reuse existing editor/workflow save contracts без отдельного template marketplace backend
+- **Не входит**:
+  - public marketplace
+  - user-generated templates
+  - template sharing/import/export
+- **Файлы**:
+  - `apps/web/src/pages/*`
+  - `apps/web/src/components/editor/*`
+  - `apps/web/src/lib/*`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - пользователь может создать workflow из готового starter template
+  - после выбора шаблона остаётся только заполнить свои connection/config values
+  - backend contract workflow save/load не меняется
+- **Проверка**:
+  - создать workflow из двух starter templates
+  - сохранить и открыть их в editor
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-056: Email/Telegram message preview from last run
+- **Статус**: `todo`
+- **Цель**: показать пользователю, как реально будет выглядеть сообщение до отправки
+- **Проблема**:
+  - даже с chips и field picker пользователь не видит финальный текст сообщения с подставленными данными
+  - для проверки приходится mentally simulate template interpolation или запускать workflow целиком
+- **Scope**:
+  - preview button в Email и Telegram action forms
+  - рендер template с данными последнего compatible execution или последнего step test-run
+  - preview panel внутри editor без отправки сообщения наружу
+  - чёткий empty state, если данных для preview пока нет
+- **Не входит**:
+  - actual send/test-send
+  - preview для HTTP/DB/Data Transform
+  - rich HTML email rendering beyond safe basic preview
+- **Файлы**:
+  - `apps/web/src/components/editor/config-forms/EmailActionConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/TelegramConfig.tsx`
+  - `apps/web/src/lib/api/*`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - Email и Telegram forms показывают итоговый message preview на реальных данных
+  - preview работает и после обычного execution, и после step test-run
+  - при отсутствии данных виден явный empty state вместо молчаливой ошибки
+- **Проверка**:
+  - выполнить workflow или step test
+  - открыть preview в Email и Telegram forms
+  - `pnpm --filter @mini-zapier/web build`
