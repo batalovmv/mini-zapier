@@ -1177,9 +1177,9 @@
 - **Проверка**: `pnpm --filter @mini-zapier/worker build && pnpm --filter @mini-zapier/worker test`
 ---
 
-## Срез 7: Shared workspace auth
+## Срез 7: User auth + workspace isolation
 
-### TASK-045: Shared-workspace user registration
+### TASK-045: Initial user registration
 - **Статус**: `done`
 - **Цель**: добавить регистрацию и логин пользователей через БД, сохранив текущую модель общего workspace без multi-tenant isolation
 - **Проблема**:
@@ -1190,7 +1190,7 @@
   - `apps/api/src/auth/*` переведён на регистрацию и логин по email/password с signed cookie session `mz_session`
   - пароли хэшируются встроенным Node.js `scrypt`, без новой зависимости
   - `apps/web` получил отдельную страницу `/register`, обновлённую `/login` и новый client API для регистрации
-  - принято явное допущение: это shared workspace, поэтому ownership workflow/connection и роли не добавляются
+  - в первом варианте было принято временное допущение: shared workspace без ownership workflow/connection; это позже исправлено в `TASK-045 follow-up`
 - **Не входит**:
   - RBAC, роли, приглашения
   - password reset, email verification
@@ -1215,4 +1215,42 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/api run prisma:migrate -- --name add_user_auth`
   - `pnpm --filter @mini-zapier/api build`
+  - `pnpm --filter @mini-zapier/web build`
+### TASK-045 follow-up: User workspace isolation
+- **Статус**: `done`
+- **Цель**: исправить auth-срез так, чтобы у каждого пользователя был свой workspace и свои данные, а не общий shared catalog
+- **Проблема**:
+  - первый вариант `TASK-045` добавил регистрацию, но оставил общий workspace для всех пользователей
+  - это противоречит фактическому продуктному требованию: workflows, connections, executions и stats должны быть изолированы по owner
+- **Что сделано**:
+  - в Prisma добавлены `Workflow.userId` и `Connection.userId` с relation на `User`; добавлена follow-up migration под owner isolation
+  - `workflow`, `connection`, `execution`, `stats` API переведены на `currentUser.id` и больше не возвращают чужие данные
+  - manual execute, execution history/detail, available fields и dashboard stats теперь режутся по owner
+  - при сохранении workflow сервер проверяет, что все referenced connections принадлежат текущему пользователю
+  - принято совместимое migration-допущение: `userId` пока nullable на уровне БД, чтобы не ломать legacy rows; старые записи требуют отдельного backfill
+- **Не входит**:
+  - RBAC, sharing/collaboration
+  - password reset, invitations
+  - автоматический backfill legacy shared данных на существующем проде
+- **Файлы**:
+  - `apps/api/prisma/schema.prisma`
+  - `apps/api/prisma/migrations/*user_workspace_isolation*`
+  - `apps/api/src/auth/current-user.decorator.ts`
+  - `apps/api/src/workflow/*`
+  - `apps/api/src/connection/*`
+  - `apps/api/src/execution/*`
+  - `apps/api/src/stats/*`
+  - `spec-v1.md`
+  - `decisions.md`
+  - `test-checklist.md`
+  - `handoff.md`
+- **Acceptance**:
+  - пользователь видит только свои workflows/connections/executions/stats
+  - manual execute/history/detail по чужому workflow/execution возвращают `404`
+  - workflow не может ссылаться на чужой connection
+  - публичные webhook/email/cron triggers продолжают работать по workflow id без auth session
+  - `pnpm --filter @mini-zapier/api build`, `pnpm --filter @mini-zapier/worker build`, `pnpm --filter @mini-zapier/web build` проходят
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/api build`
+  - `pnpm --filter @mini-zapier/worker build`
   - `pnpm --filter @mini-zapier/web build`

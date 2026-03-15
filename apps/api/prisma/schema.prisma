@@ -50,15 +50,18 @@ enum ConnectionType {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String       @id @default(cuid())
+  email        String       @unique
   passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  workflows    Workflow[]
+  connections  Connection[]
 }
 
 model Workflow {
   id            String              @id @default(cuid())
+  userId        String?
   name          String
   description   String?
   status        WorkflowStatus      @default(DRAFT)
@@ -67,10 +70,13 @@ model Workflow {
   viewport      Json?
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
+  user          User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
   nodes         WorkflowNode[]
   edges         WorkflowEdge[]
   executions    WorkflowExecution[]
   triggerEvents TriggerEvent[]
+
+  @@index([userId])
 }
 
 model WorkflowNode {
@@ -116,12 +122,16 @@ model WorkflowEdge {
 
 model Connection {
   id            String         @id @default(cuid())
+  userId        String?
   name          String
   type          ConnectionType
   credentials   String
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
   workflowNodes WorkflowNode[]
+
+  @@index([userId])
 }
 
 model WorkflowExecution {

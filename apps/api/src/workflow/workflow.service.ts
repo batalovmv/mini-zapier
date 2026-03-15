@@ -11,6 +11,7 @@ import {
 } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { TriggerService } from '../trigger/trigger.service';
 import { CreateWorkflowDto } from './dto/create-workflow.dto';
 import { ListWorkflowsQueryDto } from './dto/list-workflows-query.dto';
 import { UpdateWorkflowStatusDto } from './dto/update-workflow-status.dto';
@@ -20,7 +21,6 @@ import {
   WorkflowEdgeValidationInput,
   WorkflowNodeValidationInput,
 } from './workflow.validation';
-import { TriggerService } from '../trigger/trigger.service';
 
 declare const process: {
   env: Record<string, string | undefined>;
@@ -103,15 +103,16 @@ export class WorkflowService {
     private readonly triggerService: TriggerService,
   ) {}
 
-  async create(createWorkflowDto: CreateWorkflowDto): Promise<WorkflowDto> {
+  async create(userId: string, createWorkflowDto: CreateWorkflowDto): Promise<WorkflowDto> {
     const normalizedDefinition =
       this.normalizeWorkflowDefinition(createWorkflowDto);
 
-    await this.ensureConnectionsExist(normalizedDefinition.nodes);
+    await this.ensureConnectionsExist(userId, normalizedDefinition.nodes);
 
     const workflow = await this.prisma.$transaction(async (tx) => {
       const createdWorkflow = await tx.workflow.create({
         data: {
+          userId,
           name: normalizedDefinition.name,
           description: normalizedDefinition.description,
           timezone: normalizedDefinition.timezone,
@@ -165,12 +166,17 @@ export class WorkflowService {
     return this.toWorkflowDto(workflow);
   }
 
-  async findAll(query: ListWorkflowsQueryDto): Promise<WorkflowListResponse> {
+  async findAll(
+    userId: string,
+    query: ListWorkflowsQueryDto,
+  ): Promise<WorkflowListResponse> {
     const page = this.parsePositiveInteger(query.page, 'page', DEFAULT_PAGE);
     const limit = this.parsePositiveInteger(query.limit, 'limit', DEFAULT_LIMIT);
     const status = this.normalizeWorkflowStatus(query.status, true);
 
-    const where: Prisma.WorkflowWhereInput = {};
+    const where: Prisma.WorkflowWhereInput = {
+      userId,
+    };
 
     if (status !== undefined) {
       where.status = status as PrismaWorkflowStatus;
@@ -200,29 +206,22 @@ export class WorkflowService {
     };
   }
 
-  async findOne(id: string): Promise<WorkflowDto> {
-    const workflow = await this.prisma.workflow.findUnique({
-      where: { id },
-      include: {
-        nodes: true,
-        edges: true,
-      },
-    });
-
-    if (!workflow) {
-      throw new NotFoundException(`Workflow "${id}" not found.`);
-    }
-
+  async findOne(userId: string, id: string): Promise<WorkflowDto> {
+    const workflow = await this.getWorkflowWithGraphOrThrow(userId, id);
     return this.toWorkflowDto(workflow);
   }
 
-  async update(id: string, updateWorkflowDto: UpdateWorkflowDto): Promise<WorkflowDto> {
-    const previousWorkflow = await this.getWorkflowWithGraphOrThrow(id);
+  async update(
+    userId: string,
+    id: string,
+    updateWorkflowDto: UpdateWorkflowDto,
+  ): Promise<WorkflowDto> {
+    const previousWorkflow = await this.getWorkflowWithGraphOrThrow(userId, id);
 
     const normalizedDefinition =
       this.normalizeWorkflowDefinition(updateWorkflowDto);
 
-    await this.ensureConnectionsExist(normalizedDefinition.nodes);
+    await this.ensureConnectionsExist(userId, normalizedDefinition.nodes);
 
     const workflow = await this.prisma.$transaction(async (tx) => {
       await tx.workflow.update({
@@ -297,10 +296,11 @@ export class WorkflowService {
   }
 
   async updateStatus(
+    userId: string,
     id: string,
     updateWorkflowStatusDto: UpdateWorkflowStatusDto,
   ): Promise<WorkflowDto> {
-    const previousWorkflow = await this.getWorkflowWithGraphOrThrow(id);
+    const previousWorkflow = await this.getWorkflowWithGraphOrThrow(userId, id);
 
     const workflow = await this.prisma.workflow.update({
       where: { id },
@@ -324,17 +324,23 @@ export class WorkflowService {
     return this.toWorkflowDto(workflow);
   }
 
-  async remove(id: string): Promise<void> {
-    await this.ensureWorkflowExists(id);
+  async remove(userId: string, id: string): Promise<void> {
+    await this.ensureWorkflowOwnedByUser(userId, id);
 
     await this.prisma.workflow.delete({
       where: { id },
     });
   }
 
-  private async ensureWorkflowExists(id: string): Promise<void> {
-    const workflow = await this.prisma.workflow.findUnique({
-      where: { id },
+  private async ensureWorkflowOwnedByUser(
+    userId: string,
+    id: string,
+  ): Promise<void> {
+    const workflow = await this.prisma.workflow.findFirst({
+      where: {
+        id,
+        userId,
+      },
       select: { id: true },
     });
 
@@ -344,10 +350,14 @@ export class WorkflowService {
   }
 
   private async getWorkflowWithGraphOrThrow(
+    userId: string,
     id: string,
   ): Promise<WorkflowWithGraph> {
-    const workflow = await this.prisma.workflow.findUnique({
-      where: { id },
+    const workflow = await this.prisma.workflow.findFirst({
+      where: {
+        id,
+        userId,
+      },
       include: {
         nodes: true,
         edges: true,
@@ -362,6 +372,7 @@ export class WorkflowService {
   }
 
   private async ensureConnectionsExist(
+    userId: string,
     nodes: Pick<NormalizedWorkflowNode, 'connectionId'>[],
   ): Promise<void> {
     const connectionIds = Array.from(
@@ -381,6 +392,7 @@ export class WorkflowService {
         id: {
           in: connectionIds,
         },
+        userId,
       },
       select: { id: true },
     });
@@ -394,7 +406,7 @@ export class WorkflowService {
 
     if (missingConnectionIds.length > 0) {
       throw new BadRequestException(
-        `Workflow references missing connections: ${missingConnectionIds.join(', ')}.`,
+        `Workflow references missing or foreign connections: ${missingConnectionIds.join(', ')}.`,
       );
     }
   }

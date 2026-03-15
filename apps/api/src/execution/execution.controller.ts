@@ -20,9 +20,14 @@ import {
 } from '@nestjs/swagger';
 import { WorkflowExecutionDto } from '@mini-zapier/shared';
 
+import type { AuthenticatedUser } from '../auth/auth.service';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { AvailableFieldsResponseDto } from './dto/available-fields-response.dto';
 import { ListExecutionsQueryDto } from './dto/list-executions-query.dto';
-import { ExecutionListResponse, ExecutionService } from './execution.service';
+import {
+  ExecutionListResponse,
+  ExecutionService,
+} from './execution.service';
 
 @ApiTags('executions')
 @Controller('api')
@@ -44,10 +49,12 @@ export class ExecutionController {
   @ApiNotFoundResponse({ description: 'Workflow not found.' })
   @ApiBadRequestResponse({ description: 'Execution payload is invalid.' })
   async executeWorkflow(
+    @CurrentUser() currentUser: AuthenticatedUser,
     @Param('id') workflowId: string,
     @Body() triggerData: unknown,
   ): Promise<{ executionId: string }> {
-    const result = await this.executionService.startExecution(
+    const result = await this.executionService.startManualExecution(
+      currentUser.id,
       workflowId,
       triggerData,
     );
@@ -75,10 +82,11 @@ export class ExecutionController {
   @ApiNotFoundResponse({ description: 'Workflow not found.' })
   @ApiBadRequestResponse({ description: 'Pagination is invalid.' })
   getExecutions(
+    @CurrentUser() currentUser: AuthenticatedUser,
     @Param('id') workflowId: string,
     @Query() query: ListExecutionsQueryDto,
   ): Promise<ExecutionListResponse> {
-    return this.executionService.getExecutions(workflowId, query);
+    return this.executionService.getExecutions(currentUser.id, workflowId, query);
   }
 
   @Get('workflows/:id/available-fields')
@@ -90,9 +98,10 @@ export class ExecutionController {
   })
   @ApiNotFoundResponse({ description: 'Workflow not found.' })
   getAvailableFields(
+    @CurrentUser() currentUser: AuthenticatedUser,
     @Param('id') workflowId: string,
   ): Promise<AvailableFieldsResponseDto> {
-    return this.executionService.getAvailableFields(workflowId);
+    return this.executionService.getAvailableFields(currentUser.id, workflowId);
   }
 
   @Get('executions/:id')
@@ -100,7 +109,10 @@ export class ExecutionController {
   @ApiParam({ name: 'id', description: 'Execution id' })
   @ApiOkResponse({ description: 'Execution returned.' })
   @ApiNotFoundResponse({ description: 'Execution not found.' })
-  getExecution(@Param('id') executionId: string): Promise<WorkflowExecutionDto> {
-    return this.executionService.getExecution(executionId);
+  getExecution(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id') executionId: string,
+  ): Promise<WorkflowExecutionDto> {
+    return this.executionService.getExecution(currentUser.id, executionId);
   }
 }

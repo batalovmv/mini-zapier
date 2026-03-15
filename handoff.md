@@ -3,14 +3,24 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-045 — `shared-workspace user registration`
+- **Последнее изменение**: TASK-045 follow-up — `user workspace isolation`
 - **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–045 закрыты
+- **Что сделано в TASK-045 follow-up**:
+  - `apps/api/prisma/schema.prisma`, `apps/api/prisma/migrations/20260315153000_user_workspace_isolation/migration.sql` — добавлены owner relations `Workflow.userId` / `Connection.userId` к `User` с follow-up migration под изоляцию workspace по владельцу
+  - `apps/api/src/auth/current-user.decorator.ts`, `apps/api/src/workflow/*`, `apps/api/src/connection/*`, `apps/api/src/execution/*`, `apps/api/src/stats/*` — API переведён на `currentUser.id`; workflows/connections/executions/stats теперь видны только владельцу, manual execute и history/detail режутся по owner
+  - `spec-v1.md`, `decisions.md`, `backlog.md`, `test-checklist.md`, `handoff.md` — документация синхронизирована под user-owned workspace вместо shared workspace
+  - **Проверки TASK-045 follow-up**:
+    - `pnpm --filter @mini-zapier/api build`
+    - `pnpm --filter @mini-zapier/worker build`
+    - `pnpm --filter @mini-zapier/web build`
+  - **Ограничения проверки TASK-045 follow-up**:
+    - локальный `prisma migrate dev` и integration smoke на реальной БД не запускались, потому что PostgreSQL/Docker на машине не подняты; migration SQL добавлен вручную, legacy rows с `userId = null` требуют отдельного backfill
 - **Что сделано в TASK-045**:
   - `apps/api/prisma/schema.prisma`, `apps/api/prisma/migrations/20260315123000_add_user_auth/migration.sql` — добавлена модель `User` и migration SQL под email/password auth
   - `apps/api/src/auth/auth.service.ts`, `auth.controller.ts`, `auth.guard.ts`, `apps/api/src/auth/dto/*` — env-based admin login заменён на регистрацию/логин через БД, signed cookie по `userId`, `scrypt` hashing и `GET /api/auth/me` с user payload
   - `apps/web/src/pages/LoginPage.tsx`, `apps/web/src/pages/RegisterPage.tsx`, `apps/web/src/lib/api/auth.ts`, `apps/web/src/App.tsx` — добавлены `/register`, email-based login, client registration API и auto-login после регистрации
   - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts`, `apps/web/e2e/ui-smoke.spec.ts` — обновлены locale strings и smoke login selector под `Email`
-  - `spec-v1.md`, `decisions.md`, `backlog.md`, `test-checklist.md`, `deploy/.env.production.example` — scope/docs/env examples синхронизированы под shared-workspace auth
+  - `spec-v1.md`, `decisions.md`, `backlog.md`, `test-checklist.md`, `deploy/.env.production.example` — scope/docs/env examples синхронизированы под initial email/password auth slice
   - **Проверки TASK-045**:
     - `pnpm --filter @mini-zapier/api build`
     - `pnpm --filter @mini-zapier/worker build`
@@ -307,7 +317,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-TASK-045 закрыт. Следующий шаг — если нужен не общий workspace, а изоляция данных между пользователями, добавить отдельный TASK на ownership / RBAC / invitations; иначе формировать следующий backlog-срез под новую продуктовую задачу.
+TASK-045 follow-up закрыл owner isolation. Следующий шаг — либо сделать one-time backfill legacy rows с `userId = null` под реальные аккаунты, либо брать следующий backlog-срез (RBAC / invitations / password reset — уже отдельные задачи).
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с новым email-login сценарием не запускался.
@@ -337,9 +347,10 @@ TASK-045 закрыт. Следующий шаг — если нужен не о
 - Для `TASK-008` `HTTP_REQUEST` реализован без новой dependency: используется встроенный Node `fetch`, но контракт strategy сохранён (`{ status, headers, data }`), non-2xx ответы считаются ошибкой
 - После `pnpm install --prefer-offline` `pnpm-lock.yaml` снова является источником истины для workspace; отдельный npm-installed state для `apps/web` больше не нужен
 - После следующего изменения `apps/api/prisma/schema.prisma` запускай `pnpm --filter @mini-zapier/api run prisma:migrate -- --name <migration_name>`
-- **Auth**: `POST /api/auth/register` создаёт пользователя в таблице `User`, пароль хэшируется встроенным `scrypt`; env vars: `AUTH_SESSION_SECRET`; cookie name `mz_session`, Max-Age 7 дней
+- Legacy rows из до-owner-isolation эпохи останутся с `userId = null` до отдельного backfill; такие workflows/connections не видны в пользовательском workspace, пока не будут привязаны к конкретному `User`
+- **Auth**: `POST /api/auth/register` создаёт пользователя в таблице `User`, пароль хэшируется встроенным `scrypt`; `Workflow` и `Connection` фильтруются по `userId`; env vars: `AUTH_SESSION_SECRET`; cookie name `mz_session`, Max-Age 7 дней
 - **Public endpoints** (не требуют auth): `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/health`, `GET /api/readiness`, `POST /api/webhooks/:workflowId`, `POST /api/inbound-email/:workflowId`, `GET /api/auth/me` (auth-aware: 200/401)
-- **Shared workspace auth**: ownership у workflows/connections/executions пока нет; любой зарегистрированный пользователь видит общий набор данных
+- **Owner isolation**: auth routes возвращают только workflows/connections/executions/stats текущего пользователя; публичные webhook/email/cron triggers по-прежнему работают по `workflowId` без auth session
 - **Swagger** отключен при `NODE_ENV=production`; доступен только в dev
 - **CORS**: origin из `CORS_ORIGIN` env (comma-separated), fallback `http://localhost:5173`; `credentials: true`
 - **Docker**: `deploy/docker-compose.prod.yml` использует `build.context: ..`, поэтому на VPS нужен весь репозиторий, а не только папка `deploy`; порт API привязан к `127.0.0.1:3000` (loopback only) и не доступен извне
@@ -438,8 +449,5 @@ TASK-045 закрыт. Следующий шаг — если нужен не о
 | TASK-042 | done | см. `git log` (`TASK-042: inspector connection semantics clarity`) | inspector now shows explicit connection states and availability instead of ambiguous numeric count badges |
 | TASK-043 | done | см. `git log` (`TASK-043: connections management page`) | dedicated `/connections` section, reusable connection catalog, standalone create/edit/delete dialog |
 | TASK-044 | done | `7f2ada5` (`TASK-044: fix DB_QUERY serialization`) | JSON.parse(JSON.stringify()) sanitizes Date/BigInt/Buffer in pg result.rows; deployed & verified on VPS |
-| TASK-045 | done | см. git log (TASK-045: shared workspace user registration) | User model + DB-backed register/login + /register page; shared workspace auth without owner isolation |
-
-
-
-
+| TASK-045 | done | см. `git log` (`TASK-045: shared workspace user registration`) | User model + DB-backed register/login + /register page; initial auth slice without owner isolation |
+| TASK-045 follow-up | done | см. `git log` (`TASK-045: enforce user workspace isolation`) | Workflow/Connection userId + owner-filtered API/stats/manual execute; legacy rows need backfill |

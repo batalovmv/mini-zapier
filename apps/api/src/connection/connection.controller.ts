@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
@@ -12,6 +22,8 @@ import {
 } from '@nestjs/swagger';
 import { ConnectionDto } from '@mini-zapier/shared';
 
+import type { AuthenticatedUser } from '../auth/auth.service';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { CreateConnectionDto } from './dto/create-connection.dto';
 import { UpdateConnectionDto } from './dto/update-connection.dto';
 import { ConnectionService } from './connection.service';
@@ -25,15 +37,20 @@ export class ConnectionController {
   @ApiOperation({ summary: 'Create connection' })
   @ApiCreatedResponse({ description: 'Connection created.' })
   @ApiBadRequestResponse({ description: 'Connection payload is invalid.' })
-  create(@Body() createConnectionDto: CreateConnectionDto): Promise<ConnectionDto> {
-    return this.connectionService.create(createConnectionDto);
+  create(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Body() createConnectionDto: CreateConnectionDto,
+  ): Promise<ConnectionDto> {
+    return this.connectionService.create(currentUser.id, createConnectionDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'List connections' })
   @ApiOkResponse({ description: 'Connections returned.' })
-  findAll(): Promise<ConnectionDto[]> {
-    return this.connectionService.findAll();
+  findAll(
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ): Promise<ConnectionDto[]> {
+    return this.connectionService.findAll(currentUser.id);
   }
 
   @Get(':id')
@@ -41,8 +58,11 @@ export class ConnectionController {
   @ApiParam({ name: 'id', description: 'Connection id' })
   @ApiOkResponse({ description: 'Connection returned.' })
   @ApiNotFoundResponse({ description: 'Connection not found.' })
-  findOne(@Param('id') id: string): Promise<ConnectionDto> {
-    return this.connectionService.findOne(id);
+  findOne(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id') id: string,
+  ): Promise<ConnectionDto> {
+    return this.connectionService.findOne(currentUser.id, id);
   }
 
   @Put(':id')
@@ -52,10 +72,11 @@ export class ConnectionController {
   @ApiBadRequestResponse({ description: 'Connection payload is invalid.' })
   @ApiNotFoundResponse({ description: 'Connection not found.' })
   update(
+    @CurrentUser() currentUser: AuthenticatedUser,
     @Param('id') id: string,
     @Body() updateConnectionDto: UpdateConnectionDto,
   ): Promise<ConnectionDto> {
-    return this.connectionService.update(id, updateConnectionDto);
+    return this.connectionService.update(currentUser.id, id, updateConnectionDto);
   }
 
   @Delete(':id')
@@ -67,7 +88,10 @@ export class ConnectionController {
     description: 'Connection is used by at least one workflow node.',
   })
   @ApiNotFoundResponse({ description: 'Connection not found.' })
-  remove(@Param('id') id: string): Promise<void> {
-    return this.connectionService.remove(id);
+  remove(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id') id: string,
+  ): Promise<void> {
+    return this.connectionService.remove(currentUser.id, id);
   }
 }

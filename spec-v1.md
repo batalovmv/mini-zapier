@@ -3,7 +3,7 @@
 > Этот документ заморожен. Изменения scope только через явное обновление этого файла с обоснованием.
 
 ## Продукт
-Платформа автоматизации workflow (мини-Zapier). Shared-workspace internal tool. Линейные workflow (один trigger → цепочка actions). Не публичный SaaS.
+Платформа автоматизации workflow (мини-Zapier). Multi-user internal tool с изолированными user workspaces. Линейные workflow (один trigger → цепочка actions). Не публичный SaaS.
 
 ## Стек
 - **apps/api**: NestJS + Prisma + Swagger (REST API, CRUD, triggers, cron registration)
@@ -29,11 +29,11 @@
 - Dedupe через TriggerEvent с idempotencyKey
 - definitionSnapshot + workflowVersion для воспроизводимости
 - REST API + Swagger документация
-- Базовая регистрация и логин пользователей по email/password (shared workspace, без ролей и owner isolation)
+- Базовая регистрация и логин пользователей по email/password + owner-based isolation workflows/connections/executions по userId
 - Линейная валидация workflow (1 trigger → chain, без branching/loops)
 
 ### НЕ включено в v1
-- RBAC, OAuth, invitation flow, owner-based isolation данных
+- RBAC, OAuth, invitation flow, password reset, collaboration/shared workflows
 - Marketplace, публичные шаблоны
 - Arbitrary JS execution (isolated-vm, vm2)
 - IMAP polling для email
@@ -84,8 +84,8 @@
 ### Auth model
 - Open self-registration по email/password
 - Session auth через signed httpOnly cookie `mz_session` с HMAC-SHA256
-- Все зарегистрированные пользователи работают в одном общем workspace
-- Workflow/Connection ownership и роли в v1 отсутствуют
+- Каждый пользователь видит только свои workflows, connections и executions
+- Ownership хранится по `userId`; роли и collaboration в v1 отсутствуют
 
 ### Версионирование
 - Workflow.version++ только при PUT /workflows/:id (изменение definition)
@@ -111,11 +111,11 @@ ConnectionType:  SMTP | TELEGRAM | POSTGRESQL | WEBHOOK
 ```
 
 ### Models
-1. **User**: id, email(unique), passwordHash, timestamps
-2. **Workflow**: id, name, description, status, version, timezone, viewport, timestamps
+1. **User**: id, email(unique), passwordHash, timestamps, workflows[], connections[]
+2. **Workflow**: id, userId, name, description, status, version, timezone, viewport, timestamps
 3. **WorkflowNode**: id, workflowId, positionX/Y, nodeKind, nodeType, label, config(JSON), connectionId?, retryCount, retryBackoff, timeoutMs, timestamps
 4. **WorkflowEdge**: id, workflowId, sourceNodeId, targetNodeId, handles, @@unique([source,target])
-5. **Connection**: id, name, type, credentials(encrypted JSON), timestamps
+5. **Connection**: id, userId, name, type, credentials(encrypted JSON), timestamps
 6. **WorkflowExecution**: id, workflowId, workflowVersion, status, triggerData, definitionSnapshot, startedAt, completedAt, errorMessage
 7. **ExecutionStepLog**: id, executionId, nodeId(no FK), nodeLabel, nodeType, status, inputData, outputData, errorMessage, retryAttempt, truncated, startedAt, completedAt, durationMs
 8. **TriggerEvent**: id, workflowId, source, idempotencyKey, processed, @@unique([workflowId, source, idempotencyKey])
@@ -159,7 +159,7 @@ ConnectionType:  SMTP | TELEGRAM | POSTGRESQL | WEBHOOK
 
 ### Pages
 - **Login**: email/password sign-in
-- **Register**: self-registration for shared workspace access
+- **Register**: self-registration by email/password
 - **Dashboard**: stats cards, workflow list, CRUD actions
 - **Workflow Editor**: React Flow canvas, node sidebar, config panel, save/load
 - **Execution History**: execution table, step log viewer (timeline + JSON)
@@ -179,5 +179,6 @@ ConnectionType:  SMTP | TELEGRAM | POSTGRESQL | WEBHOOK
 - queue.add() вне DB-транзакции → compensating cleanup (outbox pattern в будущем)
 - triggerData truncation без отдельного флага
 - Polling вместо WebSocket
-- Auth intentionally stays minimal: self-registration + shared workspace cookie sessions, без ролей и owner isolation
+- Auth intentionally stays minimal: self-registration + owner isolation через cookie sessions, без ролей, collaboration и password reset
+
 

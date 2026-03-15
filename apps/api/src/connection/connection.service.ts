@@ -5,9 +5,9 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { ConnectionDto, ConnectionType } from '@mini-zapier/shared';
 import { decrypt, encrypt } from '@mini-zapier/server-utils';
 import { Connection, ConnectionType as PrismaConnectionType } from '@prisma/client';
-import { ConnectionDto, ConnectionType } from '@mini-zapier/shared';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateConnectionDto } from './dto/create-connection.dto';
@@ -29,9 +29,13 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 export class ConnectionService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createConnectionDto: CreateConnectionDto): Promise<ConnectionDto> {
+  async create(
+    userId: string,
+    createConnectionDto: CreateConnectionDto,
+  ): Promise<ConnectionDto> {
     const connection = await this.prisma.connection.create({
       data: {
+        userId,
         name: this.normalizeName(createConnectionDto.name),
         type: this.validateType(createConnectionDto.type) as PrismaConnectionType,
         credentials: this.encryptCredentials(createConnectionDto.credentials),
@@ -41,35 +45,28 @@ export class ConnectionService {
     return this.toConnectionDto(connection);
   }
 
-  async findAll(): Promise<ConnectionDto[]> {
-    const connections = await this.prisma.connection.findMany();
+  async findAll(userId: string): Promise<ConnectionDto[]> {
+    const connections = await this.prisma.connection.findMany({
+      where: { userId },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
     return connections.map((connection) => this.toConnectionDto(connection));
   }
 
-  async findOne(id: string): Promise<ConnectionDto> {
-    const connection = await this.prisma.connection.findUnique({
-      where: { id },
-    });
-
-    if (!connection) {
-      throw new NotFoundException(`Connection "${id}" not found.`);
-    }
-
+  async findOne(userId: string, id: string): Promise<ConnectionDto> {
+    const connection = await this.getOwnedConnectionOrThrow(userId, id);
     return this.toConnectionDto(connection);
   }
 
   async update(
+    userId: string,
     id: string,
     updateConnectionDto: UpdateConnectionDto,
   ): Promise<ConnectionDto> {
-    const existingConnection = await this.prisma.connection.findUnique({
-      where: { id },
-    });
-
-    if (!existingConnection) {
-      throw new NotFoundException(`Connection "${id}" not found.`);
-    }
+    const existingConnection = await this.getOwnedConnectionOrThrow(userId, id);
 
     const data: {
       name?: string;
@@ -102,15 +99,8 @@ export class ConnectionService {
     return this.toConnectionDto(connection);
   }
 
-  async remove(id: string): Promise<void> {
-    const connection = await this.prisma.connection.findUnique({
-      where: { id },
-      select: { id: true },
-    });
-
-    if (!connection) {
-      throw new NotFoundException(`Connection "${id}" not found.`);
-    }
+  async remove(userId: string, id: string): Promise<void> {
+    await this.getOwnedConnectionReferenceOrThrow(userId, id);
 
     const usageCount = await this.prisma.workflowNode.count({
       where: { connectionId: id },
@@ -125,6 +115,41 @@ export class ConnectionService {
     await this.prisma.connection.delete({
       where: { id },
     });
+  }
+
+  private async getOwnedConnectionOrThrow(
+    userId: string,
+    id: string,
+  ): Promise<Connection> {
+    const connection = await this.prisma.connection.findFirst({
+      where: {
+        id,
+        userId,
+      },
+    });
+
+    if (!connection) {
+      throw new NotFoundException(`Connection "${id}" not found.`);
+    }
+
+    return connection;
+  }
+
+  private async getOwnedConnectionReferenceOrThrow(
+    userId: string,
+    id: string,
+  ): Promise<void> {
+    const connection = await this.prisma.connection.findFirst({
+      where: {
+        id,
+        userId,
+      },
+      select: { id: true },
+    });
+
+    if (!connection) {
+      throw new NotFoundException(`Connection "${id}" not found.`);
+    }
   }
 
   private toConnectionDto(connection: Connection): ConnectionDto {

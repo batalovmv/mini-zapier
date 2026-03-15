@@ -62,9 +62,10 @@
 **Proxy awareness**: `app.set('trust proxy', 1)` для корректного извлечения client IP из `X-Forwarded-For` за nginx.
 **Альтернатива**: nginx rate limiting — мощнее, но требует host-level конфигурации и не даёт per-route гранулярности в app коде.
 
-## DEC-014: Shared-workspace auth
-**Решение**: базовая регистрация и логин пользователей через email/password в таблице User. Сессия хранится в signed httpOnly cookie mz_session (HMAC-SHA256).
-**Причина**: нужен доступ нескольких пользователей к одному внутреннему workspace без внедрения полного multi-tenant слоя.
-**Границы**: все зарегистрированные пользователи видят один и тот же набор workflows/connections/executions. Roles, invitations, password reset и owner-based ACL не входят в этот срез.
+## DEC-014: User-owned workspace auth
+**Решение**: базовая регистрация и логин пользователей через email/password в таблице User. Workflow и Connection привязаны к owner `userId`; сессия хранится в signed httpOnly cookie `mz_session` (HMAC-SHA256).
+**Причина**: пользователи должны работать каждый в своём workspace и не видеть чужие workflows/connections/executions без внедрения полного collaboration/RBAC слоя.
+**Границы**: каждый зарегистрированный пользователь видит только свой набор workflows/connections/executions. Roles, invitations, password reset, sharing и collaborative workspaces не входят в этот срез.
 **Пароли**: хэшируются встроенным Node.js scrypt, без новой внешней зависимости.
+
 

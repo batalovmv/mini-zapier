@@ -11,6 +11,8 @@ import {
   WorkflowStatus as PrismaWorkflowStatus,
 } from '@prisma/client';
 
+import type { AuthenticatedUser } from '../auth/auth.service';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 
 class RecentExecutionStatsDto implements WorkflowExecutionDto {
@@ -104,7 +106,12 @@ export class StatsController {
     description: 'Aggregated workflow and execution statistics.',
     type: StatsResponseDto,
   })
-  async getStats(): Promise<StatsResponseDto> {
+  async getStats(
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ): Promise<StatsResponseDto> {
+    const workflowOwnerFilter = { userId: currentUser.id };
+    const executionOwnerFilter = { workflow: { is: { userId: currentUser.id } } };
+
     const [
       totalWorkflows,
       activeWorkflows,
@@ -114,21 +121,38 @@ export class StatsController {
       failedExecutions,
       recentExecutions,
     ] = await this.prisma.$transaction([
-      this.prisma.workflow.count(),
       this.prisma.workflow.count({
-        where: { status: PrismaWorkflowStatus.ACTIVE },
+        where: workflowOwnerFilter,
       }),
       this.prisma.workflow.count({
-        where: { status: PrismaWorkflowStatus.PAUSED },
+        where: {
+          ...workflowOwnerFilter,
+          status: PrismaWorkflowStatus.ACTIVE,
+        },
       }),
-      this.prisma.workflowExecution.count(),
-      this.prisma.workflowExecution.count({
-        where: { status: PrismaExecutionStatus.SUCCESS },
+      this.prisma.workflow.count({
+        where: {
+          ...workflowOwnerFilter,
+          status: PrismaWorkflowStatus.PAUSED,
+        },
       }),
       this.prisma.workflowExecution.count({
-        where: { status: PrismaExecutionStatus.FAILED },
+        where: executionOwnerFilter,
+      }),
+      this.prisma.workflowExecution.count({
+        where: {
+          ...executionOwnerFilter,
+          status: PrismaExecutionStatus.SUCCESS,
+        },
+      }),
+      this.prisma.workflowExecution.count({
+        where: {
+          ...executionOwnerFilter,
+          status: PrismaExecutionStatus.FAILED,
+        },
       }),
       this.prisma.workflowExecution.findMany({
+        where: executionOwnerFilter,
         take: 10,
         orderBy: {
           createdAt: 'desc',

@@ -76,6 +76,15 @@ export class ExecutionService {
     private readonly queueService: QueueService,
   ) {}
 
+  async startManualExecution(
+    userId: string,
+    workflowId: string,
+    triggerData: unknown,
+  ): Promise<StartExecutionResult> {
+    await this.ensureWorkflowOwnedByUser(userId, workflowId);
+    return this.startExecution(workflowId, triggerData);
+  }
+
   async startExecution(
     workflowId: string,
     triggerData: unknown,
@@ -207,10 +216,11 @@ export class ExecutionService {
   }
 
   async getExecutions(
+    userId: string,
     workflowId: string,
     query: ListExecutionsQueryDto,
   ): Promise<ExecutionListResponse> {
-    await this.ensureWorkflowExists(workflowId);
+    await this.ensureWorkflowOwnedByUser(userId, workflowId);
 
     const page = this.parsePositiveInteger(query.page, 'page', DEFAULT_PAGE);
     const limit = this.parsePositiveInteger(query.limit, 'limit', DEFAULT_LIMIT);
@@ -274,9 +284,19 @@ export class ExecutionService {
     };
   }
 
-  async getExecution(executionId: string): Promise<WorkflowExecutionDto> {
-    const execution = await this.prisma.workflowExecution.findUnique({
-      where: { id: executionId },
+  async getExecution(
+    userId: string,
+    executionId: string,
+  ): Promise<WorkflowExecutionDto> {
+    const execution = await this.prisma.workflowExecution.findFirst({
+      where: {
+        id: executionId,
+        workflow: {
+          is: {
+            userId,
+          },
+        },
+      },
       include: {
         stepLogs: {
           orderBy: {
@@ -294,10 +314,14 @@ export class ExecutionService {
   }
 
   async getAvailableFields(
+    userId: string,
     workflowId: string,
   ): Promise<AvailableFieldsResponseDto> {
-    const workflow = await this.prisma.workflow.findUnique({
-      where: { id: workflowId },
+    const workflow = await this.prisma.workflow.findFirst({
+      where: {
+        id: workflowId,
+        userId,
+      },
       include: { nodes: true, edges: true },
     });
 
@@ -434,9 +458,15 @@ export class ExecutionService {
     await this.prisma.$transaction(operations);
   }
 
-  private async ensureWorkflowExists(workflowId: string): Promise<void> {
-    const workflow = await this.prisma.workflow.findUnique({
-      where: { id: workflowId },
+  private async ensureWorkflowOwnedByUser(
+    userId: string,
+    workflowId: string,
+  ): Promise<void> {
+    const workflow = await this.prisma.workflow.findFirst({
+      where: {
+        id: workflowId,
+        userId,
+      },
       select: { id: true },
     });
 
@@ -672,6 +702,7 @@ export class ExecutionService {
     };
   }
 }
+
 
 
 

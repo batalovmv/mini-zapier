@@ -97,7 +97,7 @@
 - [ ] Сохранить, активировать
 - [ ] curl webhook с X-Webhook-Secret → execution appears in history
 - [ ] Step logs показывают input/output
-## Срез 7: Shared workspace auth
+## Срез 7: User auth + workspace isolation
 
 ### Registration + Session Auth
 - [ ] `POST /api/auth/register` создаёт пользователя в БД и ставит `mz_session`
@@ -106,5 +106,16 @@
 - [ ] `POST /api/auth/login` с невалидным паролем возвращает 401
 - [ ] `GET /api/auth/me` с cookie возвращает текущего пользователя
 - [ ] protected routes без cookie возвращают 401 / redirect на `/login`
+
+### Owner Isolation
+- [ ] список workflows возвращает только записи текущего пользователя
+- [ ] список connections возвращает только записи текущего пользователя
+- [ ] stats считают только workflows/executions текущего пользователя
+- [ ] manual execute/history/detail по чужому workflow/execution возвращают 404
+- [ ] workflow save/update отклоняет `connectionId`, принадлежащий другому пользователю
+
+### Build
 - [ ] `pnpm --filter @mini-zapier/api build` проходит
+- [ ] `pnpm --filter @mini-zapier/worker build` проходит
 - [ ] `pnpm --filter @mini-zapier/web build` проходит
+
