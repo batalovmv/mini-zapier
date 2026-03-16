@@ -94,6 +94,13 @@ function validateMutationQuery(rawQuery: string): string {
     );
   }
 
+  // Reject RETURNING clause to prevent materializing large result sets in preview
+  if (/\bRETURNING\b/i.test(trimmed)) {
+    throw new BadRequestException(
+      'RETURNING clause is not allowed in mutation preview.',
+    );
+  }
+
   return trimmed;
 }
 

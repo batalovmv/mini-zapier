@@ -411,11 +411,13 @@ export function DbQueryConfig({
       setMetaError(null);
 
       // Clear config query/params so stale SQL cannot be tested against the new connection
+      const fresh = { ...EMPTY_BUILDER };
+      builderStateRef.current = fresh;
       onChange((prev) => ({
         ...prev,
         query: '',
         params: [],
-        _builderState: undefined,
+        _builderState: fresh,
       }));
     }
 
@@ -656,14 +658,14 @@ export function DbQueryConfig({
       <div className="flex gap-1.5 rounded-full border border-slate-900/10 bg-slate-50 p-1">
         <button
           className={modeTabClass(mode === 'visual')}
-          onClick={() => setMode('visual')}
+          onClick={() => { setMode('visual'); clearTestResults(); }}
           type="button"
         >
           {t.modeVisual}
         </button>
         <button
           className={modeTabClass(mode === 'raw')}
-          onClick={() => setMode('raw')}
+          onClick={() => { setMode('raw'); clearTestResults(); }}
           type="button"
         >
           {t.modeRawSql}
