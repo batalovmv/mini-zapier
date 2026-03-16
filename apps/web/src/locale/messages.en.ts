@@ -768,6 +768,17 @@ export const en = {
       dedupe:
         'To enable deduplication, include an `Idempotency-Key` or `X-Event-ID` header. Duplicate events will be ignored.',
     },
+    messagePreview: {
+      toggle: 'Preview',
+      loading: 'Loading preview data…',
+      empty:
+        'Run a step test or execute the workflow to see a preview with real data.',
+      emptyTriggerAction:
+        'Execute the workflow to see a preview (trigger test not available).',
+      stale: 'Workflow changed since last execution — preview unavailable.',
+      sourceTest: 'Data from test run',
+      sourceExecution: 'Data from last execution',
+    },
   },
   editorDefinitions: {
     'trigger:WEBHOOK': {

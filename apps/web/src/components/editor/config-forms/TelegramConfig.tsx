@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
+import { usePreviewData } from '../../../hooks/usePreviewData';
 import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
+import { MessagePreview } from '../MessagePreview';
 import { RawJsonFallback } from './RawJsonFallback';
 import { TemplatedField } from '../templated-input';
 
@@ -16,8 +18,23 @@ export function TelegramConfig({
 }: TelegramConfigProps) {
   const { messages } = useLocale();
   const t = messages.configForms.telegram;
+  const tp = messages.configForms.messagePreview;
   const [showJson, setShowJson] = useState(false);
   const [helperOpen, setHelperOpen] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const preview = usePreviewData(showPreview);
+
+  const previewFields = useMemo(
+    () => [
+      {
+        label: t.message,
+        template: String(config.message ?? ''),
+        multiline: true,
+      },
+    ],
+    [config.message, t.message],
+  );
 
   return (
     <div className="space-y-5">
@@ -59,6 +76,29 @@ export function TelegramConfig({
         onChange={onChange}
         placeholder={t.messagePlaceholder}
       />
+
+      {/* Message Preview */}
+      <div>
+        <button
+          className="text-xs font-medium text-slate-500 transition hover:text-slate-700"
+          onClick={() => setShowPreview((v) => !v)}
+          type="button"
+        >
+          {showPreview ? `▾ ${tp.toggle}` : `▸ ${tp.toggle}`}
+        </button>
+
+        {showPreview ? (
+          <div className="mt-2">
+            <MessagePreview
+              fields={previewFields}
+              inputData={preview.inputData}
+              loading={preview.loading}
+              reason={preview.reason}
+              source={preview.source}
+            />
+          </div>
+        ) : null}
+      </div>
 
       <RawJsonFallback
         config={config}
