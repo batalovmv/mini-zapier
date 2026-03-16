@@ -61,7 +61,7 @@ export function WorkflowList({
             action={
               <Link
                 className="inline-flex rounded-full bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700"
-                to="/workflows/new/edit"
+                to="/workflows/new"
               >
                 {messages.workflowList.createWorkflow}
               </Link>

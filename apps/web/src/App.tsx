@@ -12,6 +12,7 @@ import { ExecutionHistoryPage } from './pages/ExecutionHistoryPage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { TemplatePickerPage } from './pages/TemplatePickerPage';
 import { WorkflowEditorPage } from './pages/WorkflowEditorPage';
 
 const router = createBrowserRouter([
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
           {
             index: true,
             element: <DashboardPage />,
+          },
+          {
+            path: 'workflows/new',
+            element: <TemplatePickerPage />,
           },
           {
             path: 'connections',

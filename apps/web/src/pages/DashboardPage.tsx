@@ -198,7 +198,7 @@ export function DashboardPage() {
             <Link
               className="inline-flex self-start rounded-full bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_20px_32px_-20px_rgba(141,69,20,0.62)] transition hover:bg-amber-700 lg:self-end"
               data-testid="create-workflow-link"
-              to="/workflows/new/edit"
+              to="/workflows/new"
             >
               {messages.dashboardPage.createWorkflow}
             </Link>

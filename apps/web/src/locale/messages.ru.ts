@@ -297,6 +297,22 @@ export const ru = {
     statusUpdatedToast: (status: string) => `Статус сценария: ${status}.`,
     executionStartedToast: 'Запуск создан.',
   },
+  templatePickerPage: {
+    title: 'Создать Workflow',
+    subtitle: 'Выберите стартовый шаблон или начните с пустого сценария.',
+    templateBadge: 'Шаблон',
+    blankBadge: 'Пусто',
+    blankTitle: 'Пустой Workflow',
+    blankDescription: 'Начните с пустого canvas.',
+    webhookTelegramTitle: 'Webhook → Telegram',
+    webhookTelegramDescription:
+      'Принимайте webhook-события и отправляйте сообщение в Telegram.',
+    webhookTelegramSuggestedName: 'Webhook в Telegram',
+    cronEmailTitle: 'Cron → Email',
+    cronEmailDescription:
+      'Запускайте сценарий по расписанию и отправляйте email-отчёт.',
+    cronEmailSuggestedName: 'Cron в Email',
+  },
   configPanel: {
     inspectorSteps: [
       {
@@ -870,4 +886,3 @@ export const ru = {
       'Соедините все узлы в одну цепочку, которая начинается от триггера.',
   } as Record<WorkflowValidationCode, string>,
 } satisfies LocaleMessages;
-

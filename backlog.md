@@ -1551,7 +1551,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-055: Built-in workflow starter templates
-- **Статус**: `todo`
+  - **Статус**: `done`
 - **Цель**: ускорить старт за счёт готовых внутренних шаблонов workflow без внедрения marketplace
 - **Проблема**:
   - даже с лучшими формами новый пользователь всё ещё начинает с пустого canvas

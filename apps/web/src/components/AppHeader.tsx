@@ -29,7 +29,7 @@ export function AppHeader() {
       label: messages.header.navigation.connections,
     },
     {
-      to: '/workflows/new/edit',
+      to: '/workflows/new',
       label: messages.header.navigation.createWorkflow,
     },
   ];
