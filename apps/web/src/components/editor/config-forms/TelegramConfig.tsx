@@ -90,6 +90,7 @@ export function TelegramConfig({
         {showPreview ? (
           <div className="mt-2">
             <MessagePreview
+              errorMessage={preview.errorMessage}
               fields={previewFields}
               inputData={preview.inputData}
               loading={preview.loading}

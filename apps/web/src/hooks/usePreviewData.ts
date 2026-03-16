@@ -113,6 +113,7 @@ export function usePreviewData(enabled: boolean): PreviewData {
     }
 
     let cancelled = false;
+    let requestInFlight = false;
     const shouldShowLoading = executionDataRef.current === null;
 
     if (shouldShowLoading) {
@@ -126,6 +127,12 @@ export function usePreviewData(enabled: boolean): PreviewData {
     }
 
     const loadExecutionPreview = async () => {
+      if (requestInFlight) {
+        return;
+      }
+
+      requestInFlight = true;
+
       try {
         const list = await listWorkflowExecutions(workflowId, {
           status: 'SUCCESS',
@@ -239,6 +246,8 @@ export function usePreviewData(enabled: boolean): PreviewData {
           errorMessage: getApiErrorMessage(error, messages.errors),
           loading: false,
         });
+      } finally {
+        requestInFlight = false;
       }
     };
 
