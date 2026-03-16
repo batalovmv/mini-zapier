@@ -200,6 +200,15 @@ export function createDefaultNodeConfig(
       return {
         query: '',
         params: [],
+        _builderState: {
+          operation: 'select',
+          table: '',
+          columns: [],
+          filters: [],
+          orderBy: { column: '', direction: 'ASC' },
+          limit: 100,
+          setValues: [],
+        },
       };
     case 'action:DATA_TRANSFORM':
       return {

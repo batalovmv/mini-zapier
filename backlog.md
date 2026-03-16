@@ -1488,7 +1488,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-053: DB Query write/update/delete builder
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: расширить visual DB Query builder на mutation-сценарии после безопасного read-only среза
 - **Проблема**:
   - после `TASK-052` no-code пользователь всё ещё не сможет собирать `INSERT`, `UPDATE`, `DELETE`

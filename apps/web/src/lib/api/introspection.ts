@@ -39,3 +39,16 @@ export async function testDbQuery(
 
   return response.data;
 }
+
+export async function testDbMutation(
+  connectionId: string,
+  query: string,
+  params: unknown[],
+): Promise<{ rowCount: number }> {
+  const response = await apiClient.post<{ rowCount: number }>(
+    `/connections/${connectionId}/introspect/mutation`,
+    { query, params },
+  );
+
+  return response.data;
+}

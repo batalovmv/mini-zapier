@@ -47,10 +47,9 @@ function buildClientConfig(
 }
 
 /**
- * Validate that the query is a single SELECT or WITH statement.
- * Strips trailing whitespace/semicolons, then rejects semicolons inside the body.
+ * Strip trailing whitespace/semicolons, reject embedded semicolons.
  */
-function validateReadOnlyQuery(rawQuery: string): string {
+function sanitizeSingleStatement(rawQuery: string): string {
   const trimmed = rawQuery.trim().replace(/;+\s*$/, '');
 
   if (trimmed.includes(';')) {
@@ -59,11 +58,39 @@ function validateReadOnlyQuery(rawQuery: string): string {
     );
   }
 
+  return trimmed;
+}
+
+/**
+ * Validate that the query is a single SELECT or WITH statement.
+ */
+function validateReadOnlyQuery(rawQuery: string): string {
+  const trimmed = sanitizeSingleStatement(rawQuery);
   const firstWord = trimmed.split(/\s+/)[0]?.toUpperCase();
 
   if (firstWord !== 'SELECT' && firstWord !== 'WITH') {
     throw new BadRequestException(
       'Only SELECT and WITH statements are allowed for test queries.',
+    );
+  }
+
+  return trimmed;
+}
+
+/**
+ * Validate that the query is a single INSERT, UPDATE or DELETE statement.
+ */
+function validateMutationQuery(rawQuery: string): string {
+  const trimmed = sanitizeSingleStatement(rawQuery);
+  const firstWord = trimmed.split(/\s+/)[0]?.toUpperCase();
+
+  if (
+    firstWord !== 'INSERT' &&
+    firstWord !== 'UPDATE' &&
+    firstWord !== 'DELETE'
+  ) {
+    throw new BadRequestException(
+      'Only INSERT, UPDATE and DELETE statements are allowed for mutation test.',
     );
   }
 
@@ -167,6 +194,45 @@ export class IntrospectionService {
         rows,
         rowCount: result.rowCount ?? 0,
       };
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => undefined);
+
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      const message =
+        error instanceof Error ? error.message : 'Query execution failed.';
+      throw new BadRequestException(`Query error: ${message}`);
+    } finally {
+      await client.end().catch(() => undefined);
+    }
+  }
+
+  async testMutation(
+    userId: string,
+    connectionId: string,
+    rawQuery: string,
+    params: unknown[],
+  ): Promise<{ rowCount: number }> {
+    const query = validateMutationQuery(rawQuery);
+    const client = await this.createClient(userId, connectionId);
+
+    try {
+      await client.connect();
+
+      await client.query('BEGIN');
+      await client.query(
+        `SET LOCAL statement_timeout = '${STATEMENT_TIMEOUT_MS}'`,
+      );
+
+      const result = await client.query(query, params);
+      const rowCount = result.rowCount ?? 0;
+
+      // Always rollback — mutation preview must not persist changes
+      await client.query('ROLLBACK');
+
+      return { rowCount };
     } catch (error) {
       await client.query('ROLLBACK').catch(() => undefined);
 

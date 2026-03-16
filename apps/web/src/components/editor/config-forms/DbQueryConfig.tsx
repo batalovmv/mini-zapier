@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   introspectColumns,
   introspectTables,
+  testDbMutation,
   testDbQuery,
   type ColumnInfo,
 } from '../../../lib/api/introspection';
@@ -16,18 +17,27 @@ import { RawJsonFallback } from './RawJsonFallback';
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
+type DbOperation = 'select' | 'insert' | 'update' | 'delete';
+
 interface FilterRow {
   column: string;
   operator: string;
   value: string;
 }
 
+interface SetValueRow {
+  column: string;
+  value: string;
+}
+
 interface BuilderState {
+  operation: DbOperation;
   table: string;
   columns: string[];
   filters: FilterRow[];
   orderBy: { column: string; direction: 'ASC' | 'DESC' };
   limit: number;
+  setValues: SetValueRow[];
 }
 
 interface DbQueryConfigProps {
@@ -37,7 +47,7 @@ interface DbQueryConfigProps {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Operators                                                          */
+/*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
 const UNARY_OPERATORS = new Set(['IS NULL', 'IS NOT NULL']);
@@ -52,6 +62,18 @@ const OPERATORS = [
   'IS NOT NULL',
 ] as const;
 
+const OPERATIONS: DbOperation[] = ['select', 'insert', 'update', 'delete'];
+
+const EMPTY_BUILDER: BuilderState = {
+  operation: 'select',
+  table: '',
+  columns: [],
+  filters: [],
+  orderBy: { column: '', direction: 'ASC' },
+  limit: 100,
+  setValues: [],
+};
+
 /* ------------------------------------------------------------------ */
 /*  SQL generation                                                     */
 /* ------------------------------------------------------------------ */
@@ -60,14 +82,59 @@ function quoteIdent(name: string): string {
   return `"${name.replace(/"/g, '""')}"`;
 }
 
-function generateSql(
+/** Build WHERE clause from filter rows. Returns { sql, params } fragment. */
+function buildWhere(
+  filters: FilterRow[],
+  knownColumns: string[],
+  paramsOffset: number,
+): { clause: string; params: unknown[] } {
+  const params: unknown[] = [];
+  const clauses: string[] = [];
+
+  for (const f of filters) {
+    if (!f.column || !knownColumns.includes(f.column)) continue;
+
+    if (UNARY_OPERATORS.has(f.operator)) {
+      clauses.push(`${quoteIdent(f.column)} ${f.operator}`);
+    } else if (f.value !== '') {
+      params.push(f.value);
+      const op = f.operator === '!=' ? '<>' : f.operator;
+      clauses.push(
+        `${quoteIdent(f.column)} ${op} $${paramsOffset + params.length}`,
+      );
+    }
+  }
+
+  return {
+    clause: clauses.length > 0 ? ` WHERE ${clauses.join(' AND ')}` : '',
+    params,
+  };
+}
+
+/** Dedupe setValues by column, keep first occurrence, skip empty/unknown columns. */
+function validSetValues(
+  rows: SetValueRow[],
+  knownColumns: string[],
+): SetValueRow[] {
+  const seen = new Set<string>();
+  const result: SetValueRow[] = [];
+
+  for (const row of rows) {
+    if (!row.column || !knownColumns.includes(row.column)) continue;
+    if (seen.has(row.column)) continue;
+    seen.add(row.column);
+    result.push(row);
+  }
+
+  return result;
+}
+
+function generateSelectSql(
   builder: BuilderState,
   knownTables: string[],
   knownColumns: string[],
 ): { query: string; params: unknown[] } | null {
-  if (!builder.table || !knownTables.includes(builder.table)) {
-    return null;
-  }
+  if (!builder.table || !knownTables.includes(builder.table)) return null;
 
   const cols =
     builder.columns.length === 0
@@ -77,28 +144,14 @@ function generateSql(
           .map(quoteIdent)
           .join(', ') || '*';
 
-  const params: unknown[] = [];
-  const whereClauses: string[] = [];
+  const where = buildWhere(builder.filters, knownColumns, 0);
 
-  for (const f of builder.filters) {
-    if (!f.column || !knownColumns.includes(f.column)) continue;
+  let sql = `SELECT ${cols} FROM ${quoteIdent(builder.table)}${where.clause}`;
 
-    if (UNARY_OPERATORS.has(f.operator)) {
-      whereClauses.push(`${quoteIdent(f.column)} ${f.operator}`);
-    } else if (f.value !== '') {
-      params.push(f.value);
-      const op = f.operator === '!=' ? '<>' : f.operator;
-      whereClauses.push(`${quoteIdent(f.column)} ${op} $${params.length}`);
-    }
-  }
-
-  let sql = `SELECT ${cols} FROM ${quoteIdent(builder.table)}`;
-
-  if (whereClauses.length > 0) {
-    sql += ` WHERE ${whereClauses.join(' AND ')}`;
-  }
-
-  if (builder.orderBy.column && knownColumns.includes(builder.orderBy.column)) {
+  if (
+    builder.orderBy.column &&
+    knownColumns.includes(builder.orderBy.column)
+  ) {
     sql += ` ORDER BY ${quoteIdent(builder.orderBy.column)} ${builder.orderBy.direction}`;
   }
 
@@ -106,7 +159,84 @@ function generateSql(
     sql += ` LIMIT ${builder.limit}`;
   }
 
-  return { query: sql, params };
+  return { query: sql, params: where.params };
+}
+
+function generateInsertSql(
+  builder: BuilderState,
+  knownTables: string[],
+  knownColumns: string[],
+): { query: string; params: unknown[] } | null {
+  if (!builder.table || !knownTables.includes(builder.table)) return null;
+
+  const rows = validSetValues(builder.setValues, knownColumns);
+  if (rows.length === 0) return null;
+
+  const colList = rows.map((r) => quoteIdent(r.column)).join(', ');
+  const valList = rows.map((_, i) => `$${i + 1}`).join(', ');
+  const params = rows.map((r) => r.value);
+
+  return {
+    query: `INSERT INTO ${quoteIdent(builder.table)} (${colList}) VALUES (${valList})`,
+    params,
+  };
+}
+
+function generateUpdateSql(
+  builder: BuilderState,
+  knownTables: string[],
+  knownColumns: string[],
+): { query: string; params: unknown[] } | null {
+  if (!builder.table || !knownTables.includes(builder.table)) return null;
+
+  const rows = validSetValues(builder.setValues, knownColumns);
+  if (rows.length === 0) return null;
+
+  const setClauses = rows.map(
+    (r, i) => `${quoteIdent(r.column)} = $${i + 1}`,
+  );
+  const setParams = rows.map((r) => r.value);
+
+  const where = buildWhere(builder.filters, knownColumns, setParams.length);
+
+  return {
+    query: `UPDATE ${quoteIdent(builder.table)} SET ${setClauses.join(', ')}${where.clause}`,
+    params: [...setParams, ...where.params],
+  };
+}
+
+function generateDeleteSql(
+  builder: BuilderState,
+  knownTables: string[],
+  knownColumns: string[],
+): { query: string; params: unknown[] } | null {
+  if (!builder.table || !knownTables.includes(builder.table)) return null;
+
+  const where = buildWhere(builder.filters, knownColumns, 0);
+
+  return {
+    query: `DELETE FROM ${quoteIdent(builder.table)}${where.clause}`,
+    params: where.params,
+  };
+}
+
+function generateSql(
+  builder: BuilderState,
+  knownTables: string[],
+  knownColumns: string[],
+): { query: string; params: unknown[] } | null {
+  switch (builder.operation) {
+    case 'select':
+      return generateSelectSql(builder, knownTables, knownColumns);
+    case 'insert':
+      return generateInsertSql(builder, knownTables, knownColumns);
+    case 'update':
+      return generateUpdateSql(builder, knownTables, knownColumns);
+    case 'delete':
+      return generateDeleteSql(builder, knownTables, knownColumns);
+    default:
+      return null;
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -118,26 +248,58 @@ function serializeParams(params: unknown): string {
   return JSON.stringify(params, null, 2);
 }
 
-function readBuilderState(config: Record<string, unknown>): BuilderState | null {
-  const raw = config._builderState;
+/** Normalize legacy _builderState (may lack operation/setValues). */
+function normalizeBuilderState(raw: unknown): BuilderState | null {
   if (
-    raw &&
-    typeof raw === 'object' &&
-    !Array.isArray(raw) &&
-    typeof (raw as BuilderState).table === 'string'
+    !raw ||
+    typeof raw !== 'object' ||
+    Array.isArray(raw) ||
+    typeof (raw as BuilderState).table !== 'string'
   ) {
-    return raw as BuilderState;
+    return null;
   }
+
+  const r = raw as Partial<BuilderState>;
+
+  return {
+    operation: OPERATIONS.includes(r.operation as DbOperation)
+      ? (r.operation as DbOperation)
+      : 'select',
+    table: r.table ?? '',
+    columns: Array.isArray(r.columns) ? r.columns : [],
+    filters: Array.isArray(r.filters) ? r.filters : [],
+    orderBy:
+      r.orderBy && typeof r.orderBy === 'object'
+        ? r.orderBy
+        : { column: '', direction: 'ASC' },
+    limit: typeof r.limit === 'number' ? r.limit : 100,
+    setValues: Array.isArray(r.setValues) ? r.setValues : [],
+  };
+}
+
+/** Classify raw SQL by first keyword for test routing. */
+function classifyQuery(sql: string): 'read' | 'mutation' | null {
+  const trimmed = sql.trim().replace(/;+\s*$/, '');
+  if (!trimmed) return null;
+
+  const firstWord = trimmed.split(/\s+/)[0]?.toUpperCase();
+
+  if (firstWord === 'SELECT' || firstWord === 'WITH') return 'read';
+  if (
+    firstWord === 'INSERT' ||
+    firstWord === 'UPDATE' ||
+    firstWord === 'DELETE'
+  )
+    return 'mutation';
+
   return null;
 }
 
-const EMPTY_BUILDER: BuilderState = {
-  table: '',
-  columns: [],
-  filters: [],
-  orderBy: { column: '', direction: 'ASC' },
-  limit: 100,
-};
+/** Check if generated SQL has an effective WHERE clause. */
+function hasEffectiveWhere(sql: string | undefined): boolean {
+  if (!sql) return false;
+  return /\bWHERE\b/i.test(sql);
+}
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -151,10 +313,17 @@ export function DbQueryConfig({
   const { messages } = useLocale();
   const t = messages.configForms.dbQuery;
 
+  const opLabels: Record<DbOperation, string> = {
+    select: t.opSelect,
+    insert: t.opInsert,
+    update: t.opUpdate,
+    delete: t.opDelete,
+  };
+
   // Backward compat: if _builderState exists → visual, else raw
-  const hasBuilderState = readBuilderState(config) !== null;
+  const initialBuilderState = normalizeBuilderState(config._builderState);
   const [mode, setMode] = useState<'visual' | 'raw'>(
-    hasBuilderState ? 'visual' : 'raw',
+    initialBuilderState ? 'visual' : 'raw',
   );
 
   // Raw SQL state
@@ -165,7 +334,7 @@ export function DbQueryConfig({
 
   // Visual builder state
   const [builder, setBuilder] = useState<BuilderState>(
-    () => readBuilderState(config) ?? { ...EMPTY_BUILDER },
+    () => initialBuilderState ?? { ...EMPTY_BUILDER },
   );
   const [tables, setTables] = useState<string[]>([]);
   const [columns, setColumns] = useState<ColumnInfo[]>([]);
@@ -187,10 +356,36 @@ export function DbQueryConfig({
     [columns],
   );
 
+  /* ---- Clear test results helper ---- */
+  function clearTestResults() {
+    setTestRows(null);
+    setTestRowCount(null);
+    setTestError(null);
+  }
+
   /* ---- Sync raw params from config ---- */
   useEffect(() => {
     setParamsText(serializeParams(config.params));
   }, [config.params]);
+
+  /* ---- Sync builder from external _builderState changes (e.g. RawJsonFallback) ---- */
+  const builderStateRef = useRef(config._builderState);
+
+  useEffect(() => {
+    // Only react to external changes (not our own pushBuilderToConfig calls)
+    if (builderStateRef.current === config._builderState) return;
+    builderStateRef.current = config._builderState;
+
+    const normalized = normalizeBuilderState(config._builderState);
+    if (normalized) {
+      setBuilder(normalized);
+    } else {
+      // _builderState removed or invalid → switch to raw mode
+      setMode('raw');
+    }
+
+    clearTestResults();
+  }, [config._builderState]);
 
   /* ---- Reset builder + test state when connectionId changes (not on mount) ---- */
   const prevConnectionIdRef = useRef(connectionId);
@@ -212,9 +407,7 @@ export function DbQueryConfig({
     if (!isInitialMount) {
       setBuilder({ ...EMPTY_BUILDER });
       setColumns([]);
-      setTestRows(null);
-      setTestRowCount(null);
-      setTestError(null);
+      clearTestResults();
       setMetaError(null);
 
       // Clear config query/params so stale SQL cannot be tested against the new connection
@@ -281,12 +474,16 @@ export function DbQueryConfig({
   const pushBuilderToConfig = useCallback(
     (next: BuilderState) => {
       const result = generateSql(next, tables, knownColumnNames);
-      onChange((prev) => ({
-        ...prev,
-        query: result?.query ?? prev.query ?? '',
-        params: result?.params ?? prev.params ?? [],
+      const patch: Record<string, unknown> = {
+        query: result?.query ?? '',
+        params: result?.params ?? [],
         _builderState: next,
-      }));
+      };
+
+      // Track our own writes so external-sync effect doesn't re-trigger
+      builderStateRef.current = next;
+
+      onChange((prev) => ({ ...prev, ...patch }));
     },
     [onChange, tables, knownColumnNames],
   );
@@ -297,11 +494,13 @@ export function DbQueryConfig({
       pushBuilderToConfig(next);
       return next;
     });
+    clearTestResults();
   }
 
   /* ---- Raw SQL handlers ---- */
   function handleQueryChange(value: string) {
     onChange((prev) => ({ ...prev, query: value }));
+    clearTestResults();
   }
 
   function handleParamsChange(nextValue: string) {
@@ -323,8 +522,23 @@ export function DbQueryConfig({
   async function handleTest() {
     if (!connectionId) return;
 
-    const query = typeof config.query === 'string' ? config.query : '';
-    const params = Array.isArray(config.params) ? config.params : [];
+    let query: string;
+    let params: unknown[];
+    let isMutation: boolean;
+
+    if (mode === 'visual') {
+      const result = generateSql(builder, tables, knownColumnNames);
+      if (!result) return;
+      query = result.query;
+      params = result.params;
+      isMutation = builder.operation !== 'select';
+    } else {
+      query = typeof config.query === 'string' ? config.query : '';
+      params = Array.isArray(config.params) ? config.params : [];
+      const classification = classifyQuery(query);
+      if (!classification) return;
+      isMutation = classification === 'mutation';
+    }
 
     setTestRunning(true);
     setTestError(null);
@@ -332,9 +546,14 @@ export function DbQueryConfig({
     setTestRowCount(null);
 
     try {
-      const result = await testDbQuery(connectionId, query, params);
-      setTestRows(result.rows);
-      setTestRowCount(result.rowCount);
+      if (isMutation) {
+        const result = await testDbMutation(connectionId, query, params);
+        setTestRowCount(result.rowCount);
+      } else {
+        const result = await testDbQuery(connectionId, query, params);
+        setTestRows(result.rows);
+        setTestRowCount(result.rowCount);
+      }
     } catch (err) {
       setTestError(getApiErrorMessage(err, messages.errors));
     } finally {
@@ -351,6 +570,57 @@ export function DbQueryConfig({
     return result?.query ?? '';
   }, [mode, builder, tables, knownColumnNames, config.query]);
 
+  /* ---- Test button disabled logic ---- */
+  const testDisabled = useMemo(() => {
+    if (testRunning) return true;
+
+    if (mode === 'visual') {
+      const result = generateSql(builder, tables, knownColumnNames);
+      return !result;
+    }
+
+    // Raw mode
+    const query = typeof config.query === 'string' ? config.query : '';
+    if (!query) return true;
+    if (paramsError !== null) return true;
+    if (classifyQuery(query) === null) return true;
+
+    return false;
+  }, [
+    testRunning,
+    mode,
+    builder,
+    tables,
+    knownColumnNames,
+    config.query,
+    paramsError,
+  ]);
+
+  /* ---- Mutation warning ---- */
+  const mutationWarning = useMemo(() => {
+    if (mode !== 'visual') return null;
+    if (
+      builder.operation !== 'update' &&
+      builder.operation !== 'delete'
+    )
+      return null;
+    if (!builder.table) return null;
+
+    // Check against generated SQL, not filter count
+    if (hasEffectiveWhere(sqlPreview)) return null;
+
+    return builder.operation === 'delete'
+      ? t.deleteNoFilterWarning
+      : t.updateNoFilterWarning;
+  }, [mode, builder.operation, builder.table, sqlPreview, t]);
+
+  /* ---- Show result as mutation (rowCount only) vs read (table) ---- */
+  const isMutationResult = useMemo(() => {
+    if (mode === 'visual') return builder.operation !== 'select';
+    const query = typeof config.query === 'string' ? config.query : '';
+    return classifyQuery(query) === 'mutation';
+  }, [mode, builder.operation, config.query]);
+
   /* ================================================================ */
   /*  Render                                                           */
   /* ================================================================ */
@@ -361,6 +631,24 @@ export function DbQueryConfig({
         ? 'bg-slate-900 text-white shadow-sm'
         : 'bg-white text-slate-600 hover:bg-slate-100'
     }`;
+
+  const opTabClass = (active: boolean) =>
+    `rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+      active
+        ? 'bg-amber-500 text-white shadow-sm'
+        : 'bg-white text-slate-600 hover:bg-amber-50'
+    }`;
+
+  // Fields visible per operation
+  const showColumns = builder.operation === 'select';
+  const showFilters =
+    builder.operation === 'select' ||
+    builder.operation === 'update' ||
+    builder.operation === 'delete';
+  const showOrderBy = builder.operation === 'select';
+  const showLimit = builder.operation === 'select';
+  const showSetValues =
+    builder.operation === 'insert' || builder.operation === 'update';
 
   return (
     <div className="space-y-5">
@@ -391,11 +679,40 @@ export function DbQueryConfig({
             </p>
           ) : (
             <div className="space-y-4">
+              {/* Operation selector */}
+              <div className="flex gap-1.5 rounded-full border border-slate-900/10 bg-slate-50 p-1">
+                {OPERATIONS.map((op) => (
+                  <button
+                    key={op}
+                    className={opTabClass(builder.operation === op)}
+                    onClick={() =>
+                      updateBuilder({
+                        operation: op,
+                        // Reset operation-specific fields on switch
+                        ...(op !== builder.operation
+                          ? {
+                              columns: [],
+                              filters: [],
+                              setValues: [],
+                              orderBy: { column: '', direction: 'ASC' as const },
+                            }
+                          : {}),
+                      })
+                    }
+                    type="button"
+                  >
+                    {opLabels[op]}
+                  </button>
+                ))}
+              </div>
+
               {/* Table selector */}
               <label className="block">
                 <span className="muted-label">{t.selectTable}</span>
                 {tablesLoading ? (
-                  <p className="mt-2 text-xs text-slate-400">{t.loadingTables}</p>
+                  <p className="mt-2 text-xs text-slate-400">
+                    {t.loadingTables}
+                  </p>
                 ) : (
                   <select
                     className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
@@ -404,6 +721,7 @@ export function DbQueryConfig({
                         table: e.target.value,
                         columns: [],
                         filters: [],
+                        setValues: [],
                         orderBy: { column: '', direction: 'ASC' },
                       })
                     }
@@ -428,8 +746,8 @@ export function DbQueryConfig({
                 </div>
               )}
 
-              {/* Columns */}
-              {builder.table && (
+              {/* Columns (SELECT only) */}
+              {showColumns && builder.table && (
                 <div>
                   <span className="muted-label">{t.columns}</span>
                   {columnsLoading ? (
@@ -459,7 +777,6 @@ export function DbQueryConfig({
                             }
                             onChange={(e) => {
                               if (builder.columns.length === 0) {
-                                // Switch from "all" to specific
                                 updateBuilder({
                                   columns: e.target.checked
                                     ? [col.name]
@@ -490,8 +807,79 @@ export function DbQueryConfig({
                 </div>
               )}
 
-              {/* Filters */}
-              {builder.table && columns.length > 0 && (
+              {/* Set Values (INSERT / UPDATE) */}
+              {showSetValues && builder.table && columns.length > 0 && (
+                <div>
+                  <span className="muted-label">{t.setValues}</span>
+                  <div className="mt-2 space-y-2">
+                    {builder.setValues.map((row, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <select
+                          className="w-1/3 rounded-xl border border-slate-900/10 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500"
+                          onChange={(e) => {
+                            const next = [...builder.setValues];
+                            next[index] = { ...row, column: e.target.value };
+                            updateBuilder({ setValues: next });
+                          }}
+                          value={row.column}
+                        >
+                          <option value="">{t.setValueColumn}</option>
+                          {columns.map((col) => (
+                            <option key={col.name} value={col.name}>
+                              {col.name}
+                            </option>
+                          ))}
+                        </select>
+
+                        <div className="min-w-0 flex-1">
+                          <TemplatedField
+                            label=""
+                            placeholder={t.setValuePlaceholder}
+                            value={row.value}
+                            onValueChange={(val) => {
+                              const next = [...builder.setValues];
+                              next[index] = { ...row, value: val };
+                              updateBuilder({ setValues: next });
+                            }}
+                          />
+                        </div>
+
+                        <button
+                          aria-label={t.removeSetValueAriaLabel}
+                          className="shrink-0 rounded-full p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                          onClick={() => {
+                            const next = builder.setValues.filter(
+                              (_, i) => i !== index,
+                            );
+                            updateBuilder({ setValues: next });
+                          }}
+                          type="button"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+
+                    <button
+                      className="text-xs font-semibold text-amber-600 transition hover:text-amber-700"
+                      onClick={() =>
+                        updateBuilder({
+                          setValues: [
+                            ...builder.setValues,
+                            { column: '', value: '' },
+                          ],
+                        })
+                      }
+                      type="button"
+                    >
+                      + {t.addSetValue}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Filters (SELECT, UPDATE, DELETE) */}
+              {showFilters && builder.table && columns.length > 0 && (
                 <div>
                   <span className="muted-label">{t.filters}</span>
                   <div className="mt-2 space-y-2">
@@ -582,8 +970,8 @@ export function DbQueryConfig({
                 </div>
               )}
 
-              {/* Order by */}
-              {builder.table && columns.length > 0 && (
+              {/* Order by (SELECT only) */}
+              {showOrderBy && builder.table && columns.length > 0 && (
                 <div className="flex items-end gap-3">
                   <label className="flex-1">
                     <span className="muted-label">{t.orderBy}</span>
@@ -626,8 +1014,8 @@ export function DbQueryConfig({
                 </div>
               )}
 
-              {/* Limit */}
-              {builder.table && (
+              {/* Limit (SELECT only) */}
+              {showLimit && builder.table && (
                 <label className="block">
                   <span className="muted-label">{t.limit}</span>
                   <input
@@ -642,6 +1030,13 @@ export function DbQueryConfig({
                     value={builder.limit}
                   />
                 </label>
+              )}
+
+              {/* Mutation warning */}
+              {mutationWarning && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-700">
+                  {mutationWarning}
+                </div>
               )}
             </div>
           )}
@@ -696,7 +1091,7 @@ export function DbQueryConfig({
         <div>
           <button
             className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700 shadow-sm transition hover:bg-amber-100 disabled:opacity-50"
-            disabled={testRunning || !config.query || (mode === 'raw' && paramsError !== null)}
+            disabled={testDisabled}
             onClick={() => void handleTest()}
             type="button"
           >
@@ -709,6 +1104,16 @@ export function DbQueryConfig({
             </div>
           )}
 
+          {/* Mutation result: rowCount only */}
+          {isMutationResult && testRowCount !== null && !testRows && (
+            <div className="mt-3 rounded-2xl border border-slate-900/10 bg-white px-4 py-3">
+              <p className="text-xs font-semibold text-slate-600">
+                {t.testMutationResult(testRowCount)}
+              </p>
+            </div>
+          )}
+
+          {/* Read result: table */}
           {testRows !== null && (
             <div className="mt-3">
               <p className="text-xs font-semibold text-slate-600">

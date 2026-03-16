@@ -146,4 +146,23 @@ export class ConnectionController {
       testQueryDto.params ?? [],
     );
   }
+
+  @Post(':id/introspect/mutation')
+  @ApiOperation({ summary: 'Test a mutation SQL query (rolled back after test)' })
+  @ApiParam({ name: 'id', description: 'Connection id' })
+  @ApiOkResponse({ description: 'Affected row count returned (changes rolled back).' })
+  @ApiBadRequestResponse({ description: 'Invalid or non-mutation query.' })
+  @ApiNotFoundResponse({ description: 'Connection not found.' })
+  testMutation(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() testQueryDto: TestQueryDto,
+  ): Promise<{ rowCount: number }> {
+    return this.introspectionService.testMutation(
+      currentUser.id,
+      id,
+      testQueryDto.query,
+      testQueryDto.params ?? [],
+    );
+  }
 }
