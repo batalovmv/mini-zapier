@@ -1,9 +1,16 @@
 import toast from 'react-hot-toast';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 
+import {
+  getUnsavedChangesBypassState,
+} from '../hooks/useUnsavedChangesGuard';
 import { useLocale } from '../locale/LocaleProvider';
 import { logout } from '../lib/api/auth';
 import { getApiErrorMessage } from '../lib/api/client';
+import {
+  hasUnsavedWorkflowChanges,
+  useWorkflowEditorStore,
+} from '../stores/workflow-editor.store';
 
 function getNavLinkClassName(isActive: boolean): string {
   return [
@@ -15,8 +22,14 @@ function getNavLinkClassName(isActive: boolean): string {
 }
 
 export function AppHeader() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { locale, setLocale, messages } = useLocale();
+  const hasUnsavedChanges = useWorkflowEditorStore(hasUnsavedWorkflowChanges);
+
+  const isEditorRoute =
+    location.pathname.startsWith('/workflows/') &&
+    location.pathname.endsWith('/edit');
 
   const navigationItems = [
     {
@@ -35,9 +48,20 @@ export function AppHeader() {
   ];
 
   async function handleLogout() {
+    if (
+      isEditorRoute &&
+      hasUnsavedChanges &&
+      !window.confirm(messages.workflowEditorPage.unsavedChangesConfirm)
+    ) {
+      return;
+    }
+
     try {
       await logout();
-      navigate('/login', { replace: true });
+      navigate('/login', {
+        replace: true,
+        state: getUnsavedChangesBypassState(),
+      });
     } catch (err) {
       toast.error(getApiErrorMessage(err, messages.errors));
     }

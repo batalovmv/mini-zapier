@@ -5,9 +5,15 @@ import {
   useLocation,
 } from 'react-router-dom';
 
+const UNSAVED_CHANGES_BYPASS_KEY = '__miniZapierBypassUnsavedChangesGuard';
+
 interface UseUnsavedChangesGuardOptions {
   when: boolean;
   message: string;
+}
+
+interface UnsavedChangesBypassState {
+  [UNSAVED_CHANGES_BYPASS_KEY]: true;
 }
 
 function hasLocationChanged(
@@ -25,6 +31,21 @@ function hasLocationChanged(
   );
 }
 
+function hasUnsavedChangesBypass(state: unknown): state is UnsavedChangesBypassState {
+  return (
+    typeof state === 'object' &&
+    state !== null &&
+    UNSAVED_CHANGES_BYPASS_KEY in state &&
+    (state as Record<string, unknown>)[UNSAVED_CHANGES_BYPASS_KEY] === true
+  );
+}
+
+export function getUnsavedChangesBypassState(): UnsavedChangesBypassState {
+  return {
+    [UNSAVED_CHANGES_BYPASS_KEY]: true,
+  };
+}
+
 export function useUnsavedChangesGuard({
   when,
   message,
@@ -36,6 +57,7 @@ export function useUnsavedChangesGuard({
     ({ currentLocation, nextLocation }) =>
       when &&
       !allowNextNavigationRef.current &&
+      !hasUnsavedChangesBypass(nextLocation.state) &&
       hasLocationChanged(
         currentLocation.pathname,
         currentLocation.search,

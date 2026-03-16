@@ -17,11 +17,13 @@
   - **Примечание**: backend API на VPS (`api.memelab.ru`) не обновлялся с ~TASK-044; полный e2e (execution, step test) требует VPS redeploy
 - **Что сделано в TASK-A**:
   - `apps/web/src/stores/workflow-editor.store.ts` — добавлен stable draft snapshot (`savedWorkflowSnapshot`) и derived dirty-state через сравнение текущего editor payload с последним сохранённым состоянием; для нового workflow baseline = пустой draft, поэтому template/new edits считаются unsaved до save
-  - `apps/web/src/hooks/useUnsavedChangesGuard.ts` — новый hook на базе `useBlocker` + `useBeforeUnload`: блокирует route changes, header navigation, browser back/forward и refresh/close при unsaved changes; есть bypass для внутреннего redirect после успешного первого save
+  - `apps/web/src/hooks/useUnsavedChangesGuard.ts` — новый hook на базе `useBlocker` + `useBeforeUnload`: блокирует route changes, header navigation, browser back/forward и refresh/close при unsaved changes; есть bypass для внутреннего redirect после успешного первого save и для осознанного logout redirect
+  - `apps/web/src/components/AppHeader.tsx` — self-check fix: logout в header сначала спрашивает discard только внутри dirty editor и только потом вызывает `/auth/logout`, чтобы не оставлять пользователя на странице с уже сброшенной сессией
   - `apps/web/src/pages/WorkflowEditorPage.tsx` — toolbar теперь показывает явный dirty-state (`Unsaved changes` / `No unsaved changes`) отдельно от версии (`vN` / `Not saved yet`), guard подключён на страницу editor, template load передаёт baseline для new draft
   - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — добавлены строки для dirty-state badge и discard confirm
   - **Проверки TASK-A**:
     - `pnpm --filter @mini-zapier/web build` ✓
+    - `pnpm --filter @mini-zapier/web build` ✓ (после self-check fix)
   - **Ограничения TASK-A**:
     - manual browser smoke для click-through сценариев (header nav, back button, refresh/close tab) в этой сессии не запускался; покрытие подтверждено сборкой и ревью code-path
     - discard confirm и refresh guard используют нативные browser dialogs (`window.confirm` / `beforeunload`), без кастомного modal UI

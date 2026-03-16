@@ -1624,6 +1624,7 @@
   - version diff
   - draft/publish
 - **Файлы**:
+  - `apps/web/src/components/AppHeader.tsx`
   - `apps/web/src/pages/WorkflowEditorPage.tsx`
   - `apps/web/src/stores/workflow-editor.store.ts`
   - `apps/web/src/hooks/useUnsavedChangesGuard.ts`
