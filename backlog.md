@@ -1663,3 +1663,30 @@
 - **Проверка**:
   - попытаться создать невалидные связи в editor
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-C: Fix stale test preview and field states
+- **Статус**: `done`
+- **Цель**: убрать stale state в Step Test, Message Preview и Field Picker
+- **Scope**:
+  - ресинхронизация input state в StepTestSection
+  - корректный reset/update state при смене selected node
+  - refresh/invalidation в usePreviewData после save/test/run
+  - явный error state для network/API failures вместо ложного no-data/empty state
+- **Не входит**:
+  - новые preview types
+  - full test orchestration
+- **Файлы**:
+  - `apps/web/src/components/editor/StepTestSection.tsx`
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/hooks/usePreviewData.ts`
+  - `apps/web/src/components/editor/MessagePreview.tsx`
+  - `apps/web/src/components/editor/FieldPicker.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - Step Test использует актуальные данные и не тянет stale input между узлами
+  - Preview обновляется после save/test/run и различает no-data vs error
+  - Field Picker не маскирует ошибки загрузки под empty state
+- **Проверка**:
+  - проверить Step Test, Preview и Field Picker в editor
+  - `pnpm --filter @mini-zapier/web build`

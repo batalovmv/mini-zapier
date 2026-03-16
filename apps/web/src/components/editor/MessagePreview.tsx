@@ -18,6 +18,7 @@ interface MessagePreviewProps {
   inputData: unknown | null;
   source: 'test-run' | 'execution' | null;
   reason: PreviewEmptyReason | null;
+  errorMessage?: string | null;
   loading: boolean;
 }
 
@@ -56,6 +57,7 @@ export function MessagePreview({
   inputData,
   source,
   reason,
+  errorMessage = null,
   loading,
 }: MessagePreviewProps) {
   const { messages } = useLocale();
@@ -77,6 +79,14 @@ export function MessagePreview({
       <div className="flex items-center gap-2 py-3 text-xs text-slate-400">
         <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-transparent" />
         {t.loading}
+      </div>
+    );
+  }
+
+  if (reason === 'load-error') {
+    return (
+      <div className="rounded-xl border border-rose-200 bg-rose-50/90 px-3 py-2 text-xs leading-5 text-rose-700">
+        {t.loadError(errorMessage ?? t.loadErrorFallback)}
       </div>
     );
   }

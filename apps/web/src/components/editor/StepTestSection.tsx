@@ -1,5 +1,5 @@
 import { ActionType, type StepTestResponse } from '@mini-zapier/shared';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getApiErrorMessage } from '../../lib/api/client';
 import { testStep } from '../../lib/api/executions';
@@ -67,14 +67,22 @@ export function StepTestSection({
   const [running, setRunning] = useState(false);
   const [inputExpanded, setInputExpanded] = useState(true);
   const [outputExpanded, setOutputExpanded] = useState(true);
+  const lastSyncedInputRef = useRef(defaultInputText);
 
-  // Sync default input when previous step output changes
-  const prevDefaultRef = useMemo(() => ({ value: defaultInputText }), [defaultInputText]);
+  useEffect(() => {
+    if (running) {
+      return;
+    }
 
-  if (prevDefaultRef.value !== defaultInputText && !running) {
-    setInputText(defaultInputText);
-    prevDefaultRef.value = defaultInputText;
-  }
+    const shouldResync = inputText === lastSyncedInputRef.current;
+
+    if (shouldResync) {
+      setInputText(defaultInputText);
+      setJsonError(null);
+    }
+
+    lastSyncedInputRef.current = defaultInputText;
+  }, [defaultInputText, inputText, running]);
 
   const handleTest = useCallback(async () => {
     if (!workflowId) return;

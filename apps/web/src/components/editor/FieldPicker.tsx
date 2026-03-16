@@ -10,6 +10,7 @@ import {
 import type { StepTestResponse } from '@mini-zapier/shared';
 
 import { useLocale } from '../../locale/LocaleProvider';
+import { getApiErrorMessage } from '../../lib/api/client';
 import { getAvailableFields } from '../../lib/api/executions';
 import type { AvailableFieldsResponse, FieldTreeNode } from '../../lib/api/types';
 import {
@@ -122,16 +123,19 @@ function fetchWithDedup(
 interface UseAvailableFieldsResult {
   data: AvailableFieldsResponse | null;
   loading: boolean;
+  errorMessage: string | null;
   refetch: () => void;
 }
 
 function useAvailableFields(
   workflowId: string | null,
 ): UseAvailableFieldsResult {
+  const { messages } = useLocale();
   const [data, setData] = useState<AvailableFieldsResponse | null>(
     workflowId ? (cache.get(workflowId) ?? null) : null,
   );
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const workflowIdRef = useRef(workflowId);
   workflowIdRef.current = workflowId;
 
@@ -139,12 +143,14 @@ function useAvailableFields(
     (force: boolean) => {
       if (!workflowId) {
         setData(null);
+        setErrorMessage(null);
 
         return;
       }
 
       if (!force && cache.has(workflowId)) {
         setData(cache.get(workflowId)!);
+        setErrorMessage(null);
 
         return;
       }
@@ -154,6 +160,7 @@ function useAvailableFields(
       }
 
       setLoading(true);
+      setErrorMessage(null);
 
       fetchWithDedup(workflowId)
         .then((result) => {
@@ -163,8 +170,10 @@ function useAvailableFields(
             setData(result);
           }
         })
-        .catch(() => {
-          // Assistive-only — silently fail.
+        .catch((error) => {
+          if (workflowIdRef.current === workflowId) {
+            setErrorMessage(getApiErrorMessage(error, messages.errors));
+          }
         })
         .finally(() => {
           if (workflowIdRef.current === workflowId) {
@@ -172,8 +181,13 @@ function useAvailableFields(
           }
         });
     },
-    [workflowId],
+    [workflowId, messages.errors],
   );
+
+  useEffect(() => {
+    setData(workflowId ? (cache.get(workflowId) ?? null) : null);
+    setErrorMessage(null);
+  }, [workflowId]);
 
   useEffect(() => {
     doFetch(false);
@@ -183,7 +197,7 @@ function useAvailableFields(
     doFetch(true);
   }, [doFetch]);
 
-  return { data, loading, refetch };
+  return { data, loading, errorMessage, refetch };
 }
 
 export function insertAtCursor(
@@ -362,7 +376,12 @@ export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: Fi
   );
   const stepTestResults = useWorkflowEditorStore((s) => s.stepTestResults);
 
-  const { data: rawData, loading, refetch } = useAvailableFields(workflowId);
+  const {
+    data: rawData,
+    loading,
+    errorMessage,
+    refetch,
+  } = useAvailableFields(workflowId);
   const overlay = applyTestResultOverlay(rawData, stepTestResults, nodes, edges);
   const data = overlay.data;
   const [internalOpen, setInternalOpen] = useState(false);
@@ -405,6 +424,7 @@ export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: Fi
   );
   const tree = positionData?.tree ?? [];
   const fields = positionData?.fields ?? [];
+  const hasCurrentPositionData = tree.length > 0 || fields.length > 0;
 
   // Bypass unsaved-changes warning only when test results (not stale API data) provide data for this position
   const hasTestOverlayForPosition = overlay.testPositions.has(chainPosition);
@@ -471,6 +491,17 @@ export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: Fi
           ) : hasUnsavedChanges ? (
             <div className="px-4 py-3 text-xs text-amber-600">
               {messages.fieldPicker.saveWorkflowToUpdate}
+            </div>
+          ) : errorMessage !== null && !hasCurrentPositionData ? (
+            <div className="px-4 py-3 text-xs text-rose-700">
+              <p>{messages.fieldPicker.loadError(errorMessage)}</p>
+              <button
+                className="mt-2 rounded-full border border-rose-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-rose-700 transition hover:bg-rose-50"
+                onClick={() => refetch()}
+                type="button"
+              >
+                {messages.fieldPicker.retry}
+              </button>
             </div>
           ) : data === null || data.positions.length === 0 ? (
             <div className="px-4 py-3 text-xs text-slate-400">

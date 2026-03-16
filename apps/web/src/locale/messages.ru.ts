@@ -497,6 +497,8 @@ export const ru = {
     insertField: '+ Вставить поле',
     insertFieldReference: 'Вставить ссылку на поле',
     loading: 'Загрузка…',
+    loadError: (message: string) => `Не удалось загрузить доступные поля: ${message}`,
+    retry: 'Повторить',
     saveWorkflowToUpdate: 'Сохраните сценарий, чтобы обновить доступные поля.',
     incompatibleExecutions:
       'После сохранения снова запустите сценарий, чтобы обновить доступные поля.',
@@ -828,6 +830,8 @@ export const ru = {
     messagePreview: {
       toggle: 'Предпросмотр',
       loading: 'Загрузка данных для предпросмотра…',
+      loadError: (message: string) => `Не удалось загрузить данные для предпросмотра: ${message}`,
+      loadErrorFallback: 'Запрос данных для предпросмотра завершился ошибкой.',
       empty:
         'Запустите тест шага или выполните workflow, чтобы увидеть предпросмотр с реальными данными.',
       emptyTriggerAction:

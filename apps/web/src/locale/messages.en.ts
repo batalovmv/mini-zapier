@@ -477,6 +477,8 @@ export const en = {
     insertField: '+ Insert field',
     insertFieldReference: 'Insert field reference',
     loading: 'Loading…',
+    loadError: (message: string) => `Could not load available fields: ${message}`,
+    retry: 'Retry',
     saveWorkflowToUpdate: 'Save workflow to update available fields.',
     incompatibleExecutions:
       'Run the workflow again after saving to refresh available fields.',
@@ -794,6 +796,8 @@ export const en = {
     messagePreview: {
       toggle: 'Preview',
       loading: 'Loading preview data…',
+      loadError: (message: string) => `Could not load preview data: ${message}`,
+      loadErrorFallback: 'Preview data request failed.',
       empty:
         'Run a step test or execute the workflow to see a preview with real data.',
       emptyTriggerAction:

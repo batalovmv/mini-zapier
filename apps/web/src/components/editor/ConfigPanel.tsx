@@ -496,6 +496,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
 
           {selectedNode.data.nodeKind === 'action' ? (
             <StepTestSection
+              key={selectedNode.id}
               config={selectedNode.data.config}
               connectionId={selectedNode.data.connectionId ?? null}
               nodeId={selectedNode.id}
