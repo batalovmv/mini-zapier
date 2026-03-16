@@ -72,6 +72,14 @@ export function DashboardPage() {
   const [workflowPendingDelete, setWorkflowPendingDelete] =
     useState<WorkflowDto | null>(null);
 
+  async function refreshDashboardDataAfterAction(): Promise<void> {
+    try {
+      await refreshDashboardData();
+    } catch {
+      // Action already succeeded; refresh errors are shown via page-level state.
+    }
+  }
+
   async function refreshDashboardData() {
     setDashboardError(null);
     setLastExecutionsLoading(true);
@@ -104,10 +112,9 @@ export function DashboardPage() {
 
     try {
       await executeWorkflow(workflow.id, {});
-
-      await refreshDashboardData();
-
       toast.success(messages.dashboardPage.executionStartedToast(workflow.name));
+
+      await refreshDashboardDataAfterAction();
     } catch (error) {
       toast.error(getApiErrorMessage(error, messages.errors));
     } finally {
@@ -128,15 +135,14 @@ export function DashboardPage() {
       await updateWorkflowStatus(workflow.id, {
         status: nextStatus,
       });
-
-      await refreshDashboardData();
-
       toast.success(
         messages.dashboardPage.statusUpdatedToast(
           workflow.name,
           messages.common.workflowStatusLabels[nextStatus],
         ),
       );
+
+      await refreshDashboardDataAfterAction();
     } catch (error) {
       toast.error(getApiErrorMessage(error, messages.errors));
     } finally {
@@ -163,10 +169,9 @@ export function DashboardPage() {
     try {
       await deleteWorkflow(workflow.id);
       setWorkflowPendingDelete(null);
-
-      await refreshDashboardData();
-
       toast.success(messages.dashboardPage.deletedToast(workflow.name));
+
+      await refreshDashboardDataAfterAction();
     } catch (error) {
       toast.error(getApiErrorMessage(error, messages.errors));
     } finally {

@@ -120,7 +120,13 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
         credentials: payload.credentials,
       });
 
-      await loadConnections();
+      setConnections((currentConnections) => [
+        ...currentConnections.filter(
+          (connection) => connection.id !== createdConnection.id,
+        ),
+        createdConnection,
+      ]);
+      setConnectionsError(null);
       updateNodeMeta(selectedNode.id, {
         connectionId: createdConnection.id,
       });

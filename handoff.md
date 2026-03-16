@@ -21,8 +21,9 @@
   - **Примечание**: backend API на VPS (`api.memelab.ru`) не обновлялся с ~TASK-044; полный e2e (execution, step test) требует VPS redeploy
 - **Что сделано в TASK-E**:
   - `apps/web/src/components/ui/ConfirmationDialog.tsx` — destructive confirm dialogs теперь в pending state меняют title/description/note на in-progress copy, блокируют cancel и все close-paths, а confirm-кнопка может показывать action-specific label вместо общего `Working...`
-  - `apps/web/src/pages/DashboardPage.tsx`, `apps/web/src/pages/ConnectionsPage.tsx` — delete dialogs для workflow/connection передают action-specific pending copy; dashboard additionally закрывает modal сразу после подтверждённого API delete, не дожидаясь фонового refresh
+  - `apps/web/src/pages/DashboardPage.tsx`, `apps/web/src/pages/ConnectionsPage.tsx` — delete dialogs для workflow/connection передают action-specific pending copy; dashboard additionally закрывает modal сразу после подтверждённого API delete, не дожидаясь фонового refresh, и больше не показывает ложный error-toast, если после успешного action падает только refresh
   - `apps/web/src/components/connections/ConnectionFormDialog.tsx` — edit submit больше не показывает misleading `Creating...`; pending copy соответствует update action
+  - `apps/web/src/components/editor/ConfigPanel.tsx` — editor create-connection flow теперь использует успешный `createConnection` response как source of truth для локального списка и выбора connection, поэтому не даёт ложный failure и не оставляет stale dialog open, если повторный `listConnections` недоступен
   - `apps/web/src/pages/LoginPage.tsx`, `apps/web/src/pages/RegisterPage.tsx` — auth failures оставлены как inline blocking feedback без дублирующего `toast.error(...)`
   - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — добавлены EN/RU строки для pending destructive states и update-specific connection submit copy
   - **Проверки TASK-E**:
