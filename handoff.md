@@ -384,7 +384,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-TASK-051 закрыт. Следующий рекомендованный TASK — `TASK-052` (DB Query metadata introspection + read builder) или `TASK-053`.
+TASK-052 закрыт. Следующий рекомендованный TASK — `TASK-053` (DB Query write/update/delete builder) или `TASK-054` (Step test-run infrastructure).
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с новым email-login сценарием не запускался.

@@ -192,16 +192,32 @@ export function DbQueryConfig({
     setParamsText(serializeParams(config.params));
   }, [config.params]);
 
-  /* ---- Load tables when connectionId changes ---- */
+  /* ---- Reset builder + test state when connectionId changes ---- */
   useEffect(() => {
     if (!connectionId) {
       setTables([]);
+      setColumns([]);
       return;
     }
 
+    // Connection switched — reset visual builder to avoid stale SQL against new DB
+    setBuilder({ ...EMPTY_BUILDER });
+    setColumns([]);
+    setTestRows(null);
+    setTestRowCount(null);
+    setTestError(null);
+    setMetaError(null);
+
+    // Clear config query/params so stale SQL cannot be tested against the new connection
+    onChange((prev) => ({
+      ...prev,
+      query: '',
+      params: [],
+      _builderState: undefined,
+    }));
+
     let cancelled = false;
     setTablesLoading(true);
-    setMetaError(null);
 
     introspectTables(connectionId)
       .then((result) => {
@@ -219,6 +235,7 @@ export function DbQueryConfig({
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onChange is stable, intentionally omitted to avoid loops
   }, [connectionId, messages.errors]);
 
   /* ---- Load columns when table changes ---- */
@@ -668,7 +685,7 @@ export function DbQueryConfig({
         <div>
           <button
             className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700 shadow-sm transition hover:bg-amber-100 disabled:opacity-50"
-            disabled={testRunning || !config.query}
+            disabled={testRunning || !config.query || (mode === 'raw' && paramsError !== null)}
             onClick={() => void handleTest()}
             type="button"
           >
