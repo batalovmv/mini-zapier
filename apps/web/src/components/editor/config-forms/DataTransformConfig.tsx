@@ -173,13 +173,23 @@ export function DataTransformConfig({
                   </button>
                 </div>
 
-                <TemplatedField
-                  ariaLabel={t.mappingValueAriaLabel(index + 1)}
-                  label=""
-                  onValueChange={(v) => updateMappingValue(index, v)}
-                  placeholder={t.valuePlaceholder}
-                  value={value}
-                />
+                {key.trim().length > 0 ? (
+                  <TemplatedField
+                    ariaLabel={t.mappingValueAriaLabel(index + 1)}
+                    label=""
+                    onValueChange={(v) => updateMappingValue(index, v)}
+                    placeholder={t.valuePlaceholder}
+                    value={value}
+                  />
+                ) : (
+                  <input
+                    aria-label={t.mappingValueAriaLabel(index + 1)}
+                    className="w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-400 outline-none"
+                    disabled
+                    placeholder={t.valuePlaceholder}
+                    type="text"
+                  />
+                )}
               </div>
             ))}
           </div>
