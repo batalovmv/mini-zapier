@@ -268,7 +268,11 @@ export const en = {
   workflowEditorPage: {
     workflowName: 'Workflow name',
     untitledWorkflow: 'Untitled workflow',
-    unsaved: 'Unsaved',
+    notSavedYet: 'Not saved yet',
+    unsavedChanges: 'Unsaved changes',
+    noUnsavedChanges: 'No unsaved changes',
+    unsavedChangesConfirm:
+      'Discard unsaved changes and leave the editor?',
     saving: 'Saving...',
     saveFirst: 'Save the workflow first',
     updating: 'Updating...',

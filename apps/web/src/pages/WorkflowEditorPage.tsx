@@ -7,6 +7,7 @@ import { ConfigPanel } from '../components/editor/ConfigPanel';
 import { FlowCanvas } from '../components/editor/FlowCanvas';
 import { NodeSidebar } from '../components/editor/NodeSidebar';
 import { LoadingState } from '../components/ui/LoadingState';
+import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import { useLocale } from '../locale/LocaleProvider';
 import { getApiErrorMessage } from '../lib/api/client';
 import { executeWorkflow } from '../lib/api/executions';
@@ -17,7 +18,10 @@ import {
   updateWorkflowStatus,
 } from '../lib/api/workflows';
 import { getTemplateById } from '../lib/workflow-templates';
-import { useWorkflowEditorStore } from '../stores/workflow-editor.store';
+import {
+  hasUnsavedWorkflowChanges,
+  useWorkflowEditorStore,
+} from '../stores/workflow-editor.store';
 
 const ACTIVE_STATUS = 'ACTIVE' as WorkflowDto['status'];
 const PAUSED_STATUS = 'PAUSED' as WorkflowDto['status'];
@@ -37,6 +41,12 @@ function getStatusClasses(status: WorkflowDto['status']): string {
   }
 }
 
+function getDirtyStateClasses(hasUnsavedChanges: boolean): string {
+  return hasUnsavedChanges
+    ? 'border-amber-200 bg-amber-50 text-amber-700'
+    : 'border-emerald-200 bg-emerald-50 text-emerald-700';
+}
+
 export function WorkflowEditorPage() {
   const { id = 'new' } = useParams();
   const location = useLocation();
@@ -52,6 +62,7 @@ export function WorkflowEditorPage() {
   const workflowName = useWorkflowEditorStore((state) => state.workflowName);
   const workflowStatus = useWorkflowEditorStore((state) => state.workflowStatus);
   const workflowVersion = useWorkflowEditorStore((state) => state.workflowVersion);
+  const hasUnsavedChanges = useWorkflowEditorStore(hasUnsavedWorkflowChanges);
   const setWorkflowName = useWorkflowEditorStore((state) => state.setWorkflowName);
   const resetEditor = useWorkflowEditorStore((state) => state.resetEditor);
   const loadTemplate = useWorkflowEditorStore((state) => state.loadTemplate);
@@ -68,6 +79,10 @@ export function WorkflowEditorPage() {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [running, setRunning] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
+  const { allowNextNavigation } = useUnsavedChangesGuard({
+    when: hasUnsavedChanges,
+    message: messages.workflowEditorPage.unsavedChangesConfirm,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -86,6 +101,7 @@ export function WorkflowEditorPage() {
               messages.templatePickerPage[template.suggestedNameKey],
               template.nodes,
               template.edges,
+              messages.workflowEditorPage.untitledWorkflow,
             );
             return;
           }
@@ -160,6 +176,7 @@ export function WorkflowEditorPage() {
       );
 
       if (workflowId === null) {
+        allowNextNavigation();
         navigate(`/workflows/${workflow.id}/edit`, {
           replace: true,
         });
@@ -221,6 +238,9 @@ export function WorkflowEditorPage() {
 
   const toggleStatusLabel =
     workflowStatus === ACTIVE_STATUS ? messages.common.pause : messages.common.activate;
+  const dirtyStateLabel = hasUnsavedChanges
+    ? messages.workflowEditorPage.unsavedChanges
+    : messages.workflowEditorPage.noUnsavedChanges;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-5 xl:overflow-hidden">
@@ -252,8 +272,15 @@ export function WorkflowEditorPage() {
             >
               {messages.common.workflowStatusLabels[workflowStatus]}
             </span>
+            <span
+              className={`inline-flex h-10 items-center rounded-full border px-3.5 text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] ${getDirtyStateClasses(hasUnsavedChanges)}`}
+            >
+              {dirtyStateLabel}
+            </span>
             <span className="inline-flex h-10 items-center rounded-full border border-slate-900/10 bg-white/84 px-3.5 text-sm font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
-              {workflowVersion === null ? messages.workflowEditorPage.unsaved : `v${workflowVersion}`}
+              {workflowVersion === null
+                ? messages.workflowEditorPage.notSavedYet
+                : `v${workflowVersion}`}
             </span>
             <span className="hidden h-7 w-px bg-slate-200/90 sm:block" />
 

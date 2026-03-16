@@ -284,7 +284,11 @@ export const ru = {
   workflowEditorPage: {
     workflowName: 'Название сценария',
     untitledWorkflow: 'Новый сценарий',
-    unsaved: 'Не сохранён',
+    notSavedYet: 'Ещё не сохранён',
+    unsavedChanges: 'Есть несохранённые изменения',
+    noUnsavedChanges: 'Все изменения сохранены',
+    unsavedChangesConfirm:
+      'Отменить несохранённые изменения и покинуть редактор?',
     saving: 'Сохранение...',
     saveFirst: 'Сначала сохраните сценарий',
     updating: 'Обновление...',

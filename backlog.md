@@ -1609,3 +1609,32 @@
   - выполнить workflow или step test
   - открыть preview в Email и Telegram forms
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-A: Protect unsaved editor changes
+- **Статус**: `done`
+- **Цель**: не дать пользователю потерять несохранённые правки при уходе из editor
+- **Scope**:
+  - dirty indicator в editor toolbar/header
+  - определение несохранённых изменений относительно последнего сохранённого состояния
+  - confirm при navigation away из editor
+  - confirm при клике по header navigation/back, если есть unsaved changes
+  - beforeunload guard для вкладки/refresh
+- **Не входит**:
+  - autosave
+  - version diff
+  - draft/publish
+- **Файлы**:
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+  - `apps/web/src/stores/workflow-editor.store.ts`
+  - `apps/web/src/hooks/useUnsavedChangesGuard.ts`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - editor показывает явный dirty-state
+  - при уходе со страницы/маршрута с несохранёнными правками появляется confirm
+  - клики по header navigation/back не уводят без discard confirm
+  - закрытие вкладки и refresh показывают browser beforeunload guard
+- **Проверка**:
+  - изменить workflow в editor и попытаться уйти через header navigation/back
+  - обновить страницу/закрыть вкладку с несохранёнными правками
+  - `pnpm --filter @mini-zapier/web build`

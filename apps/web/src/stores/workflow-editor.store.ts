@@ -314,6 +314,76 @@ function validateWorkflowGraph(
   return errors;
 }
 
+interface WorkflowDraftState {
+  workflowName: string;
+  workflowDescription: string | null;
+  workflowTimezone: string | null;
+  viewport: Viewport | null;
+  nodes: WorkflowEditorNode[];
+  edges: WorkflowEditorEdge[];
+}
+
+function normalizeJsonValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeJsonValue(item));
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .reduce<Record<string, unknown>>((acc, [key, nestedValue]) => {
+        acc[key] = normalizeJsonValue(nestedValue);
+        return acc;
+      }, {});
+  }
+
+  return value;
+}
+
+function stableStringify(value: unknown): string {
+  return JSON.stringify(normalizeJsonValue(value));
+}
+
+function toWorkflowMutationInput(
+  state: WorkflowDraftState,
+  defaultWorkflowName = DEFAULT_WORKFLOW_NAME,
+): WorkflowMutationInput {
+  return {
+    name: state.workflowName.trim() || defaultWorkflowName,
+    description: state.workflowDescription ?? undefined,
+    timezone: state.workflowTimezone ?? undefined,
+    viewport: toViewportRecord(state.viewport),
+    nodes: state.nodes.map((node) => toWorkflowNode(node)),
+    edges: state.edges.map((edge) => ({
+      id: edge.id,
+      sourceNodeId: edge.source,
+      targetNodeId: edge.target,
+      sourceHandle: edge.sourceHandle ?? undefined,
+      targetHandle: edge.targetHandle ?? undefined,
+    })),
+  };
+}
+
+function getWorkflowDraftSnapshot(
+  state: WorkflowDraftState,
+  defaultWorkflowName = DEFAULT_WORKFLOW_NAME,
+): string {
+  return stableStringify(toWorkflowMutationInput(state, defaultWorkflowName));
+}
+
+function getEmptyDraftSnapshot(
+  defaultWorkflowName = DEFAULT_WORKFLOW_NAME,
+): string {
+  return stableStringify({
+    name: defaultWorkflowName,
+    description: undefined,
+    timezone: undefined,
+    viewport: null,
+    nodes: [],
+    edges: [],
+  });
+}
+
 interface NodeMetaUpdates {
   label?: string;
   connectionId?: string | null;
@@ -333,6 +403,7 @@ interface WorkflowEditorStore {
   nodes: WorkflowEditorNode[];
   edges: WorkflowEditorEdge[];
   selectedNodeId: string | null;
+  savedWorkflowSnapshot: string | null;
   savedStructuralFingerprint: string | null;
   stepTestResults: Record<string, StepTestResponse>;
   setStepTestResult: (nodeId: string, result: StepTestResponse | null) => void;
@@ -363,9 +434,19 @@ interface WorkflowEditorStore {
     workflowName: string,
     nodes: WorkflowEditorNode[],
     edges: WorkflowEditorEdge[],
+    defaultWorkflowName?: string,
   ) => void;
   loadWorkflow: (workflow: WorkflowDto) => void;
   saveWorkflow: (defaultWorkflowName?: string) => WorkflowMutationInput;
+}
+
+export function hasUnsavedWorkflowChanges(
+  state: Pick<WorkflowEditorStore, keyof WorkflowDraftState | 'savedWorkflowSnapshot'>,
+): boolean {
+  return (
+    state.savedWorkflowSnapshot !== null &&
+    getWorkflowDraftSnapshot(state) !== state.savedWorkflowSnapshot
+  );
 }
 
 export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => ({
@@ -379,6 +460,7 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
   nodes: [],
   edges: [],
   selectedNodeId: null,
+  savedWorkflowSnapshot: getEmptyDraftSnapshot(),
   savedStructuralFingerprint: null,
   stepTestResults: {},
 
@@ -581,12 +663,13 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
       nodes: [],
       edges: [],
       selectedNodeId: null,
+      savedWorkflowSnapshot: getEmptyDraftSnapshot(defaultWorkflowName),
       savedStructuralFingerprint: null,
       stepTestResults: {},
     });
   },
 
-  loadTemplate(workflowName, nodes, edges) {
+  loadTemplate(workflowName, nodes, edges, defaultWorkflowName = DEFAULT_WORKFLOW_NAME) {
     set({
       workflowId: null,
       workflowName,
@@ -598,6 +681,7 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
       nodes,
       edges,
       selectedNodeId: null,
+      savedWorkflowSnapshot: getEmptyDraftSnapshot(defaultWorkflowName),
       savedStructuralFingerprint: null,
       stepTestResults: {},
     });
@@ -613,6 +697,7 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
       targetHandle: edge.targetHandle ?? null,
       type: 'smoothstep',
     }));
+    const workflowViewport = toViewport(workflow.viewport);
 
     set({
       workflowId: workflow.id,
@@ -621,10 +706,18 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
       workflowVersion: workflow.version,
       workflowDescription: workflow.description ?? null,
       workflowTimezone: workflow.timezone ?? null,
-      viewport: toViewport(workflow.viewport),
+      viewport: workflowViewport,
       nodes: editorNodes,
       edges: editorEdges,
       selectedNodeId: null,
+      savedWorkflowSnapshot: getWorkflowDraftSnapshot({
+        workflowName: workflow.name,
+        workflowDescription: workflow.description ?? null,
+        workflowTimezone: workflow.timezone ?? null,
+        viewport: workflowViewport,
+        nodes: editorNodes,
+        edges: editorEdges,
+      }),
       savedStructuralFingerprint: computeStructuralFingerprint(
         editorNodes,
         editorEdges,
@@ -636,19 +729,6 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
   saveWorkflow(defaultWorkflowName = DEFAULT_WORKFLOW_NAME) {
     const state = get();
 
-    return {
-      name: state.workflowName.trim() || defaultWorkflowName,
-      description: state.workflowDescription ?? undefined,
-      timezone: state.workflowTimezone ?? undefined,
-      viewport: toViewportRecord(state.viewport),
-      nodes: state.nodes.map((node) => toWorkflowNode(node)),
-      edges: state.edges.map((edge) => ({
-        id: edge.id,
-        sourceNodeId: edge.source,
-        targetNodeId: edge.target,
-        sourceHandle: edge.sourceHandle ?? undefined,
-        targetHandle: edge.targetHandle ?? undefined,
-      })),
-    };
+    return toWorkflowMutationInput(state, defaultWorkflowName);
   },
 }));
