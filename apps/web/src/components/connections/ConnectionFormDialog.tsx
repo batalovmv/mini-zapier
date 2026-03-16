@@ -1,5 +1,5 @@
 import type { ConnectionDto } from '@mini-zapier/shared';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useLocale } from '../../locale/LocaleProvider';
 import { ModalShell } from '../ui/ModalShell';
@@ -83,6 +83,7 @@ export function ConnectionFormDialog({
   testIds,
 }: ConnectionFormDialogProps) {
   const { messages } = useLocale();
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
   const connectionTypeLabels =
     messages.common.connectionTypeLabels as Record<ConnectionTypeValue, string>;
   const editingConnection = mode === 'edit' ? connection ?? null : null;
@@ -248,7 +249,9 @@ export function ConnectionFormDialog({
           ? messages.connectionsPage.createDialogDescription(typeLabel)
           : messages.connectionsPage.editDialogDescription(typeLabel)
       }
+      dismissable={!pending}
       eyebrow={messages.connectionsPage.dialogEyebrow}
+      initialFocusRef={nameInputRef}
       onClose={handleClose}
       title={
         mode === 'create'
@@ -298,6 +301,7 @@ export function ConnectionFormDialog({
               setFormError(null);
             }}
             placeholder={messages.connectionCreateDialog.connectionPlaceholder(typeLabel)}
+            ref={nameInputRef}
             type="text"
             value={name}
           />

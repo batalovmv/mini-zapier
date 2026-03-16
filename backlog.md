@@ -1744,3 +1744,30 @@
   - проверить login/register error surface
   - проверить delete flows на Dashboard и Connections
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-F: Improve modal accessibility
+- **Статус**: `done`
+- **Цель**: улучшить accessibility и focus management модалок
+- **Scope**:
+  - focus trap внутри `ModalShell`
+  - initial focus в диалоге
+  - return focus на триггер после закрытия
+  - корректные `aria-labelledby` / `aria-describedby`
+  - безопасное поведение `Escape` и backdrop close
+  - без новой UI-библиотеки
+- **Не входит**:
+  - новая modal/dialog library
+  - redesign dialog UI
+  - изменения backend API
+- **Файлы**:
+  - `apps/web/src/components/ui/ModalShell.tsx`
+  - `apps/web/src/components/ui/ConfirmationDialog.tsx`
+  - `apps/web/src/components/connections/ConnectionFormDialog.tsx`
+- **Acceptance**:
+  - keyboard focus остаётся внутри открытой модалки
+  - при открытии фокус попадает в содержимое диалога
+  - после закрытия фокус возвращается на исходный trigger, если он ещё существует в DOM
+  - dialog получает корректные aria-связки с title/description
+  - pending dialogs не закрываются через `Escape` и клик по backdrop
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
