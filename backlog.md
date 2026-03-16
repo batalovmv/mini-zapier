@@ -1455,7 +1455,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-052: DB Query metadata introspection + read builder
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: начать no-code DB Query c безопасного сценария чтения данных
 - **Проблема**:
   - текущий `DB_QUERY` — это raw SQL textarea + params JSON, практически непригодно для нетехнических пользователей

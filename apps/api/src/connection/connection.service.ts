@@ -117,6 +117,18 @@ export class ConnectionService {
     });
   }
 
+  async getDecryptedCredentials(
+    userId: string,
+    connectionId: string,
+  ): Promise<{ credentials: Record<string, string>; type: string }> {
+    const connection = await this.getOwnedConnectionOrThrow(userId, connectionId);
+
+    return {
+      credentials: this.decryptCredentials(connection.credentials),
+      type: connection.type,
+    };
+  }
+
   private async getOwnedConnectionOrThrow(
     userId: string,
     id: string,

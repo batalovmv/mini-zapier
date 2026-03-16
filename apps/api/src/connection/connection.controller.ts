@@ -25,13 +25,18 @@ import { ConnectionDto } from '@mini-zapier/shared';
 import type { AuthenticatedUser } from '../auth/auth.service';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { CreateConnectionDto } from './dto/create-connection.dto';
+import { TestQueryDto } from './dto/test-query.dto';
 import { UpdateConnectionDto } from './dto/update-connection.dto';
 import { ConnectionService } from './connection.service';
+import { IntrospectionService } from './introspection.service';
 
 @ApiTags('connections')
 @Controller('api/connections')
 export class ConnectionController {
-  constructor(private readonly connectionService: ConnectionService) {}
+  constructor(
+    private readonly connectionService: ConnectionService,
+    private readonly introspectionService: IntrospectionService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create connection' })
@@ -93,5 +98,52 @@ export class ConnectionController {
     @Param('id') id: string,
   ): Promise<void> {
     return this.connectionService.remove(currentUser.id, id);
+  }
+
+  @Get(':id/introspect/tables')
+  @ApiOperation({ summary: 'List tables for a PostgreSQL connection' })
+  @ApiParam({ name: 'id', description: 'Connection id' })
+  @ApiOkResponse({ description: 'Tables returned.' })
+  @ApiBadRequestResponse({ description: 'Connection is not PostgreSQL.' })
+  @ApiNotFoundResponse({ description: 'Connection not found.' })
+  introspectTables(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id') id: string,
+  ): Promise<{ tables: string[] }> {
+    return this.introspectionService.getTables(currentUser.id, id);
+  }
+
+  @Get(':id/introspect/tables/:table/columns')
+  @ApiOperation({ summary: 'List columns for a table' })
+  @ApiParam({ name: 'id', description: 'Connection id' })
+  @ApiParam({ name: 'table', description: 'Table name' })
+  @ApiOkResponse({ description: 'Columns returned.' })
+  @ApiBadRequestResponse({ description: 'Connection is not PostgreSQL.' })
+  @ApiNotFoundResponse({ description: 'Connection not found.' })
+  introspectColumns(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id') id: string,
+    @Param('table') table: string,
+  ): Promise<{ columns: { name: string; type: string; nullable: boolean }[] }> {
+    return this.introspectionService.getColumns(currentUser.id, id, table);
+  }
+
+  @Post(':id/introspect/query')
+  @ApiOperation({ summary: 'Test a read-only SQL query' })
+  @ApiParam({ name: 'id', description: 'Connection id' })
+  @ApiOkResponse({ description: 'Query result returned.' })
+  @ApiBadRequestResponse({ description: 'Invalid or non-SELECT query.' })
+  @ApiNotFoundResponse({ description: 'Connection not found.' })
+  testQuery(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() testQueryDto: TestQueryDto,
+  ): Promise<{ rows: unknown[]; rowCount: number }> {
+    return this.introspectionService.testQuery(
+      currentUser.id,
+      id,
+      testQueryDto.query,
+      testQueryDto.params ?? [],
+    );
   }
 }

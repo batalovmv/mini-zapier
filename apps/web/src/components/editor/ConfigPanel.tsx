@@ -148,6 +148,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
     nodeType: string;
     config: Record<string, unknown>;
     onChange: ConfigUpdater;
+    connectionId: string | null;
   }) {
     const definitionKey = `${options.nodeKind}:${options.nodeType}`;
 
@@ -188,6 +189,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
         return (
           <DbQueryConfig
             config={options.config}
+            connectionId={options.connectionId}
             onChange={options.onChange}
           />
         );
@@ -469,6 +471,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                 nodeType: selectedNode.data.nodeType,
                 config: selectedNode.data.config,
                 onChange: (updater) => updateNodeConfig(selectedNode.id, updater),
+                connectionId: selectedNode.data.connectionId ?? null,
               })}
             </div>
 
