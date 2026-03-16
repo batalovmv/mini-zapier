@@ -1425,7 +1425,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-051: Data Transform visual mapping builder
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: сделать Data Transform понятным через явную таблицу "выходное поле ← источник"
 - **Проблема**:
   - текущий mapping mode всё ещё требует вручную писать `{{input.*}}` в value

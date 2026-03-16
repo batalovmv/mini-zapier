@@ -591,6 +591,8 @@ export const en = {
       removeMappingRowAriaLabel: (index: number) =>
         `Remove mapping row ${index}`,
       remove: 'Remove',
+      showJson: 'Show as JSON',
+      hideJson: 'Hide JSON',
     },
     dbQuery: {
       query: 'SQL query',

@@ -1,9 +1,10 @@
-import { useRef } from 'react';
+import { useState } from 'react';
 
 import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
-import { FieldPicker, insertAtCursorRecord } from '../FieldPicker';
 import { TemplatedField } from '../templated-input';
+
+import { RawJsonFallback } from './RawJsonFallback';
 
 function toStringRecord(value: unknown): Record<string, string> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -27,7 +28,9 @@ export function DataTransformConfig({
   onChange,
 }: DataTransformConfigProps) {
   const { messages } = useLocale();
-  const mappingValueRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const t = messages.configForms.dataTransform;
+
+  const [showJson, setShowJson] = useState(false);
 
   const mode = config.mode === 'mapping' ? 'mapping' : 'template';
   const mapping = toStringRecord(config.mapping);
@@ -95,9 +98,9 @@ export function DataTransformConfig({
   return (
     <div className="space-y-5">
       <label className="block">
-        <span className="muted-label">{messages.configForms.dataTransform.mode}</span>
+        <span className="muted-label">{t.mode}</span>
         <select
-          aria-label={messages.configForms.dataTransform.modeAriaLabel}
+          aria-label={t.modeAriaLabel}
           className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
           onChange={(event) => {
             const value = event.target.value;
@@ -105,25 +108,25 @@ export function DataTransformConfig({
           }}
           value={mode}
         >
-          <option value="template">{messages.configForms.dataTransform.templateMode}</option>
-          <option value="mapping">{messages.configForms.dataTransform.mappingMode}</option>
+          <option value="template">{t.templateMode}</option>
+          <option value="mapping">{t.mappingMode}</option>
         </select>
       </label>
 
       {mode === 'template' ? (
         <TemplatedField
-          ariaLabel={messages.configForms.dataTransform.templateAriaLabel}
+          ariaLabel={t.templateAriaLabel}
           config={config}
           configKey="template"
-          label={messages.configForms.dataTransform.template}
+          label={t.template}
           multiline
           onChange={onChange}
-          placeholder={messages.configForms.dataTransform.templatePlaceholder}
+          placeholder={t.templatePlaceholder}
         />
       ) : (
         <div>
           <div className="flex items-center justify-between gap-3">
-            <span className="muted-label">{messages.configForms.dataTransform.mapping}</span>
+            <span className="muted-label">{t.mapping}</span>
             <button
               className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
               onClick={() =>
@@ -138,7 +141,7 @@ export function DataTransformConfig({
               }
               type="button"
             >
-              {messages.configForms.dataTransform.addField}
+              {t.addField}
             </button>
           </div>
 
@@ -150,63 +153,48 @@ export function DataTransformConfig({
               >
                 <div className="flex items-center gap-2">
                   <input
-                    aria-label={messages.configForms.dataTransform.mappingKeyAriaLabel(index + 1)}
+                    aria-label={t.mappingKeyAriaLabel(index + 1)}
                     className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                     onChange={(event) =>
                       updateMappingKey(index, event.target.value)
                     }
-                    placeholder={messages.configForms.dataTransform.keyPlaceholder}
+                    placeholder={t.keyPlaceholder}
                     type="text"
                     value={key}
                   />
                   <button
-                    aria-label={messages.configForms.dataTransform.removeMappingRowAriaLabel(index + 1)}
+                    aria-label={t.removeMappingRowAriaLabel(index + 1)}
                     className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
                     onClick={() => removeMapping(index)}
-                    title={messages.configForms.dataTransform.remove}
+                    title={t.remove}
                     type="button"
                   >
                     &times;
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <input
-                    aria-label={messages.configForms.dataTransform.mappingValueAriaLabel(index + 1)}
-                    className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-                    onChange={(event) =>
-                      updateMappingValue(index, event.target.value)
-                    }
-                    placeholder={messages.configForms.dataTransform.valuePlaceholder}
-                    ref={(el) => {
-                      mappingValueRefs.current[index] = el;
-                    }}
-                    type="text"
-                    value={value}
-                  />
-                  {key.trim().length > 0 ? (
-                    <FieldPicker
-                      onSelect={(f) =>
-                        insertAtCursorRecord(
-                          mappingValueRefs.current[index],
-                          f,
-                          'mapping',
-                          key,
-                          config,
-                          onChange,
-                          toStringRecord,
-                        )
-                      }
-                    />
-                  ) : (
-                    <div className="h-6 w-6 shrink-0" />
-                  )}
-                </div>
+                <TemplatedField
+                  ariaLabel={t.mappingValueAriaLabel(index + 1)}
+                  label=""
+                  onValueChange={(v) => updateMappingValue(index, v)}
+                  placeholder={t.valuePlaceholder}
+                  value={value}
+                />
               </div>
             ))}
           </div>
         </div>
       )}
+
+      {/* Raw JSON fallback */}
+      <RawJsonFallback
+        config={config}
+        hideLabel={t.hideJson}
+        onChange={onChange}
+        onToggle={() => setShowJson((v) => !v)}
+        open={showJson}
+        showLabel={t.showJson}
+      />
     </div>
   );
 }

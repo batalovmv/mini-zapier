@@ -622,6 +622,8 @@ export const ru = {
       removeMappingRowAriaLabel: (index: number) =>
         `Удалить строку маппинга ${index}`,
       remove: 'Удалить',
+      showJson: 'Показать как JSON',
+      hideJson: 'Скрыть JSON',
     },
     dbQuery: {
       query: 'SQL-запрос',
