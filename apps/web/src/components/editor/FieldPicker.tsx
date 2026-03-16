@@ -7,15 +7,84 @@ import {
   type RefObject,
 } from 'react';
 
+import type { StepTestResponse } from '@mini-zapier/shared';
+
 import { useLocale } from '../../locale/LocaleProvider';
 import { getAvailableFields } from '../../lib/api/executions';
 import type { AvailableFieldsResponse, FieldTreeNode } from '../../lib/api/types';
 import {
+  computeChainOrder,
   computeChainPosition,
   computeStructuralFingerprint,
+  flattenTreePaths,
 } from '../../lib/editor-chain';
 import { useWorkflowEditorStore } from '../../stores/workflow-editor.store';
 import type { ConfigUpdater } from './ConfigPanel';
+
+function applyTestResultOverlay(
+  apiResponse: AvailableFieldsResponse | null,
+  stepTestResults: Record<string, StepTestResponse>,
+  nodes: { id: string; data: { nodeKind: string; nodeType: string } }[],
+  edges: { source: string; target: string }[],
+): AvailableFieldsResponse | null {
+  const hasAnyTestResults = Object.keys(stepTestResults).length > 0;
+
+  if (!hasAnyTestResults) {
+    return apiResponse;
+  }
+
+  const chainOrder = computeChainOrder(
+    nodes as Parameters<typeof computeChainOrder>[0],
+    edges as Parameters<typeof computeChainOrder>[1],
+  );
+
+  if (chainOrder.length === 0) {
+    return apiResponse;
+  }
+
+  const positions: { position: number; fields: string[]; tree: FieldTreeNode[] }[] = [];
+  let hasOverlayData = false;
+
+  // Position 0: trigger data — from API only
+  const apiPos0 = apiResponse?.positions.find((p) => p.position === 0);
+  positions.push({
+    position: 0,
+    fields: apiPos0?.fields ?? [],
+    tree: apiPos0?.tree ?? [],
+  });
+
+  // Positions 1..N: action outputs
+  for (let i = 1; i < chainOrder.length; i++) {
+    const actionNodeId = chainOrder[i]!;
+    const testResult = stepTestResults[actionNodeId];
+
+    if (testResult?.status === 'SUCCESS' && testResult.outputDataSchema) {
+      const tree = testResult.outputDataSchema;
+      const fields = flattenTreePaths(tree);
+      positions.push({ position: i, fields, tree });
+      hasOverlayData = true;
+    } else {
+      const apiPos = apiResponse?.positions.find((p) => p.position === i);
+      positions.push({
+        position: i,
+        fields: apiPos?.fields ?? [],
+        tree: apiPos?.tree ?? [],
+      });
+    }
+  }
+
+  if (!hasOverlayData) {
+    return apiResponse;
+  }
+
+  return {
+    sourceExecutionId: apiResponse?.sourceExecutionId ?? null,
+    sourceWorkflowVersion: apiResponse?.sourceWorkflowVersion ?? null,
+    hasExecutions: apiResponse?.hasExecutions ?? false,
+    emptyState: null,
+    positions,
+  };
+}
 
 const cache = new Map<string, AvailableFieldsResponse>();
 const inflight = new Map<string, Promise<AvailableFieldsResponse>>();
@@ -279,8 +348,10 @@ export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: Fi
   const savedFingerprint = useWorkflowEditorStore(
     (s) => s.savedStructuralFingerprint,
   );
+  const stepTestResults = useWorkflowEditorStore((s) => s.stepTestResults);
 
-  const { data, loading, refetch } = useAvailableFields(workflowId);
+  const { data: rawData, loading, refetch } = useAvailableFields(workflowId);
+  const data = applyTestResultOverlay(rawData, stepTestResults, nodes, edges);
   const [internalOpen, setInternalOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const prevOpenRef = useRef(false);
@@ -315,20 +386,25 @@ export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: Fi
   }
 
   const currentFingerprint = computeStructuralFingerprint(nodes, edges);
-  const hasUnsavedChanges =
-    savedFingerprint !== null && currentFingerprint !== savedFingerprint;
-
-  const versionMismatch =
-    data !== null &&
-    data.sourceWorkflowVersion !== null &&
-    workflowVersion !== null &&
-    data.sourceWorkflowVersion !== workflowVersion;
 
   const positionData = data?.positions.find(
     (p) => p.position === chainPosition,
   );
   const tree = positionData?.tree ?? [];
   const fields = positionData?.fields ?? [];
+
+  // Bypass unsaved-changes warning when test results provide data for this position
+  const hasTestOverlayForPosition = tree.length > 0 || fields.length > 0;
+  const hasUnsavedChanges =
+    savedFingerprint !== null &&
+    currentFingerprint !== savedFingerprint &&
+    !hasTestOverlayForPosition;
+
+  const versionMismatch =
+    data !== null &&
+    data.sourceWorkflowVersion !== null &&
+    workflowVersion !== null &&
+    data.sourceWorkflowVersion !== workflowVersion;
 
   function handleToggle() {
     if (open) {

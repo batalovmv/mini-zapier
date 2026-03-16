@@ -1,7 +1,10 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { Job, Queue } from 'bullmq';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { StepTestResponse } from '@mini-zapier/shared';
+import { Job, Queue, QueueEvents } from 'bullmq';
 
 import {
+  STEP_TEST_JOB_NAME,
+  STEP_TEST_QUEUE_NAME,
   WORKFLOW_EXECUTION_JOB_NAME,
   WORKFLOW_EXECUTION_QUEUE_NAME,
 } from './queue.constants';
@@ -14,17 +17,40 @@ export interface WorkflowExecutionJobData {
   executionId: string;
 }
 
+export interface StepTestJobData {
+  nodeType: string;
+  config: Record<string, unknown>;
+  connectionId: string | null;
+  inputData: unknown;
+}
+
+const STEP_TEST_WAIT_TIMEOUT = 35_000;
+
 @Injectable()
-export class QueueService implements OnModuleDestroy {
+export class QueueService implements OnModuleInit, OnModuleDestroy {
+  private readonly redisConnection = {
+    host: process.env.REDIS_HOST ?? 'localhost',
+    port: this.parseRedisPort(process.env.REDIS_PORT),
+  };
+
   private readonly workflowExecutionQueue = new Queue<WorkflowExecutionJobData>(
     WORKFLOW_EXECUTION_QUEUE_NAME,
-    {
-      connection: {
-        host: process.env.REDIS_HOST ?? 'localhost',
-        port: this.parseRedisPort(process.env.REDIS_PORT),
-      },
-    },
+    { connection: this.redisConnection },
   );
+
+  private readonly stepTestQueue = new Queue<StepTestJobData>(
+    STEP_TEST_QUEUE_NAME,
+    { connection: this.redisConnection },
+  );
+
+  private readonly stepTestQueueEvents = new QueueEvents(
+    STEP_TEST_QUEUE_NAME,
+    { connection: this.redisConnection },
+  );
+
+  async onModuleInit(): Promise<void> {
+    await this.stepTestQueueEvents.waitUntilReady();
+  }
 
   async addWorkflowExecutionJob(
     executionId: string,
@@ -42,7 +68,28 @@ export class QueueService implements OnModuleDestroy {
     }
   }
 
+  async addStepTestJob(data: StepTestJobData): Promise<StepTestResponse> {
+    const job = await this.stepTestQueue.add(STEP_TEST_JOB_NAME, data);
+
+    try {
+      const result = await job.waitUntilFinished(
+        this.stepTestQueueEvents,
+        STEP_TEST_WAIT_TIMEOUT,
+      );
+
+      return result as StepTestResponse;
+    } catch {
+      return {
+        status: 'FAILED',
+        errorMessage: 'Step test timed out.',
+        durationMs: STEP_TEST_WAIT_TIMEOUT,
+      };
+    }
+  }
+
   async onModuleDestroy(): Promise<void> {
+    await this.stepTestQueueEvents.close();
+    await this.stepTestQueue.close();
     await this.workflowExecutionQueue.close();
   }
 

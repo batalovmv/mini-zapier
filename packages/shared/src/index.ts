@@ -3,3 +3,4 @@ export * from './types/trigger';
 export * from './types/action';
 export * from './types/execution';
 export * from './types/connection';
+export * from './types/step-test';

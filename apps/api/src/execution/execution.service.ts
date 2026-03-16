@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -8,6 +9,7 @@ import {
   ExecutionStatus,
   FieldTreeNode,
   StepStatus,
+  StepTestResponse,
   TriggerType,
   WorkflowExecutionDto,
 } from '@mini-zapier/shared';
@@ -23,6 +25,7 @@ import {
 
 import { PrismaService } from '../prisma/prisma.service';
 import { QueueService } from '../queue/queue.service';
+import { StepTestBodyDto } from './dto/step-test.dto';
 import {
   computeChainSignature,
   flattenTreePaths,
@@ -85,6 +88,36 @@ export class ExecutionService {
   ): Promise<StartExecutionResult> {
     await this.ensureWorkflowOwnedByUser(userId, workflowId);
     return this.startExecution(workflowId, triggerData);
+  }
+
+  async testStep(
+    userId: string,
+    workflowId: string,
+    body: StepTestBodyDto,
+  ): Promise<StepTestResponse> {
+    await this.ensureWorkflowOwnedByUser(userId, workflowId);
+
+    const connectionId = body.connectionId ?? null;
+
+    if (connectionId) {
+      const connection = await this.prisma.connection.findFirst({
+        where: { id: connectionId, userId },
+        select: { id: true },
+      });
+
+      if (!connection) {
+        throw new ForbiddenException(
+          `Connection "${connectionId}" not found or not owned by user.`,
+        );
+      }
+    }
+
+    return this.queueService.addStepTestJob({
+      nodeType: body.nodeType,
+      config: body.config,
+      connectionId,
+      inputData: body.inputData,
+    });
   }
 
   async startExecution(

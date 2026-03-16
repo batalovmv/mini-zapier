@@ -1,4 +1,4 @@
-import type { WorkflowDto } from '@mini-zapier/shared';
+import type { StepTestResponse, WorkflowDto } from '@mini-zapier/shared';
 import {
   addEdge,
   applyEdgeChanges,
@@ -132,6 +132,48 @@ function canConnectLinear(
   }
 
   return !hasPath(connection.target, connection.source, edges);
+}
+
+function getDownstreamNodeIds(
+  nodeId: string,
+  edges: WorkflowEditorEdge[],
+): string[] {
+  const ids: string[] = [];
+  let currentId: string | undefined = nodeId;
+  const visited = new Set<string>();
+
+  while (currentId !== undefined) {
+    if (visited.has(currentId)) break;
+    visited.add(currentId);
+
+    const outgoing = edges.find((edge) => edge.source === currentId);
+
+    if (!outgoing) break;
+
+    ids.push(outgoing.target);
+    currentId = outgoing.target;
+  }
+
+  return ids;
+}
+
+function clearTestResultsForNodeAndDownstream(
+  nodeId: string,
+  edges: WorkflowEditorEdge[],
+  stepTestResults: Record<string, StepTestResponse>,
+): Record<string, StepTestResponse> {
+  const toClear = [nodeId, ...getDownstreamNodeIds(nodeId, edges)];
+  const hasAny = toClear.some((id) => id in stepTestResults);
+
+  if (!hasAny) return stepTestResults;
+
+  const next = { ...stepTestResults };
+
+  for (const id of toClear) {
+    delete next[id];
+  }
+
+  return next;
 }
 
 export type WorkflowValidationCode =
@@ -292,6 +334,9 @@ interface WorkflowEditorStore {
   edges: WorkflowEditorEdge[];
   selectedNodeId: string | null;
   savedStructuralFingerprint: string | null;
+  stepTestResults: Record<string, StepTestResponse>;
+  setStepTestResult: (nodeId: string, result: StepTestResponse | null) => void;
+  clearStepTestResults: () => void;
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   onConnect: (connection: Connection) => void;
@@ -330,6 +375,25 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
   edges: [],
   selectedNodeId: null,
   savedStructuralFingerprint: null,
+  stepTestResults: {},
+
+  setStepTestResult(nodeId, result) {
+    set((state) => {
+      if (result === null) {
+        const next = { ...state.stepTestResults };
+        delete next[nodeId];
+        return { stepTestResults: next };
+      }
+
+      return {
+        stepTestResults: { ...state.stepTestResults, [nodeId]: result },
+      };
+    });
+  },
+
+  clearStepTestResults() {
+    set({ stepTestResults: {} });
+  },
 
   onNodesChange(changes) {
     set((state) => {
@@ -352,6 +416,7 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
   onEdgesChange(changes) {
     set((state) => ({
       edges: applyEdgeChanges(changes, state.edges),
+      stepTestResults: {},
     }));
   },
 
@@ -372,6 +437,7 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
         },
         state.edges,
       ),
+      stepTestResults: {},
     }));
   },
 
@@ -433,33 +499,64 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
           },
         };
       }),
+      stepTestResults: clearTestResultsForNodeAndDownstream(
+        nodeId,
+        state.edges,
+        state.stepTestResults,
+      ),
     }));
   },
 
   updateNodeMeta(nodeId, updates) {
-    set((state) => ({
-      nodes: state.nodes.map((node) =>
-        node.id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                ...updates,
-              },
-            }
-          : node,
-      ),
-    }));
+    set((state) => {
+      const currentNode = state.nodes.find((n) => n.id === nodeId);
+      const connectionChanged =
+        'connectionId' in updates &&
+        currentNode?.data.connectionId !== updates.connectionId;
+
+      return {
+        nodes: state.nodes.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  ...updates,
+                },
+              }
+            : node,
+        ),
+        stepTestResults: connectionChanged
+          ? clearTestResultsForNodeAndDownstream(
+              nodeId,
+              state.edges,
+              state.stepTestResults,
+            )
+          : state.stepTestResults,
+      };
+    });
   },
 
   removeNode(nodeId) {
-    set((state) => ({
-      nodes: state.nodes.filter((node) => node.id !== nodeId),
-      edges: state.edges.filter(
-        (edge) => edge.source !== nodeId && edge.target !== nodeId,
-      ),
-      selectedNodeId: state.selectedNodeId === nodeId ? null : state.selectedNodeId,
-    }));
+    set((state) => {
+      const clearedResults = clearTestResultsForNodeAndDownstream(
+        nodeId,
+        state.edges,
+        state.stepTestResults,
+      );
+      const next = { ...clearedResults };
+      delete next[nodeId];
+
+      return {
+        nodes: state.nodes.filter((node) => node.id !== nodeId),
+        edges: state.edges.filter(
+          (edge) => edge.source !== nodeId && edge.target !== nodeId,
+        ),
+        selectedNodeId:
+          state.selectedNodeId === nodeId ? null : state.selectedNodeId,
+        stepTestResults: next,
+      };
+    });
   },
 
   validateWorkflow() {
@@ -480,6 +577,7 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
       edges: [],
       selectedNodeId: null,
       savedStructuralFingerprint: null,
+      stepTestResults: {},
     });
   },
 
@@ -509,6 +607,7 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
         editorNodes,
         editorEdges,
       ),
+      stepTestResults: {},
     });
   },
 

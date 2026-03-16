@@ -1,4 +1,4 @@
-import { WorkflowExecutionDto } from '@mini-zapier/shared';
+import { StepTestRequest, StepTestResponse, WorkflowExecutionDto } from '@mini-zapier/shared';
 
 import { apiClient } from './client';
 import {
@@ -39,6 +39,18 @@ export async function getAvailableFields(
 ): Promise<AvailableFieldsResponse> {
   const response = await apiClient.get<AvailableFieldsResponse>(
     `/workflows/${workflowId}/available-fields`,
+  );
+
+  return response.data;
+}
+
+export async function testStep(
+  workflowId: string,
+  body: StepTestRequest,
+): Promise<StepTestResponse> {
+  const response = await apiClient.post<StepTestResponse>(
+    `/workflows/${workflowId}/steps/test`,
+    body,
   );
 
   return response.data;

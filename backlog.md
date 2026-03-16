@@ -1518,7 +1518,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-054: Step test-run infrastructure
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: дать editor кнопку `Тест` на уровне конкретного шага и использовать этот результат для обновления field schema
 - **Проблема**:
   - сейчас проверить конфигурацию можно только через полный workflow run или manual execute

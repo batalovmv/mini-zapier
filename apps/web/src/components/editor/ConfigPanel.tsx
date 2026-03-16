@@ -20,6 +20,7 @@ import { HttpRequestConfig } from './config-forms/HttpRequestConfig';
 import { TelegramConfig } from './config-forms/TelegramConfig';
 import { WebhookConfig } from './config-forms/WebhookConfig';
 import { getNodeDefinition } from './editor-definitions';
+import { StepTestSection } from './StepTestSection';
 
 interface ConfigPanelProps {
   workflowId: string | null;
@@ -492,6 +493,16 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
               </button>
             </div>
           </section>
+
+          {selectedNode.data.nodeKind === 'action' ? (
+            <StepTestSection
+              config={selectedNode.data.config}
+              connectionId={selectedNode.data.connectionId ?? null}
+              nodeId={selectedNode.id}
+              nodeType={selectedNode.data.nodeType}
+              workflowId={workflowId}
+            />
+          ) : null}
         </div>
       </aside>
 

@@ -12,17 +12,19 @@ import {
 import {
   ApiAcceptedResponse,
   ApiBadRequestResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { WorkflowExecutionDto } from '@mini-zapier/shared';
+import { StepTestResponse, WorkflowExecutionDto } from '@mini-zapier/shared';
 
 import type { AuthenticatedUser } from '../auth/auth.service';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { AvailableFieldsResponseDto } from './dto/available-fields-response.dto';
+import { StepTestBodyDto } from './dto/step-test.dto';
 import { ListExecutionsQueryDto } from './dto/list-executions-query.dto';
 import {
   ExecutionListResponse,
@@ -68,6 +70,22 @@ export class ExecutionController {
     return {
       executionId: result.executionId,
     };
+  }
+
+  @Post('workflows/:id/steps/test')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Test a single action step with mock input data' })
+  @ApiParam({ name: 'id', description: 'Workflow id (for ownership check)' })
+  @ApiOkResponse({ description: 'Step test result.' })
+  @ApiNotFoundResponse({ description: 'Workflow not found.' })
+  @ApiForbiddenResponse({ description: 'Connection not owned by user.' })
+  @ApiBadRequestResponse({ description: 'Invalid step test payload.' })
+  async testStep(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id') workflowId: string,
+    @Body() body: StepTestBodyDto,
+  ): Promise<StepTestResponse> {
+    return this.executionService.testStep(currentUser.id, workflowId, body);
   }
 
   @Get('workflows/:id/executions')
