@@ -21,16 +21,23 @@ import {
 import { useWorkflowEditorStore } from '../../stores/workflow-editor.store';
 import type { ConfigUpdater } from './ConfigPanel';
 
+interface OverlayResult {
+  data: AvailableFieldsResponse | null;
+  /** Set of chain positions where test results contributed data */
+  testPositions: Set<number>;
+}
+
 function applyTestResultOverlay(
   apiResponse: AvailableFieldsResponse | null,
   stepTestResults: Record<string, StepTestResponse>,
   nodes: { id: string; data: { nodeKind: string; nodeType: string } }[],
   edges: { source: string; target: string }[],
-): AvailableFieldsResponse | null {
+): OverlayResult {
+  const emptyResult: OverlayResult = { data: apiResponse, testPositions: new Set() };
   const hasAnyTestResults = Object.keys(stepTestResults).length > 0;
 
   if (!hasAnyTestResults) {
-    return apiResponse;
+    return emptyResult;
   }
 
   const chainOrder = computeChainOrder(
@@ -39,10 +46,11 @@ function applyTestResultOverlay(
   );
 
   if (chainOrder.length === 0) {
-    return apiResponse;
+    return emptyResult;
   }
 
   const positions: { position: number; fields: string[]; tree: FieldTreeNode[] }[] = [];
+  const testPositions = new Set<number>();
   let hasOverlayData = false;
 
   // Position 0: trigger data — from API only
@@ -62,6 +70,7 @@ function applyTestResultOverlay(
       const tree = testResult.outputDataSchema;
       const fields = flattenTreePaths(tree);
       positions.push({ position: i, fields, tree });
+      testPositions.add(i);
       hasOverlayData = true;
     } else {
       const apiPos = apiResponse?.positions.find((p) => p.position === i);
@@ -74,15 +83,18 @@ function applyTestResultOverlay(
   }
 
   if (!hasOverlayData) {
-    return apiResponse;
+    return emptyResult;
   }
 
   return {
-    sourceExecutionId: apiResponse?.sourceExecutionId ?? null,
-    sourceWorkflowVersion: apiResponse?.sourceWorkflowVersion ?? null,
-    hasExecutions: apiResponse?.hasExecutions ?? false,
-    emptyState: null,
-    positions,
+    data: {
+      sourceExecutionId: apiResponse?.sourceExecutionId ?? null,
+      sourceWorkflowVersion: apiResponse?.sourceWorkflowVersion ?? null,
+      hasExecutions: apiResponse?.hasExecutions ?? false,
+      emptyState: null,
+      positions,
+    },
+    testPositions,
   };
 }
 
@@ -351,7 +363,8 @@ export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: Fi
   const stepTestResults = useWorkflowEditorStore((s) => s.stepTestResults);
 
   const { data: rawData, loading, refetch } = useAvailableFields(workflowId);
-  const data = applyTestResultOverlay(rawData, stepTestResults, nodes, edges);
+  const overlay = applyTestResultOverlay(rawData, stepTestResults, nodes, edges);
+  const data = overlay.data;
   const [internalOpen, setInternalOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const prevOpenRef = useRef(false);
@@ -393,8 +406,8 @@ export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: Fi
   const tree = positionData?.tree ?? [];
   const fields = positionData?.fields ?? [];
 
-  // Bypass unsaved-changes warning when test results provide data for this position
-  const hasTestOverlayForPosition = tree.length > 0 || fields.length > 0;
+  // Bypass unsaved-changes warning only when test results (not stale API data) provide data for this position
+  const hasTestOverlayForPosition = overlay.testPositions.has(chainPosition);
   const hasUnsavedChanges =
     savedFingerprint !== null &&
     currentFingerprint !== savedFingerprint &&

@@ -51,14 +51,23 @@ function buildClientConfig(
   };
 }
 
+const ALLOWED_READ = new Set(['SELECT', 'WITH']);
+const ALLOWED_MUTATION = new Set(['INSERT', 'UPDATE', 'DELETE']);
+
 function classifyQuery(query: string): 'read' | 'mutation' {
   const firstWord = query.trim().split(/\s+/)[0]?.toUpperCase();
 
-  if (firstWord === 'SELECT' || firstWord === 'WITH') {
+  if (firstWord && ALLOWED_READ.has(firstWord)) {
     return 'read';
   }
 
-  return 'mutation';
+  if (firstWord && ALLOWED_MUTATION.has(firstWord)) {
+    return 'mutation';
+  }
+
+  throw new Error(
+    `Only SELECT, WITH, INSERT, UPDATE and DELETE statements are allowed. Got: ${firstWord ?? '(empty)'}`,
+  );
 }
 
 @Injectable()

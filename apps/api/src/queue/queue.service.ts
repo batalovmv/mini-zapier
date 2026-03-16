@@ -78,10 +78,15 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       );
 
       return result as StepTestResponse;
-    } catch {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error && error.message.includes('timed out')
+          ? 'Step test timed out.'
+          : `Step test failed: ${error instanceof Error ? error.message : String(error)}`;
+
       return {
         status: 'FAILED',
-        errorMessage: 'Step test timed out.',
+        errorMessage: message,
         durationMs: STEP_TEST_WAIT_TIMEOUT,
       };
     }
