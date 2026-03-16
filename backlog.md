@@ -1714,3 +1714,33 @@
 - **Проверка**:
   - проверить создание connection в editor и на странице Connections
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-E: Refine notification semantics and destructive flows
+- **Статус**: `done`
+- **Цель**: привести feedback к типу действия и убрать misleading state в destructive flows
+- **Scope**:
+  - поправить confirmation dialogs в pending state
+  - убрать лишнее дублирование toast + inline в auth flow там, где toast лишний
+  - проверить и точечно выровнять CRUD feedback на dashboard/connections/editor без смены общего toaster contract
+  - сохранить существующие confirm dialogs для destructive actions
+- **Не входит**:
+  - backend API changes
+  - global toaster redesign
+  - unrelated UI refresh
+- **Файлы**:
+  - `apps/web/src/components/ui/ConfirmationDialog.tsx`
+  - `apps/web/src/components/connections/ConnectionFormDialog.tsx`
+  - `apps/web/src/pages/DashboardPage.tsx`
+  - `apps/web/src/pages/ConnectionsPage.tsx`
+  - `apps/web/src/pages/LoginPage.tsx`
+  - `apps/web/src/pages/RegisterPage.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - destructive dialogs не выглядят отменяемыми/ожидающими подтверждения после уже начатого удаления
+  - auth blocking errors не дублируются одновременно toast-ом и inline блоком
+  - create/update/delete feedback использует copy, соответствующий текущему действию
+- **Проверка**:
+  - проверить login/register error surface
+  - проверить delete flows на Dashboard и Connections
+  - `pnpm --filter @mini-zapier/web build`

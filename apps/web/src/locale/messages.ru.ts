@@ -98,6 +98,10 @@ export const ru = {
     deleteDialogConfirm: 'Удалить сценарий',
     deleteDialogDescription: (name: string) =>
       `Удалить сценарий "${name}"? Это действие нельзя отменить.`,
+    deleteDialogPendingTitle: 'Удаление сценария...',
+    deleteDialogPendingLabel: 'Удаление сценария...',
+    deleteDialogPendingDescription: (name: string) =>
+      `Удаляем сценарий "${name}". Диалог закроется, когда API подтвердит удаление.`,
     executionStartedToast: (name: string) =>
       `Запуск сценария "${name}" создан.`,
     statusUpdatedToast: (name: string, status: string) =>
@@ -463,6 +467,7 @@ export const ru = {
       'При создании или полной замене credentials нужно заполнить значение для каждого поля.',
     valuePlaceholderEdit: 'Введите новое значение',
     updateConnection: 'Сохранить изменения',
+    updatingConnection: 'Обновление...',
     connectionCreatedToast: (name: string) => `Подключение "${name}" создано.`,
     connectionUpdatedToast: (name: string) => `Подключение "${name}" обновлено.`,
     connectionDeletedToast: (name: string) => `Подключение "${name}" удалено.`,
@@ -470,6 +475,10 @@ export const ru = {
     deleteDialogDescription: (name: string) =>
       `Удалить подключение "${name}"? API заблокирует удаление, если оно всё ещё используется узлом сценария.`,
     deleteDialogConfirm: 'Удалить подключение',
+    deleteDialogPendingTitle: 'Удаление подключения...',
+    deleteDialogPendingLabel: 'Удаление подключения...',
+    deleteDialogPendingDescription: (name: string) =>
+      `Удаляем подключение "${name}". Если оно ещё используется в сценарии, API вернёт ошибку и ничего не удалит.`,
   },
   connectionCreateDialog: {
     cancel: 'Отмена',
@@ -885,6 +894,7 @@ export const ru = {
     eyebrow: 'Подтверждение',
     cancel: 'Отмена',
     working: 'Выполняется...',
+    pendingNote: 'Запрос уже выполняется. Закрытие временно недоступно.',
     destructiveNote: 'Это действие необратимо и требует явного подтверждения.',
   },
   loadingState: {

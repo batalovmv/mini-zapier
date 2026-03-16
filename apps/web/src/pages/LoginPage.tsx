@@ -1,5 +1,4 @@
 import { FormEvent, useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { useLocale } from '../locale/LocaleProvider';
@@ -31,7 +30,6 @@ export function LoginPage() {
     } catch (err) {
       const message = getApiErrorMessage(err, messages.errors);
       setLoginError(message);
-      toast.error(message);
     } finally {
       setLoading(false);
     }

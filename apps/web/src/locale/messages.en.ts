@@ -96,6 +96,10 @@ export const en = {
     deleteDialogConfirm: 'Delete workflow',
     deleteDialogDescription: (name: string) =>
       `Delete workflow "${name}"? This action cannot be undone.`,
+    deleteDialogPendingTitle: 'Deleting workflow...',
+    deleteDialogPendingLabel: 'Deleting workflow...',
+    deleteDialogPendingDescription: (name: string) =>
+      `Deleting workflow "${name}". This dialog closes after the API confirms the removal.`,
     executionStartedToast: (name: string) =>
       `Workflow "${name}" execution started.`,
     statusUpdatedToast: (name: string, status: string) =>
@@ -444,6 +448,7 @@ export const en = {
       'Enter a value for every credential field when creating or replacing credentials.',
     valuePlaceholderEdit: 'Enter new value',
     updateConnection: 'Update connection',
+    updatingConnection: 'Updating...',
     connectionCreatedToast: (name: string) => `Connection "${name}" created.`,
     connectionUpdatedToast: (name: string) => `Connection "${name}" updated.`,
     connectionDeletedToast: (name: string) => `Connection "${name}" deleted.`,
@@ -451,6 +456,10 @@ export const en = {
     deleteDialogDescription: (name: string) =>
       `Delete connection "${name}"? The API will block removal if it is still used by a workflow node.`,
     deleteDialogConfirm: 'Delete connection',
+    deleteDialogPendingTitle: 'Deleting connection...',
+    deleteDialogPendingLabel: 'Deleting connection...',
+    deleteDialogPendingDescription: (name: string) =>
+      `Deleting connection "${name}". If a workflow still uses it, the API will return an error and keep it intact.`,
   },
   connectionCreateDialog: {
     cancel: 'Cancel',
@@ -851,6 +860,7 @@ export const en = {
     eyebrow: 'Confirmation',
     cancel: 'Cancel',
     working: 'Working...',
+    pendingNote: 'This request is already in progress. Closing is temporarily disabled.',
     destructiveNote:
       'This action is destructive and requires explicit confirmation.',
   },

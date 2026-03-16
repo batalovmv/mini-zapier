@@ -162,10 +162,10 @@ export function DashboardPage() {
 
     try {
       await deleteWorkflow(workflow.id);
+      setWorkflowPendingDelete(null);
 
       await refreshDashboardData();
 
-      setWorkflowPendingDelete(null);
       toast.success(messages.dashboardPage.deletedToast(workflow.name));
     } catch (error) {
       toast.error(getApiErrorMessage(error, messages.errors));
@@ -238,6 +238,11 @@ export function DashboardPage() {
           description={messages.dashboardPage.deleteDialogDescription(
             workflowPendingDelete.name,
           )}
+          pendingDescription={messages.dashboardPage.deleteDialogPendingDescription(
+            workflowPendingDelete.name,
+          )}
+          pendingLabel={messages.dashboardPage.deleteDialogPendingLabel}
+          pendingTitle={messages.dashboardPage.deleteDialogPendingTitle}
           onCancel={() => setWorkflowPendingDelete(null)}
           onConfirm={() => void confirmDelete()}
           pending={pendingAction?.action === 'delete'}

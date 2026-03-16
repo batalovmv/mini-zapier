@@ -234,7 +234,9 @@ export function ConnectionFormDialog({
             type="button"
           >
             {pending
-              ? messages.connectionCreateDialog.creating
+              ? mode === 'create'
+                ? messages.connectionCreateDialog.creating
+                : messages.connectionsPage.updatingConnection
               : mode === 'create'
                 ? messages.connectionCreateDialog.createConnection
                 : messages.connectionsPage.updateConnection}

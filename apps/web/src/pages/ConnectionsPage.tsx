@@ -359,6 +359,11 @@ export function ConnectionsPage() {
           confirmLabel={messages.connectionsPage.deleteDialogConfirm}
           confirmTone="danger"
           description={messages.connectionsPage.deleteDialogDescription(deleteTarget.name)}
+          pendingDescription={messages.connectionsPage.deleteDialogPendingDescription(
+            deleteTarget.name,
+          )}
+          pendingLabel={messages.connectionsPage.deleteDialogPendingLabel}
+          pendingTitle={messages.connectionsPage.deleteDialogPendingTitle}
           onCancel={() => setDeleteTarget(null)}
           onConfirm={() => void handleDeleteConfirm()}
           pending={deletePending}
