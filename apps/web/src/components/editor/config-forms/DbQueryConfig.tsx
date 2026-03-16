@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   introspectColumns,
@@ -192,32 +192,43 @@ export function DbQueryConfig({
     setParamsText(serializeParams(config.params));
   }, [config.params]);
 
-  /* ---- Reset builder + test state when connectionId changes ---- */
+  /* ---- Reset builder + test state when connectionId changes (not on mount) ---- */
+  const prevConnectionIdRef = useRef(connectionId);
+
   useEffect(() => {
+    const isInitialMount = prevConnectionIdRef.current === connectionId;
+
+    if (!isInitialMount) {
+      prevConnectionIdRef.current = connectionId;
+    }
+
     if (!connectionId) {
       setTables([]);
       setColumns([]);
       return;
     }
 
-    // Connection switched — reset visual builder to avoid stale SQL against new DB
-    setBuilder({ ...EMPTY_BUILDER });
-    setColumns([]);
-    setTestRows(null);
-    setTestRowCount(null);
-    setTestError(null);
-    setMetaError(null);
+    // Only reset on actual connection switch, not initial mount
+    if (!isInitialMount) {
+      setBuilder({ ...EMPTY_BUILDER });
+      setColumns([]);
+      setTestRows(null);
+      setTestRowCount(null);
+      setTestError(null);
+      setMetaError(null);
 
-    // Clear config query/params so stale SQL cannot be tested against the new connection
-    onChange((prev) => ({
-      ...prev,
-      query: '',
-      params: [],
-      _builderState: undefined,
-    }));
+      // Clear config query/params so stale SQL cannot be tested against the new connection
+      onChange((prev) => ({
+        ...prev,
+        query: '',
+        params: [],
+        _builderState: undefined,
+      }));
+    }
 
     let cancelled = false;
     setTablesLoading(true);
+    setMetaError(null);
 
     introspectTables(connectionId)
       .then((result) => {
