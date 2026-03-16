@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-C — `fix stale test preview and field states`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт
+- **Последнее изменение**: TASK-D — `align connection dialog validation`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -15,8 +15,18 @@
   - **TASK-A local build**: editor dirty-state + route/beforeunload guard собраны локально, `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-B local build**: rejected editor connections теперь показывают явную причину через toast, `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-C local build**: Step Test / Message Preview / Field Picker stale-state fixes собраны локально, `pnpm --filter @mini-zapier/web build` ✅
+  - **TASK-D local build**: editor create dialog и Connections dialog теперь используют один validation/pending contract, `pnpm --filter @mini-zapier/web build` ✅
   - Console errors: 0 за всю сессию тестирования ✅
   - **Примечание**: backend API на VPS (`api.memelab.ru`) не обновлялся с ~TASK-044; полный e2e (execution, step test) требует VPS redeploy
+- **Что сделано в TASK-D**:
+  - `apps/web/src/components/connections/ConnectionFormDialog.tsx` — create/edit dialog получил `fixedType` для editor flow и стал единственной точкой client-side validation: name и credential keys/values trim-ятся одинаково, пустые credential values больше не проходят через editor path, create/edit используют одинаковый error copy
+  - `apps/web/src/components/connections/ConnectionFormDialog.tsx` — pending state теперь блокирует cancel/overlay close, type select, inputs и add/remove controls, так что оба dialog не дают менять или закрывать форму во время submit
+  - `apps/web/src/components/editor/ConnectionCreateDialog.tsx` — editor create dialog упрощён до wrapper над `ConnectionFormDialog`, сохранил существующие `data-testid` для e2e и унаследовал те же правила create validation, что и страница Connections
+  - **Проверки TASK-D**:
+    - `pnpm --filter @mini-zapier/web build` ✓
+  - **Ограничения TASK-D**:
+    - manual browser smoke для editor/create и Connections/create/edit в этой сессии не запускался; покрытие подтверждено сборкой и code-path review
+    - API error surface не менялся: server-side ошибки по-прежнему показываются через existing toast behavior, scope backend API/introspection не расширялся
 - **Что сделано в TASK-C**:
   - `apps/web/src/components/editor/StepTestSection.tsx`, `apps/web/src/components/editor/ConfigPanel.tsx` — убран side-effect во время render, input для step test снова синхронизируется с актуальным output предыдущего шага, а при смене action-node секция remount-ится и не тащит stale local state
   - `apps/web/src/hooks/usePreviewData.ts` — preview data теперь сбрасывается по context change, пере-fetchится при reopen и в фоне polling'ом каждые 5с пока preview открыт, так что save/test/run больше не держат старый execution snapshot; network/API errors теперь отдаются как явный `load-error`, а не как `no-data`
@@ -493,7 +503,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-TASK-C закрыт. Следующий рекомендованный TASK — см. backlog.md.
+TASK-D закрыт. Следующий рекомендованный TASK — см. backlog.md.
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с новым email-login сценарием не запускался.
@@ -641,3 +651,4 @@ TASK-C закрыт. Следующий рекомендованный TASK — 
 | TASK-A | done | см. `git log` (`TASK-A: protect unsaved editor changes`) | Editor draft snapshot + dirty badge, route discard confirm for header/back/navigation, beforeunload guard for refresh/close |
 | TASK-B | done | см. `git log` (`TASK-B: explain rejected editor interactions`) | Explicit toast feedback for rejected editor connections with reason codes for invalid source/target, direction, duplicate edge, second in/out, cycle risk |
 | TASK-C | done | см. `git log` (`TASK-C: fix stale test preview and field states`) | StepTest input resync + selected-node reset, preview refresh/error states, FieldPicker load errors no longer masked as empty state |
+| TASK-D | done | см. `git log` (`TASK-D: align connection dialog validation`) | Shared connection dialog validation/pending behavior; editor create now reuses the library form and rejects empty credential values |

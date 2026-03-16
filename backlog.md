@@ -1690,3 +1690,27 @@
 - **Проверка**:
   - проверить Step Test, Preview и Field Picker в editor
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-D: Align connection dialog validation
+- **Статус**: `done`
+- **Цель**: выровнять UX и валидацию connection dialogs между editor и Connections page
+- **Scope**:
+  - синхронизировать validation rules между `ConnectionCreateDialog` и `ConnectionFormDialog`
+  - одинаково обрабатывать пустые values, обязательные поля и error copy
+  - выровнять pending/error behavior
+  - не менять backend API
+  - не расширять scope на connection test/introspection beyond existing behavior
+- **Не входит**:
+  - изменения backend API
+  - новый flow test/introspection для connections
+  - любые изменения вне connection dialogs
+- **Файлы**:
+  - `apps/web/src/components/connections/ConnectionFormDialog.tsx`
+  - `apps/web/src/components/editor/ConnectionCreateDialog.tsx`
+- **Acceptance**:
+  - создание connection в editor и на странице Connections использует одинаковые правила валидации
+  - нельзя создать credentials с пустыми значениями через editor dialog
+  - pending/error behavior в обоих dialog выровнен
+- **Проверка**:
+  - проверить создание connection в editor и на странице Connections
+  - `pnpm --filter @mini-zapier/web build`
