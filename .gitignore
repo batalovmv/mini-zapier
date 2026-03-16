@@ -15,3 +15,10 @@ apps/api/prisma/migrations/*.sql.bak
 .vscode/
 *.swp
 *.swo
+
+# Claude Code
+.claude/
+
+# Test artifacts
+test-results/
+AGENTS.md
