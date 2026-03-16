@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import toast from 'react-hot-toast';
 import ReactFlow, {
   Background,
+  type Connection,
   ConnectionMode,
   Controls,
   MarkerType,
@@ -151,7 +152,7 @@ function FlowCanvasInner() {
 
     window.__MINI_ZAPIER_TEST__ = {
       connectNodes(sourceNodeId: string, targetNodeId: string) {
-        onConnect({
+        handleConnect({
           source: sourceNodeId,
           target: targetNodeId,
           sourceHandle: null,
@@ -163,7 +164,7 @@ function FlowCanvasInner() {
     return () => {
       delete window.__MINI_ZAPIER_TEST__;
     };
-  }, [onConnect]);
+  }, [handleConnect]);
 
   useEffect(() => {
     function clearDropState() {
@@ -254,6 +255,16 @@ function FlowCanvasInner() {
     }
   }
 
+  function handleConnect(connection: Connection) {
+    const result = onConnect(connection);
+
+    if (!result.ok) {
+      toast.error(messages.flowCanvas.connectionRejected[result.code], {
+        id: 'editor-connection-rejected',
+      });
+    }
+  }
+
   return (
     <div className="app-panel editor-canvas-shell relative flex h-full min-h-0 flex-col overflow-hidden">
       <div className="border-b border-slate-900/10 px-5 py-4">
@@ -325,7 +336,7 @@ function FlowCanvasInner() {
           fitView={nodes.length > 0 && viewport === null}
           nodeTypes={nodeTypes}
           nodes={nodes}
-          onConnect={onConnect}
+          onConnect={handleConnect}
           onEdgesChange={onEdgesChange}
           onNodeClick={(_, node) => selectNode(node.id)}
           onNodesChange={onNodesChange}

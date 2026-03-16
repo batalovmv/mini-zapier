@@ -1639,3 +1639,27 @@
   - изменить workflow в editor и попытаться уйти через header navigation/back
   - обновить страницу/закрыть вкладку с несохранёнными правками
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-B: Explain rejected editor interactions
+- **Статус**: `done`
+- **Цель**: убрать silent failures в editor interactions и объяснять пользователю, почему действие отклонено
+- **Scope**:
+  - явный feedback при невалидном соединении нод в editor
+  - объяснение причин отказа: duplicate edge, invalid direction, second incoming/outgoing, cycle risk, invalid target/source
+  - сохранить текущие ограничения linear workflow
+- **Не входит**:
+  - backend contract
+  - redesign canvas
+  - новые graph capabilities beyond linear workflow
+- **Файлы**:
+  - `apps/web/src/stores/workflow-editor.store.ts`
+  - `apps/web/src/components/editor/FlowCanvas.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - отклонённое соединение больше не выглядит как silent no-op
+  - пользователь получает явное объяснение причины отказа
+  - existing linear constraints не ослаблены
+- **Проверка**:
+  - попытаться создать невалидные связи в editor
+  - `pnpm --filter @mini-zapier/web build`

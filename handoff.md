@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-A — `Protect unsaved editor changes`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт
+- **Последнее изменение**: TASK-B — `Explain rejected editor interactions`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -13,8 +13,18 @@
   - **TASK-055 save+reopen**: Webhook→Telegram template → save → dashboard → reopen editor — узлы и связи intact ✅; Cron→Email template → save → dashboard → reopen editor — intact ✅
   - **TASK-056 preview UI**: Email config → кнопка «▸ Предпросмотр» → empty state корректный; Telegram config → аналогично ✅
   - **TASK-A local build**: editor dirty-state + route/beforeunload guard собраны локально, `pnpm --filter @mini-zapier/web build` ✅
+  - **TASK-B local build**: rejected editor connections теперь показывают явную причину через toast, `pnpm --filter @mini-zapier/web build` ✅
   - Console errors: 0 за всю сессию тестирования ✅
   - **Примечание**: backend API на VPS (`api.memelab.ru`) не обновлялся с ~TASK-044; полный e2e (execution, step test) требует VPS redeploy
+- **Что сделано в TASK-B**:
+  - `apps/web/src/stores/workflow-editor.store.ts` — boolean/no-op проверка соединений заменена на typed result с явными кодами отказа: `INVALID_SOURCE`, `INVALID_TARGET`, `INVALID_DIRECTION`, `DUPLICATE_EDGE`, `SECOND_OUTGOING`, `SECOND_INCOMING`, `CYCLE_RISK`; ограничения linear workflow не менялись
+  - `apps/web/src/components/editor/FlowCanvas.tsx` — `onConnect` теперь проходит через локальный `handleConnect()`, и при reject пользователь получает `toast.error(...)` с понятной причиной вместо silent failure; тестовый helper `window.__MINI_ZAPIER_TEST__.connectNodes()` использует тот же путь
+  - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — добавлены EN/RU тексты для всех причин отклонения соединения
+  - **Проверки TASK-B**:
+    - `pnpm --filter @mini-zapier/web build` ✓
+  - **Ограничения TASK-B**:
+    - manual browser smoke для каждого reject-сценария в этой сессии не запускался; покрытие подтверждено сборкой и code-path review
+    - для отклонённых соединений выбран `toast` как основной feedback surface; inline message на canvas не добавлялся, чтобы не расширять scope
 - **Что сделано в TASK-A**:
   - `apps/web/src/stores/workflow-editor.store.ts` — добавлен stable draft snapshot (`savedWorkflowSnapshot`) и derived dirty-state через сравнение текущего editor payload с последним сохранённым состоянием; для нового workflow baseline = пустой draft, поэтому template/new edits считаются unsaved до save
   - `apps/web/src/hooks/useUnsavedChangesGuard.ts` — новый hook на базе `useBlocker` + `useBeforeUnload`: блокирует route changes, header navigation, browser back/forward и refresh/close при unsaved changes; есть bypass для внутреннего redirect после успешного первого save и для осознанного logout redirect
@@ -471,7 +481,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-TASK-A закрыт. Следующий рекомендованный TASK — см. backlog.md.
+TASK-B закрыт. Следующий рекомендованный TASK — см. backlog.md.
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с новым email-login сценарием не запускался.
@@ -617,3 +627,4 @@ TASK-A закрыт. Следующий рекомендованный TASK — 
 | TASK-055 | done | см. `git log` (`TASK-055: built-in workflow starter templates`) | `/workflows/new` template picker, built-in Webhook→Telegram / Cron→Email starters, editor prefill via `templateId` state; prod save+reopen verified for both templates |
 | TASK-056 | done | см. `git log` (`TASK-056: Email/Telegram message preview from last run`) | template-resolve utility, usePreviewData hook (test+execution fallback with double guard), MessagePreview component, Email/Telegram config integration; prod UI verified on Vercel |
 | TASK-A | done | см. `git log` (`TASK-A: protect unsaved editor changes`) | Editor draft snapshot + dirty badge, route discard confirm for header/back/navigation, beforeunload guard for refresh/close |
+| TASK-B | done | см. `git log` (`TASK-B: explain rejected editor interactions`) | Explicit toast feedback for rejected editor connections with reason codes for invalid source/target, direction, duplicate edge, second in/out, cycle risk |

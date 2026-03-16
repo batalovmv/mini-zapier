@@ -1,5 +1,8 @@
 import type { LocaleMessages } from './messages.en';
-import type { WorkflowValidationCode } from '../stores/workflow-editor.store';
+import type {
+  EditorConnectionRejectionCode,
+  WorkflowValidationCode,
+} from '../stores/workflow-editor.store';
 
 import {
   formatCount,
@@ -532,6 +535,22 @@ export const ru = {
       },
     ],
     duplicateTrigger: 'В одном сценарии может быть только один триггер.',
+    connectionRejected: {
+      INVALID_SOURCE:
+        'Связь отклонена: исходный шаг невалиден или больше не существует.',
+      INVALID_TARGET:
+        'Связь отклонена: целевой шаг невалиден или больше не существует.',
+      INVALID_DIRECTION:
+        'Связь отклонена: связь должна заканчиваться на action-узле, а не на триггере.',
+      DUPLICATE_EDGE:
+        'Связь отклонена: эти два шага уже соединены.',
+      SECOND_OUTGOING:
+        'Связь отклонена: у этого шага уже есть исходящее ребро.',
+      SECOND_INCOMING:
+        'Связь отклонена: у этого шага уже есть входящее ребро.',
+      CYCLE_RISK:
+        'Связь отклонена: эта связь создаст цикл в сценарии.',
+    } as Record<EditorConnectionRejectionCode, string>,
     eyebrow: 'Canvas сценария',
     emptyTitle: 'Начните с одного триггера',
     workspaceTitle: 'Рабочая область canvas',

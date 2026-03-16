@@ -1,4 +1,7 @@
-import type { WorkflowValidationCode } from '../stores/workflow-editor.store';
+import type {
+  EditorConnectionRejectionCode,
+  WorkflowValidationCode,
+} from '../stores/workflow-editor.store';
 
 import {
   formatCount,
@@ -512,6 +515,22 @@ export const en = {
       },
     ],
     duplicateTrigger: 'Only one trigger is allowed per workflow.',
+    connectionRejected: {
+      INVALID_SOURCE:
+        'Connection rejected: the source step is invalid or no longer exists.',
+      INVALID_TARGET:
+        'Connection rejected: the target step is invalid or no longer exists.',
+      INVALID_DIRECTION:
+        'Connection rejected: connections must end on an action step, not on a trigger.',
+      DUPLICATE_EDGE:
+        'Connection rejected: these two steps are already connected.',
+      SECOND_OUTGOING:
+        'Connection rejected: this step already has an outgoing connection.',
+      SECOND_INCOMING:
+        'Connection rejected: this step already has an incoming connection.',
+      CYCLE_RISK:
+        'Connection rejected: this link would create a cycle in the workflow.',
+    } as Record<EditorConnectionRejectionCode, string>,
     eyebrow: 'Workflow Canvas',
     emptyTitle: 'Start with one trigger',
     workspaceTitle: 'Canvas workspace',

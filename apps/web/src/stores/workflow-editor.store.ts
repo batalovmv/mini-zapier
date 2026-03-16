@@ -90,28 +90,49 @@ function hasPath(
   );
 }
 
-function canConnectLinear(
+export type EditorConnectionRejectionCode =
+  | 'INVALID_SOURCE'
+  | 'INVALID_TARGET'
+  | 'INVALID_DIRECTION'
+  | 'DUPLICATE_EDGE'
+  | 'SECOND_OUTGOING'
+  | 'SECOND_INCOMING'
+  | 'CYCLE_RISK';
+
+export type EditorConnectionResult =
+  | { ok: true }
+  | { ok: false; code: EditorConnectionRejectionCode };
+
+function validateLinearConnection(
   connection: Connection,
   nodes: WorkflowEditorNode[],
   edges: WorkflowEditorEdge[],
-): boolean {
-  if (!connection.source || !connection.target) {
-    return false;
+): EditorConnectionResult {
+  if (!connection.source) {
+    return { ok: false, code: 'INVALID_SOURCE' };
+  }
+
+  if (!connection.target) {
+    return { ok: false, code: 'INVALID_TARGET' };
   }
 
   if (connection.source === connection.target) {
-    return false;
+    return { ok: false, code: 'CYCLE_RISK' };
   }
 
   const sourceNode = nodes.find((node) => node.id === connection.source);
   const targetNode = nodes.find((node) => node.id === connection.target);
 
-  if (!sourceNode || !targetNode) {
-    return false;
+  if (!sourceNode) {
+    return { ok: false, code: 'INVALID_SOURCE' };
+  }
+
+  if (!targetNode) {
+    return { ok: false, code: 'INVALID_TARGET' };
   }
 
   if (targetNode.data.nodeKind !== 'action') {
-    return false;
+    return { ok: false, code: 'INVALID_DIRECTION' };
   }
 
   if (
@@ -120,18 +141,22 @@ function canConnectLinear(
         edge.source === connection.source && edge.target === connection.target,
     )
   ) {
-    return false;
+    return { ok: false, code: 'DUPLICATE_EDGE' };
   }
 
   if (edges.some((edge) => edge.source === connection.source)) {
-    return false;
+    return { ok: false, code: 'SECOND_OUTGOING' };
   }
 
   if (edges.some((edge) => edge.target === connection.target)) {
-    return false;
+    return { ok: false, code: 'SECOND_INCOMING' };
   }
 
-  return !hasPath(connection.target, connection.source, edges);
+  if (hasPath(connection.target, connection.source, edges)) {
+    return { ok: false, code: 'CYCLE_RISK' };
+  }
+
+  return { ok: true };
 }
 
 function getDownstreamNodeIds(
@@ -410,7 +435,7 @@ interface WorkflowEditorStore {
   clearStepTestResults: () => void;
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
-  onConnect: (connection: Connection) => void;
+  onConnect: (connection: Connection) => EditorConnectionResult;
   selectNode: (nodeId: string | null) => void;
   setWorkflowName: (name: string) => void;
   setWorkflowStatus: (status: WorkflowDto['status']) => void;
@@ -509,9 +534,10 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
 
   onConnect(connection) {
     const { nodes, edges } = get();
+    const connectionResult = validateLinearConnection(connection, nodes, edges);
 
-    if (!canConnectLinear(connection, nodes, edges)) {
-      return;
+    if (!connectionResult.ok) {
+      return connectionResult;
     }
 
     set((state) => ({
@@ -526,6 +552,8 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
       ),
       stepTestResults: {},
     }));
+
+    return { ok: true };
   },
 
   selectNode(nodeId) {
