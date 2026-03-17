@@ -1965,3 +1965,30 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+### TASK-N1: refactor editor inspector shell
+- **Статус**: `done`
+- **Цель**: превратить правую панель editor в contextual property inspector выбранного узла без дублирующего progress-UI и без конкуренции вторичных действий с основной настройкой
+- **Scope**:
+  - убрать верхний progress-summary `1/2/3` и декоративные `AC/TR` из header inspector-а
+  - оставить в header только название узла, chip `Триггер/Действие` и одну короткую status line без fake-ready copy
+  - упростить секции `Подключение`, `Основное`, `Тест шага с входными данными` и перевести удаление шага в quiet footer action
+  - обновить EN/RU copy только для shell inspector-а и `StepTestSection`
+- **Не входит**:
+  - глубокая переработка `DbQueryConfig` и остальных config forms
+  - изменения backend API
+  - расширение scope за пределы shell/layout/copy inspector-а
+- **Файлы**:
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/components/editor/StepTestSection.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - inspector больше не показывает верхний progress-summary и декоративные `AC/TR`
+  - header inspector-а состоит только из названия узла, chip node kind и короткой contextual status line
+  - connection section сведён к select + `Создать новое` + low-emphasis `Обновить список`, без summary-card, status pill, required-type helper и numbered badge
+  - секция `Настройка` переименована в `Основное`, а `Step Test` стал secondary и свёрнутым по умолчанию
+  - delete action вынесен в quiet footer, empty state inspector-а сведён к одному guidance block
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`

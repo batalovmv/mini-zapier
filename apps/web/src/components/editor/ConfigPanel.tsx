@@ -1,5 +1,5 @@
 import type { ConnectionDto, ConnectionType } from '@mini-zapier/shared';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import {
@@ -53,9 +53,6 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [connectionCreating, setConnectionCreating] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const connectionSectionRef = useRef<HTMLElement | null>(null);
-  const settingsSectionRef = useRef<HTMLElement | null>(null);
-  const testSectionRef = useRef<HTMLElement | null>(null);
 
   const selectedNode = useMemo(
     () => nodes.find((node) => node.id === selectedNodeId) ?? null,
@@ -68,8 +65,6 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
     ? messages.editorDefinitions[definition.id]
     : undefined;
   const selectedNodeLabel = definitionCopy?.label ?? selectedNode?.data.label ?? '';
-  const selectedNodeDescription =
-    definitionCopy?.description ?? messages.configPanel.defaultSelectedDescription;
   const connectionTypeLabel =
     definition?.connectionType
       ? messages.common.connectionTypeLabels[definition.connectionType as ConnectionType]
@@ -222,79 +217,22 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
   if (!selectedNode) {
     return (
       <aside className="app-panel editor-rail flex h-full min-h-0 flex-col overflow-hidden">
-        <div className="border-b border-slate-900/10 px-5 py-5">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-[1.05rem] bg-slate-950 text-[11px] font-black uppercase tracking-[0.28em] text-white shadow-[0_16px_28px_-18px_rgba(15,23,42,0.52)]">
-              IN
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-3">
-                <p className="muted-label">{messages.configPanel.emptyEyebrow}</p>
-                <span className="app-pill">
-                  {messages.configPanel.inspectorSteps.length}
-                </span>
-              </div>
-              <h2 className="mt-2 text-[1.45rem] font-semibold leading-tight tracking-tight text-slate-900">
-                {messages.configPanel.emptyTitle}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {messages.configPanel.emptyDescription}
-              </p>
-            </div>
-          </div>
-        </div>
-
         <div className="flex-1 overflow-y-auto px-5 py-5">
-          <div className="flex flex-col gap-4">
-            <section className={railSectionMutedClass}>
-              <p className="muted-label">{messages.configPanel.workspaceGuidanceEyebrow}</p>
-
-              <ol className="mt-3 divide-y divide-slate-900/8">
-                {messages.configPanel.inspectorSteps.map((item) => (
-                  <li
-                    key={item.step}
-                    className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
-                  >
-                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
-                      {item.step}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-900">
-                        {item.title}
-                      </p>
-                      <p className="mt-1 text-[13px] leading-5 text-slate-600">
-                        {item.description}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </section>
-
-            <section className="rounded-[1.45rem] border border-dashed border-slate-900/12 bg-white/55 px-4 py-4">
-              <p className="muted-label">{messages.configPanel.whatShowsUpTitle}</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {messages.configPanel.whatShowsUpDescription}
-              </p>
-            </section>
-          </div>
+          <section className={railSectionMutedClass}>
+            <p className={sectionEyebrowClass}>
+              {messages.configPanel.emptyEyebrow}
+            </p>
+            <h2 className="mt-2 text-[1.3rem] font-semibold leading-tight tracking-tight text-slate-900">
+              {messages.configPanel.emptyTitle}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {messages.configPanel.emptyDescription}
+            </p>
+          </section>
         </div>
       </aside>
     );
   }
-
-  const selectedNodeTone =
-    selectedNode.data.nodeKind === 'trigger'
-      ? {
-          short: 'TR',
-          icon: 'bg-emerald-600 text-white',
-          chip: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        }
-      : {
-          short: 'AC',
-          icon: 'bg-sky-600 text-white',
-          chip: 'border-sky-200 bg-sky-50 text-sky-700',
-        };
 
   const availableConnections =
     definition?.connectionType === null
@@ -308,188 +246,55 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
       : availableConnections.find(
           (connection) => connection.id === selectedNode.data.connectionId,
         ) ?? null;
-  const connectionAvailabilityLabel =
-    availableConnections.length === 0
-      ? messages.configPanel.noConnectionsInline
-      : messages.configPanel.availableConnectionsCount(availableConnections.length);
-  const connectionStatusLabel = selectedConnection
-    ? messages.configPanel.selectedConnectionSummary(selectedConnection.name)
-    : availableConnections.length === 0
-      ? messages.configPanel.noConnectionsInline
-      : messages.configPanel.connectionNotSelected;
   const requiresConnection = Boolean(definition?.connectionType);
   const isActionNode = selectedNode.data.nodeKind === 'action';
-  const connectionReady = !requiresConnection || selectedConnection !== null;
-  const activeStep = !connectionReady ? '1' : '2';
-  const sectionStatusClass = (tone: 'emerald' | 'sky' | 'violet' | 'slate') =>
-    ({
-      emerald: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-      sky: 'border-sky-200 bg-sky-50 text-sky-700',
-      violet: 'border-violet-200 bg-violet-50 text-violet-700',
-      slate: 'border-slate-200 bg-slate-50 text-slate-600',
-    })[tone];
-  const scrollToSection = (element: HTMLElement | null) => {
-    element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-  const progressItems = [
-    {
-      step: '1',
-      label: messages.configPanel.connectionEyebrow,
-      detail: requiresConnection
-        ? connectionStatusLabel
-        : messages.configPanel.noConnectionRequired,
-      toneClass: connectionReady
-        ? 'border-emerald-200 bg-emerald-50/78'
-        : 'border-amber-200 bg-amber-50/88',
-      target: requiresConnection ? connectionSectionRef : settingsSectionRef,
-    },
-    {
-      step: '2',
-      label: messages.configPanel.nodeSettingsEyebrow,
-      detail: connectionReady
-        ? messages.configPanel.statusNow
-        : messages.configPanel.statusLater,
-      toneClass: connectionReady
-        ? 'border-sky-200 bg-sky-50/82'
-        : 'border-slate-200 bg-slate-50/84',
-      target: settingsSectionRef,
-    },
-    ...(isActionNode
-      ? [
-          {
-            step: '3',
-            label: messages.stepTest.sectionEyebrow,
-            detail: workflowId
-              ? messages.configPanel.statusAvailable
-              : messages.configPanel.statusSaveFirst,
-            toneClass: workflowId
-              ? 'border-violet-200 bg-violet-50/82'
-              : 'border-slate-200 bg-slate-50/84',
-            target: testSectionRef,
-          },
-        ]
-      : []),
-  ];
+  const nodeKindChipClass =
+    selectedNode.data.nodeKind === 'trigger'
+      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+      : 'border-sky-200 bg-sky-50 text-sky-700';
+  const headerStatusLine =
+    requiresConnection && !selectedConnection
+      ? messages.configPanel.headerConnectionRequired(
+          connectionTypeLabel ?? definition?.connectionType ?? '',
+        )
+      : selectedConnection
+        ? messages.configPanel.headerConnectionSelected(selectedConnection.name)
+        : isActionNode && !workflowId
+          ? messages.configPanel.headerSaveToTest
+          : messages.configPanel.headerMainFields;
 
   return (
     <>
       <aside className="app-panel editor-rail flex h-full min-h-0 flex-col overflow-hidden">
         <div className="border-b border-slate-900/10 px-5 py-5">
-          <div className="flex items-start gap-3">
-            <span
-              className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-[1.05rem] text-[11px] font-black uppercase tracking-[0.28em] shadow-[0_16px_28px_-18px_rgba(15,23,42,0.36)] ${selectedNodeTone.icon}`}
-            >
-              {selectedNodeTone.short}
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-3">
-                <p className={sectionEyebrowClass}>
-                  {messages.configPanel.panelEyebrow}
-                </p>
-                <span className={`app-pill ${selectedNodeTone.chip}`}>
-                  {messages.common.nodeKindLabels[selectedNode.data.nodeKind]}
-                </span>
-              </div>
-              <h2 className="mt-2 text-[1.42rem] font-semibold leading-tight tracking-tight text-slate-900">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-[1.42rem] font-semibold leading-tight tracking-tight text-slate-900">
                 {selectedNodeLabel}
               </h2>
-              <p className="mt-2 text-[13px] leading-5 text-slate-600">
-                {selectedNodeDescription}
-              </p>
-
-              <div className="mt-4 space-y-2">
-                {progressItems.map((item) => (
-                  <button
-                    key={item.step}
-                    className={`flex w-full items-start gap-3 rounded-[1.05rem] border px-3 py-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.62)] transition hover:border-slate-300 hover:bg-white/92 ${
-                      item.step === activeStep
-                        ? `${item.toneClass} shadow-[0_16px_30px_-26px_rgba(15,23,42,0.32)]`
-                        : 'border-slate-900/8 bg-white/78'
-                    }`}
-                    onClick={() => scrollToSection(item.target.current)}
-                    type="button"
-                  >
-                    <span
-                      className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
-                        item.step === activeStep
-                          ? 'bg-white text-slate-900'
-                          : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      {item.step}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-slate-900">
-                        {item.label}
-                      </p>
-                      <p className="mt-0.5 text-xs leading-5 text-slate-600">
-                        {item.detail}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
+              <span className={`app-pill ${nodeKindChipClass}`}>
+                {messages.common.nodeKindLabels[selectedNode.data.nodeKind]}
+              </span>
             </div>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {headerStatusLine}
+            </p>
           </div>
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
           {definition?.connectionType ? (
-            <section
-              className={railSectionMutedClass}
-              ref={connectionSectionRef}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-slate-700 shadow-[0_8px_20px_-16px_rgba(15,23,42,0.45)]">
-                    1
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className={sectionEyebrowClass}>
-                      {messages.configPanel.connectionEyebrow}
-                    </p>
-                    <h3 className="mt-1.5 text-base font-semibold tracking-tight text-slate-900">
-                      {connectionTypeLabel ?? definition.connectionType}
-                    </h3>
-                    <p className="mt-1.5 text-[13px] leading-5 text-slate-600">
-                      {messages.configPanel.connectionSectionDescription(
-                        connectionTypeLabel ?? definition.connectionType,
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <span
-                  className={`shrink-0 rounded-full border px-3 py-1 text-[11px] font-semibold ${
-                    connectionReady
-                      ? sectionStatusClass('emerald')
-                      : sectionStatusClass('slate')
-                  }`}
-                >
-                  {connectionReady
-                    ? messages.configPanel.sectionReady
-                    : messages.configPanel.sectionNeedsAttention}
-                </span>
-              </div>
+            <section className={railSectionClass}>
+              <h3 className="text-sm font-semibold tracking-tight text-slate-900">
+                {messages.configPanel.connectionEyebrow}
+              </h3>
 
-              <div className="mt-4 rounded-[1.2rem] border border-slate-900/8 bg-white/86 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
-                <p className={sectionEyebrowClass}>
-                  {messages.configPanel.availableConnections}
-                </p>
-                <p className="mt-1.5 text-sm font-semibold text-slate-900">
-                  {selectedConnection?.name ??
-                    messages.configPanel.connectionNotSelected}
-                </p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
-                  {connectionAvailabilityLabel}
-                </p>
-              </div>
-
-              <label className="mt-4 block">
-                <span className={sectionEyebrowClass}>
-                  {messages.configPanel.availableConnections}
-                </span>
+              <div className="mt-3">
                 <select
-                  className="mt-2 w-full rounded-[1.15rem] border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                  aria-label={messages.configPanel.selectConnection(
+                    connectionTypeLabel ?? definition.connectionType,
+                  )}
+                  className="w-full rounded-[1.15rem] border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   data-testid="connection-select"
                   onChange={(event) =>
                     updateNodeMeta(selectedNode.id, {
@@ -513,14 +318,9 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                     </option>
                   ))}
                 </select>
-                <span className="mt-2 block text-xs leading-5 text-slate-500">
-                  {messages.configPanel.requiredType(
-                    connectionTypeLabel ?? definition.connectionType,
-                  )}
-                </span>
-              </label>
+              </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="mt-3 flex flex-wrap items-center gap-3">
                 <button
                   className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white"
                   data-testid="create-connection-button"
@@ -545,18 +345,11 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
               ) : null}
 
               {!loading && availableConnections.length === 0 ? (
-                <div className="mt-4 rounded-[1.15rem] border border-slate-900/10 bg-white/86 px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
-                  <p className="text-sm font-semibold text-slate-900">
-                    {messages.configPanel.noConnectionsTitle(
-                      connectionTypeLabel ?? definition.connectionType,
-                    )}
-                  </p>
-                  <p className="mt-1.5 text-[13px] leading-5 text-slate-600">
-                    {messages.configPanel.noConnectionsDescription(
-                      connectionTypeLabel ?? definition.connectionType,
-                    )}
-                  </p>
-                </div>
+                <p className="mt-3 text-xs leading-5 text-slate-500">
+                  {messages.configPanel.noConnectionsDescription(
+                    connectionTypeLabel ?? definition.connectionType,
+                  )}
+                </p>
               ) : null}
 
               {connectionsError ? (
@@ -567,35 +360,12 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
             </section>
           ) : null}
 
-          <section
-            className={railSectionClass}
-            ref={settingsSectionRef}
-          >
-            <div className="flex items-start gap-3">
-              <div className="flex min-w-0 items-start gap-3">
-                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-slate-700 shadow-[0_8px_20px_-16px_rgba(15,23,42,0.45)]">
-                  2
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className={sectionEyebrowClass}>
-                    {messages.configPanel.nodeSettingsEyebrow}
-                  </p>
-                  <p className="mt-1.5 text-sm leading-6 text-slate-600">
-                    {messages.configPanel.nodeSettingsDescription}
-                  </p>
-                </div>
-              </div>
-            </div>
+          <section className={railSectionClass}>
+            <h3 className="text-sm font-semibold tracking-tight text-slate-900">
+              {messages.configPanel.nodeSettingsEyebrow}
+            </h3>
 
-            {requiresConnection && !selectedConnection ? (
-              <div className="mt-4 rounded-[1.15rem] border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm leading-6 text-amber-800">
-                {messages.configPanel.nextActionConnect(
-                  connectionTypeLabel ?? definition?.connectionType ?? '',
-                )}
-              </div>
-            ) : null}
-
-            <div key={selectedNode.id} className="mt-4">
+            <div key={selectedNode.id} className="mt-3">
               {renderConfigForm({
                 workflowId,
                 nodeKind: selectedNode.data.nodeKind,
@@ -620,31 +390,22 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
               connectionId={selectedNode.data.connectionId ?? null}
               nodeId={selectedNode.id}
               nodeType={selectedNode.data.nodeType}
-              sectionRef={testSectionRef}
               workflowId={workflowId}
             />
           ) : null}
+        </div>
 
-          <section className="rounded-[1.4rem] border border-slate-900/8 bg-white/72 px-4 py-4 shadow-[0_18px_34px_-30px_rgba(15,23,42,0.16)]">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className={sectionEyebrowClass}>
-                  {messages.configPanel.dangerZoneEyebrow}
-                </p>
-                <p className="mt-1.5 text-sm leading-6 text-slate-600">
-                  {messages.configPanel.dangerZoneDescription}
-                </p>
-              </div>
-              <button
-                className="rounded-full border border-rose-200 bg-white px-4 py-2 text-xs font-semibold text-rose-700 shadow-sm transition hover:border-rose-300 hover:bg-rose-50"
-                data-testid="delete-node-button"
-                onClick={() => setDeleteDialogOpen(true)}
-                type="button"
-              >
-                {messages.configPanel.deleteNode}
-              </button>
-            </div>
-          </section>
+        <div className="border-t border-slate-900/8 px-5 py-4">
+          <div className="flex justify-end">
+            <button
+              className="text-xs font-semibold text-slate-500 transition hover:text-rose-700"
+              data-testid="delete-node-button"
+              onClick={() => setDeleteDialogOpen(true)}
+              type="button"
+            >
+              {messages.configPanel.deleteNode}
+            </button>
+          </div>
         </div>
       </aside>
 

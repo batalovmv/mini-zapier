@@ -5,7 +5,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type RefObject,
 } from 'react';
 
 import {
@@ -18,7 +17,7 @@ import { useLocale } from '../../locale/LocaleProvider';
 import { useWorkflowEditorStore } from '../../stores/workflow-editor.store';
 
 const railSectionClass =
-  'rounded-[1.55rem] border border-slate-900/10 bg-white/88 px-4 py-4 shadow-[0_18px_34px_-30px_rgba(15,23,42,0.24)]';
+  'rounded-[1.55rem] border border-slate-900/10 bg-[linear-gradient(180deg,rgba(247,248,250,0.92)_0%,rgba(255,255,255,0.88)_100%)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]';
 
 interface StepTestSectionProps {
   workflowId: string | null;
@@ -26,7 +25,6 @@ interface StepTestSectionProps {
   nodeType: string;
   config: Record<string, unknown>;
   connectionId: string | null;
-  sectionRef?: RefObject<HTMLElement | null>;
 }
 
 export function StepTestSection({
@@ -35,7 +33,6 @@ export function StepTestSection({
   nodeType,
   config,
   connectionId,
-  sectionRef,
 }: StepTestSectionProps) {
   const { messages } = useLocale();
   const t = messages.stepTest;
@@ -82,7 +79,7 @@ export function StepTestSection({
   const [unsupportedMessage, setUnsupportedMessage] = useState<string | null>(
     null,
   );
-  const [open, setOpen] = useState(Boolean(existingResult));
+  const [open, setOpen] = useState(false);
   const lastSyncedInputRef = useRef(defaultInputText);
 
   useEffect(() => {
@@ -99,12 +96,6 @@ export function StepTestSection({
 
     lastSyncedInputRef.current = defaultInputText;
   }, [defaultInputText, inputText, running]);
-
-  useEffect(() => {
-    if (existingResult || unsupportedMessage) {
-      setOpen(true);
-    }
-  }, [existingResult, unsupportedMessage]);
 
   const handleTest = useCallback(async () => {
     if (!workflowId) return;
@@ -164,37 +155,31 @@ export function StepTestSection({
   ]);
 
   const disabled = !workflowId || unsupportedMessage !== null;
-  const summaryText = existingResult
-    ? existingResult.status === 'SUCCESS'
-      ? t.successStatus
-      : t.failedStatus
-    : unsupportedMessage !== null
+  const summaryText =
+    unsupportedMessage !== null
       ? t.testButtonUnsupported
-      : !workflowId
-        ? t.testButtonSaveFirst
-        : t.sectionDescription;
+      : existingResult
+        ? existingResult.status === 'SUCCESS'
+          ? t.lastResultSuccess
+          : t.lastResultFailed
+        : !workflowId
+          ? t.testButtonSaveFirst
+          : t.sectionDescription;
 
   return (
-    <section
-      className={railSectionClass}
-      ref={sectionRef}
-    >
+    <section className={railSectionClass}>
       <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-50 text-xs font-bold text-violet-700">
-            3
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">
-              {t.sectionEyebrow}
-            </p>
-            <p className="mt-1.5 text-sm leading-6 text-slate-600">
-              {summaryText}
-            </p>
-          </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-semibold tracking-tight text-slate-900">
+            {t.sectionEyebrow}
+          </h3>
+          <p className="mt-1.5 text-[13px] leading-5 text-slate-600">
+            {summaryText}
+          </p>
         </div>
         <button
           className="rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-violet-200 hover:text-violet-700"
+          aria-expanded={open}
           onClick={() => setOpen((value) => !value)}
           type="button"
         >

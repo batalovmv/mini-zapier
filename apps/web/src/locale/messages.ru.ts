@@ -347,7 +347,7 @@ export const ru = {
     emptyEyebrow: 'Настройка шага',
     emptyTitle: 'Выберите шаг на схеме',
     emptyDescription:
-      'Когда шаг выбран, справа появятся подключение, основные поля и проверка.',
+      'Выберите шаг на canvas, чтобы справа открыть его подключение, основные поля и проверку.',
     workspaceGuidanceEyebrow: 'Как работать с шагами',
     whatShowsUpTitle: 'Что показывается здесь',
     whatShowsUpDescription:
@@ -356,6 +356,12 @@ export const ru = {
     defaultSelectedDescription: 'Заполните поля выбранного шага.',
     nodeTypeEyebrow: 'Тип узла',
     connectionEyebrow: 'Подключение',
+    headerConnectionRequired: (connectionType: string) =>
+      `Сначала выберите подключение ${connectionType}.`,
+    headerConnectionSelected: (name: string) => `Подключение: ${name}.`,
+    headerSaveToTest:
+      'Основные поля ниже. Сначала сохраните сценарий, потом тестируйте.',
+    headerMainFields: 'Основные поля этого шага ниже.',
     connectionRequired: (connectionType: string) =>
       `Требуется подключение ${connectionType}`,
     noConnectionRequired: 'Подключение не требуется',
@@ -367,17 +373,18 @@ export const ru = {
       `Доступно: ${formatCount('ru-RU', count)}`,
     selectedConnectionSummary: (name: string) => `Выбрано: ${name}`,
     availableConnections: 'Подключение',
-    selectConnection: (_connectionType: string) => 'Выберите подключение',
+    selectConnection: (connectionType: string) =>
+      `Выберите подключение ${connectionType}`,
     requiredType: (connectionType: string) =>
       `Требуемый тип: ${connectionType}.`,
-    createConnection: 'Создать подключение',
+    createConnection: 'Создать новое',
     refreshConnections: 'Обновить список',
     noConnectionsTitle: (connectionType: string) =>
       `Нет подключений ${connectionType}`,
     noConnectionsDescription: (connectionType: string) =>
-      `Подключение ${connectionType} пока не создано. Создайте его здесь, чтобы не выходить из интерфейса.`,
+      `Подключений ${connectionType} пока нет. Создайте новое, чтобы выбрать его здесь.`,
     noConnectionNeeded: 'Этому шагу подключение не требуется.',
-    nodeSettingsEyebrow: 'Настройка',
+    nodeSettingsEyebrow: 'Основное',
     nodeSettingsDescription:
       'Заполните основные поля. Дополнительные режимы открываются по необходимости.',
     loadingConnectionsTitle: 'Загрузка подключений...',
@@ -397,22 +404,22 @@ export const ru = {
     dangerZoneEyebrow: 'Удаление шага',
     dangerZoneDescription:
       'Удаляйте шаг только когда он точно больше не нужен в цепочке.',
-    deleteNode: 'Удалить узел',
-    deleteNodeDialogTitle: 'Удалить выбранный узел?',
+    deleteNode: 'Удалить шаг',
+    deleteNodeDialogTitle: 'Удалить выбранный шаг?',
     deleteNodeDialogDescription: (label: string) =>
       `Убрать "${label}" с canvas и удалить связанные рёбра?`,
-    deleteNodeDialogConfirm: 'Удалить узел',
+    deleteNodeDialogConfirm: 'Удалить шаг',
     connectionCreatedToast: (name: string) => `Подключение "${name}" создано.`,
-    nodeDeletedToast: (label: string) => `Узел "${label}" удалён.`,
+    nodeDeletedToast: (label: string) => `Шаг "${label}" удалён.`,
   },
   stepTest: {
-    sectionEyebrow: 'Проверка',
+    sectionEyebrow: 'Тест шага с входными данными',
     sectionDescription:
-      'Запустите шаг на тестовых данных и сразу посмотрите результат.',
-    testButton: 'Проверить шаг',
+      'Откройте этот блок, когда нужно быстро прогнать шаг на JSON-входе.',
+    testButton: 'Запустить тест',
     testRunning: 'Выполняется...',
     testButtonSaveFirst:
-      'Сначала сохраните сценарий, потом можно запустить проверку.',
+      'Сохраните сценарий, чтобы включить этот тест.',
     testButtonUnsupported: 'Проверка пока недоступна в этой версии сервиса.',
     inputDataLabel: 'Входные данные (JSON)',
     inputDataPlaceholder: '{}',
@@ -420,6 +427,8 @@ export const ru = {
     invalidJson: 'Невалидный JSON.',
     successStatus: 'Успешно',
     failedStatus: 'Ошибка',
+    lastResultSuccess: 'Последний результат: успешно.',
+    lastResultFailed: 'Последний результат: ошибка.',
     duration: (ms: number) => `${ms}мс`,
     outputDataLabel: 'Результат',
     fieldsUpdated: 'Доступные поля обновлены для следующих шагов.',
@@ -428,8 +437,8 @@ export const ru = {
     collapseInput: 'Скрыть входные данные',
     expandOutput: 'Показать результат',
     collapseOutput: 'Скрыть результат',
-    openSection: 'Открыть',
-    closeSection: 'Скрыть',
+    openSection: 'Показать тест',
+    closeSection: 'Скрыть тест',
     unsupported:
       'Проверка пока недоступна в этой версии сервиса. Обновите backend или выполните сценарий обычным запуском.',
   },

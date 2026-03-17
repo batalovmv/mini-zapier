@@ -329,7 +329,7 @@ export const en = {
     emptyEyebrow: 'Step setup',
     emptyTitle: 'Select a step on the canvas',
     emptyDescription:
-      'When a step is selected, its connection, core fields and test tools appear here.',
+      'Select a step on the canvas to open its connection, main fields and test tools here.',
     workspaceGuidanceEyebrow: 'How to work with steps',
     whatShowsUpTitle: 'What shows up here',
     whatShowsUpDescription:
@@ -338,6 +338,11 @@ export const en = {
     defaultSelectedDescription: 'Fill in the fields for the selected step.',
     nodeTypeEyebrow: 'Node type',
     connectionEyebrow: 'Connection',
+    headerConnectionRequired: (connectionType: string) =>
+      `Choose a ${connectionType} connection first.`,
+    headerConnectionSelected: (name: string) => `Connection: ${name}.`,
+    headerSaveToTest: 'Main fields are below. Save the workflow before testing.',
+    headerMainFields: 'Main step fields are below.',
     connectionRequired: (connectionType: string) =>
       `${connectionType} connection required`,
     noConnectionRequired: 'No connection required',
@@ -349,16 +354,17 @@ export const en = {
       `Available: ${formatCount('en-US', count)}`,
     selectedConnectionSummary: (name: string) => `Selected: ${name}`,
     availableConnections: 'Connection',
-    selectConnection: (_connectionType: string) => 'Select a connection',
+    selectConnection: (connectionType: string) =>
+      `Choose a ${connectionType} connection`,
     requiredType: (connectionType: string) => `Required type: ${connectionType}.`,
-    createConnection: 'Create connection',
+    createConnection: 'Create new',
     refreshConnections: 'Refresh list',
     noConnectionsTitle: (connectionType: string) =>
       `No ${connectionType} connections`,
     noConnectionsDescription: (connectionType: string) =>
-      `No ${connectionType} connection is available yet. Create one here to keep the workflow flow inside the UI.`,
+      `No ${connectionType} connections yet. Create one to use it here.`,
     noConnectionNeeded: 'This step does not require a connection.',
-    nodeSettingsEyebrow: 'Setup',
+    nodeSettingsEyebrow: 'Main',
     nodeSettingsDescription:
       'Fill in the main fields first. Open advanced modes only when you need them.',
     loadingConnectionsTitle: 'Loading connections...',
@@ -378,21 +384,21 @@ export const en = {
     dangerZoneEyebrow: 'Delete step',
     dangerZoneDescription:
       'Remove this step only when you are sure it is no longer needed in the chain.',
-    deleteNode: 'Delete Node',
-    deleteNodeDialogTitle: 'Delete selected node?',
+    deleteNode: 'Delete step',
+    deleteNodeDialogTitle: 'Delete selected step?',
     deleteNodeDialogDescription: (label: string) =>
       `Remove "${label}" from the workflow canvas and delete connected edges.`,
-    deleteNodeDialogConfirm: 'Delete node',
+    deleteNodeDialogConfirm: 'Delete step',
     connectionCreatedToast: (name: string) => `Connection "${name}" created.`,
-    nodeDeletedToast: (label: string) => `Node "${label}" deleted.`,
+    nodeDeletedToast: (label: string) => `Step "${label}" deleted.`,
   },
   stepTest: {
-    sectionEyebrow: 'Test',
+    sectionEyebrow: 'Test step with input data',
     sectionDescription:
-      'Run this step with sample data and inspect the result immediately.',
-    testButton: 'Test step',
+      'Open this when you want to run the step against sample JSON.',
+    testButton: 'Run test',
     testRunning: 'Running...',
-    testButtonSaveFirst: 'Save the workflow before running a test.',
+    testButtonSaveFirst: 'Save the workflow to enable this test.',
     testButtonUnsupported: 'Testing is not available in this service version yet.',
     inputDataLabel: 'Input data (JSON)',
     inputDataPlaceholder: '{}',
@@ -400,6 +406,8 @@ export const en = {
     invalidJson: 'Invalid JSON.',
     successStatus: 'Success',
     failedStatus: 'Failed',
+    lastResultSuccess: 'Latest result: success.',
+    lastResultFailed: 'Latest result: failed.',
     duration: (ms: number) => `${ms}ms`,
     outputDataLabel: 'Output',
     fieldsUpdated: 'Available fields updated for downstream steps.',
@@ -408,8 +416,8 @@ export const en = {
     collapseInput: 'Hide input',
     expandOutput: 'Show output',
     collapseOutput: 'Hide output',
-    openSection: 'Open',
-    closeSection: 'Hide',
+    openSection: 'Show test',
+    closeSection: 'Hide test',
     unsupported:
       'Testing is not available in this service version yet. Update the backend or run the workflow normally.',
   },
