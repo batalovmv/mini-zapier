@@ -471,7 +471,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
 
         return status?.trim() ?? '';
       })
-      .toBe('SUCCESS');
+      .toBe('Success');
 
     await expect(page.getByText('HTTP Request')).toBeVisible();
     await expect(page.getByText('Data Transform')).toBeVisible();
