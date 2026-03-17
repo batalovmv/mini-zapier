@@ -488,10 +488,8 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     await expect(transformCard).toBeVisible();
     await transformCard.getByText('Output data').click();
     await expect(
-      transformCard.getByText(
-        `Processed ${webhookPayload.name} / ${webhookPayload.eventId}`,
-      ),
-    ).toBeVisible();
+      transformCard.locator('pre').last(),
+    ).toContainText(`Processed ${webhookPayload.name} / ${webhookPayload.eventId}`);
 
     expect(
       consoleErrors,
