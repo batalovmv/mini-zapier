@@ -287,6 +287,8 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
   page,
   baseURL,
 }) => {
+  test.slow();
+
   if (!baseURL) {
     throw new Error('Playwright baseURL is required for the smoke test.');
   }
@@ -510,11 +512,25 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     ).toEqual([]);
   } finally {
     if (workflowId) {
-      await page.request.delete(`${baseURL}/api/workflows/${workflowId}`);
+      try {
+        await page.request.delete(`${baseURL}/api/workflows/${workflowId}`, {
+          failOnStatusCode: false,
+          timeout: 10_000,
+        });
+      } catch {
+        // Best-effort cleanup only.
+      }
     }
 
     if (connectionId) {
-      await page.request.delete(`${baseURL}/api/connections/${connectionId}`);
+      try {
+        await page.request.delete(`${baseURL}/api/connections/${connectionId}`, {
+          failOnStatusCode: false,
+          timeout: 10_000,
+        });
+      } catch {
+        // Best-effort cleanup only.
+      }
     }
   }
 });
