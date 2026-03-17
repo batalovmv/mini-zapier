@@ -473,12 +473,10 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
       })
       .toBe('Success');
 
-    await expect(page.getByText('HTTP Request')).toBeVisible();
-    await expect(page.getByText('Data Transform')).toBeVisible();
-
     const httpRequestCard = page.locator(
       '[data-testid="step-log-item"][data-step-label="HTTP Request"]',
     );
+    await expect(httpRequestCard).toBeVisible();
     await httpRequestCard.getByText('Output data').click();
     await expect(
       httpRequestCard.locator('pre').last(),
@@ -487,6 +485,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     const transformCard = page.locator(
       '[data-testid="step-log-item"][data-step-label="Data Transform"]',
     );
+    await expect(transformCard).toBeVisible();
     await transformCard.getByText('Output data').click();
     await expect(
       transformCard.getByText(
