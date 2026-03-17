@@ -1879,3 +1879,34 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-K: Stabilize inspector panel density + DB Query builder semantics
+- **Статус**: `done`
+- **Цель**: убрать сжатие и пустоты в правой панели editor, а для PostgreSQL сделать visual builder понятнее и снова пригодным там, где ручной SQL уже работает
+- **Scope**:
+  - уплотнить общую вёрстку inspector panel на фиксированной узкой rail-ширине, чтобы статусные карточки и advanced-блоки не ужимались по viewport breakpoint'ам
+  - перестроить `TemplatedField`/advanced JSON surfaces так, чтобы кнопки field picker/manual edit не создавали лишние пустые строки в повторяющихся формах
+  - переименовать режимы и операции `DB Query` в более понятные для новых пользователей формулировки
+  - расширить backend introspection до queryable PostgreSQL relations, чтобы visual builder видел не только базовые таблицы из `information_schema.tables`
+- **Не входит**:
+  - redesign canvas и левой библиотеки узлов
+  - новый workflow wizard поверх editor
+  - исправление прав/ролей на стороне пользовательской PostgreSQL базы
+  - полноценный manual browser QA на production после deploy
+- **Файлы**:
+  - `apps/api/src/connection/introspection.service.ts`
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/RawJsonFallback.tsx`
+  - `apps/web/src/components/editor/templated-input/TemplatedField.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - правый inspector больше не сжимает прогресс-карточки и repeated form actions на узкой rail-ширине
+  - `TemplatedField` не создаёт отдельную пустую action-строку над каждым полем без label
+  - `DB Query` использует понятные режимы `Конструктор` / `Написать SQL` и более ясные operation/source labels
+  - visual builder снова показывает доступные PostgreSQL relations там, где ручной SQL test уже может обратиться к ним
+  - `pnpm --filter @mini-zapier/api build` и `pnpm --filter @mini-zapier/web build` проходят
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/api build`
+  - `pnpm --filter @mini-zapier/web build`

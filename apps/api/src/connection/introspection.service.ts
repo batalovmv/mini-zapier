@@ -154,27 +154,39 @@ export class IntrospectionService {
       await client.connect();
 
       const result = await client.query<{
-        table_schema: string;
-        table_name: string;
+        relation_schema: string;
+        relation_name: string;
       }>(
-        `SELECT table_schema, table_name
-         FROM information_schema.tables
-         WHERE table_type = 'BASE TABLE'
-           AND table_schema NOT IN (${SYSTEM_SCHEMAS.map((_, index) => `$${index + 1}`).join(', ')})
-           AND table_schema NOT LIKE 'pg_toast%'
-           AND table_schema NOT LIKE 'pg_temp_%'
+        `SELECT n.nspname AS relation_schema, c.relname AS relation_name
+         FROM pg_catalog.pg_class AS c
+         INNER JOIN pg_catalog.pg_namespace AS n
+           ON n.oid = c.relnamespace
+         WHERE c.relkind IN ('r', 'p', 'v', 'm', 'f')
+           AND n.nspname NOT IN (${SYSTEM_SCHEMAS.map((_, index) => `$${index + 1}`).join(', ')})
+           AND n.nspname NOT LIKE 'pg_toast%'
+           AND n.nspname NOT LIKE 'pg_temp_%'
+           AND (
+             pg_catalog.has_table_privilege(c.oid, 'SELECT')
+             OR pg_catalog.has_table_privilege(c.oid, 'INSERT')
+             OR pg_catalog.has_table_privilege(c.oid, 'UPDATE')
+             OR pg_catalog.has_table_privilege(c.oid, 'DELETE')
+             OR pg_catalog.has_any_column_privilege(c.oid, 'SELECT')
+             OR pg_catalog.has_any_column_privilege(c.oid, 'INSERT')
+             OR pg_catalog.has_any_column_privilege(c.oid, 'UPDATE')
+             OR pg_catalog.has_any_column_privilege(c.oid, 'REFERENCES')
+           )
          ORDER BY
-           CASE WHEN table_schema = 'public' THEN 0 ELSE 1 END,
-           table_schema,
-           table_name`,
+           CASE WHEN n.nspname = 'public' THEN 0 ELSE 1 END,
+           n.nspname,
+           c.relname`,
         SYSTEM_SCHEMAS,
       );
 
       return {
         tables: result.rows.map((row) =>
-          row.table_schema === 'public'
-            ? row.table_name
-            : `${row.table_schema}.${row.table_name}`,
+          row.relation_schema === 'public'
+            ? row.relation_name
+            : `${row.relation_schema}.${row.relation_name}`,
         ),
       };
     } finally {
@@ -196,12 +208,22 @@ export class IntrospectionService {
       const result = await client.query<{
         column_name: string;
         data_type: string;
-        is_nullable: string;
+        is_nullable: boolean;
       }>(
-        `SELECT column_name, data_type, is_nullable
-         FROM information_schema.columns
-         WHERE table_schema = $1 AND table_name = $2
-         ORDER BY ordinal_position`,
+        `SELECT
+           a.attname AS column_name,
+           pg_catalog.format_type(a.atttypid, a.atttypmod) AS data_type,
+           NOT a.attnotnull AS is_nullable
+         FROM pg_catalog.pg_class AS c
+         INNER JOIN pg_catalog.pg_namespace AS n
+           ON n.oid = c.relnamespace
+         INNER JOIN pg_catalog.pg_attribute AS a
+           ON a.attrelid = c.oid
+         WHERE n.nspname = $1
+           AND c.relname = $2
+           AND a.attnum > 0
+           AND NOT a.attisdropped
+         ORDER BY a.attnum`,
         [tableRef.schema, tableRef.table],
       );
 
@@ -209,7 +231,7 @@ export class IntrospectionService {
         columns: result.rows.map((row) => ({
           name: row.column_name,
           type: row.data_type,
-          nullable: row.is_nullable === 'YES',
+          nullable: row.is_nullable,
         })),
       };
     } finally {

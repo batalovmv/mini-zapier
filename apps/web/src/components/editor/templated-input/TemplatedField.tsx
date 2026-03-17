@@ -188,7 +188,7 @@ export function TemplatedField(props: TemplatedFieldProps) {
   return (
     <div className="block" ref={containerRef}>
       {label ? (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="muted-label">{label}</span>
           <FieldPicker
             onOpenChange={handleFieldPickerOpenChange}
@@ -196,13 +196,7 @@ export function TemplatedField(props: TemplatedFieldProps) {
             open={fieldPickerOpen}
           />
         </div>
-      ) : (
-        <FieldPicker
-          onOpenChange={handleFieldPickerOpenChange}
-          onSelect={handleFieldSelect}
-          open={fieldPickerOpen}
-        />
-      )}
+      ) : null}
 
       <div className="mt-2">
         {mode === 'visual' ? (
@@ -241,16 +235,25 @@ export function TemplatedField(props: TemplatedFieldProps) {
         )}
       </div>
 
-      <button
-        className="mt-2 rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:border-amber-200 hover:text-amber-700"
-        onClick={() => {
-          setMode((m) => (m === 'visual' ? 'code' : 'visual'));
-          setInspectedChip(null);
-        }}
-        type="button"
-      >
-        {mode === 'visual' ? t.editAsCode : t.visualMode}
-      </button>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {!label ? (
+          <FieldPicker
+            onOpenChange={handleFieldPickerOpenChange}
+            onSelect={handleFieldSelect}
+            open={fieldPickerOpen}
+          />
+        ) : null}
+        <button
+          className="rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:border-amber-200 hover:text-amber-700"
+          onClick={() => {
+            setMode((m) => (m === 'visual' ? 'code' : 'visual'));
+            setInspectedChip(null);
+          }}
+          type="button"
+        >
+          {mode === 'visual' ? t.editAsCode : t.visualMode}
+        </button>
+      </div>
 
       {inspectedChip && containerRect && chipRect ? (
         <ChipInspector

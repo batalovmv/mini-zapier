@@ -36,6 +36,8 @@ const railSectionMutedClass =
   'rounded-[1.55rem] border border-slate-900/10 bg-[linear-gradient(180deg,rgba(250,246,239,0.94)_0%,rgba(255,255,255,0.84)_100%)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]';
 const neutralMetaPillClass =
   'inline-flex items-center rounded-full border border-slate-900/10 bg-white/84 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]';
+const progressCardClass =
+  'flex items-start gap-3 rounded-[1.1rem] border px-3 py-3';
 
 export function ConfigPanel({ workflowId }: ConfigPanelProps) {
   const { messages } = useLocale();
@@ -406,21 +408,21 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                 </p>
               </div>
 
-              <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+              <div className="mt-4 flex flex-col gap-2.5">
                 {progressItems.map((item) => (
                   <div
                     key={item.step}
-                    className={`rounded-[1.1rem] border px-3 py-3 ${item.toneClass}`}
+                    className={`${progressCardClass} ${item.toneClass}`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-[11px] font-bold">
-                        {item.step}
-                      </span>
+                    <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/90 text-[11px] font-bold">
+                      {item.step}
+                    </span>
+                    <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold uppercase tracking-[0.16em]">
                         {item.label}
                       </p>
+                      <p className="mt-1 text-xs leading-5">{item.detail}</p>
                     </div>
-                    <p className="mt-2 text-xs leading-5">{item.detail}</p>
                   </div>
                 ))}
               </div>

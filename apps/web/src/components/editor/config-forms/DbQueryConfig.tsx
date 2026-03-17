@@ -725,31 +725,38 @@ export function DbQueryConfig({
   const showLimit = builder.operation === 'select';
   const showSetValues =
     builder.operation === 'insert' || builder.operation === 'update';
+  const modeDescription =
+    mode === 'visual' ? t.modeVisualHint : t.modeRawSqlHint;
 
   return (
     <div className="min-w-0 space-y-5">
       {/* Mode toggle */}
-      <div className="flex flex-wrap gap-1.5 rounded-[1.4rem] border border-slate-900/10 bg-slate-50 p-1">
-        <button
-          className={modeTabClass(mode === 'visual')}
-          onClick={() => {
-            setMode('visual');
-            clearTestResults();
-          }}
-          type="button"
-        >
-          {t.modeVisual}
-        </button>
-        <button
-          className={modeTabClass(mode === 'raw')}
-          onClick={() => {
-            setMode('raw');
-            clearTestResults();
-          }}
-          type="button"
-        >
-          {t.modeRawSql}
-        </button>
+      <div>
+        <div className="grid grid-cols-2 gap-1.5 rounded-[1.4rem] border border-slate-900/10 bg-slate-50 p-1">
+          <button
+            className={modeTabClass(mode === 'visual')}
+            onClick={() => {
+              setMode('visual');
+              clearTestResults();
+            }}
+            type="button"
+          >
+            {t.modeVisual}
+          </button>
+          <button
+            className={modeTabClass(mode === 'raw')}
+            onClick={() => {
+              setMode('raw');
+              clearTestResults();
+            }}
+            type="button"
+          >
+            {t.modeRawSql}
+          </button>
+        </div>
+        <p className="mt-2 text-xs leading-5 text-slate-500">
+          {modeDescription}
+        </p>
       </div>
 
       {/* ---- VISUAL MODE ---- */}
@@ -773,7 +780,7 @@ export function DbQueryConfig({
           ) : (
             <div className="space-y-4">
               {/* Operation selector */}
-              <div className="flex flex-wrap gap-1.5 rounded-[1.4rem] border border-slate-900/10 bg-slate-50 p-1">
+              <div className="grid grid-cols-2 gap-1.5 rounded-[1.4rem] border border-slate-900/10 bg-slate-50 p-1">
                 {OPERATIONS.map((op) => (
                   <button
                     key={op}
@@ -833,6 +840,13 @@ export function DbQueryConfig({
                   tables.length === 0 &&
                   connectionId && (
                   <p className="mt-2 text-xs text-slate-400">{t.noTables}</p>
+                )}
+                {!tablesLoading &&
+                  tables.length > 0 &&
+                  connectionId && (
+                  <p className="mt-2 text-xs text-slate-500">
+                    {t.sourceCount(tables.length)}
+                  </p>
                 )}
               </label>
 
