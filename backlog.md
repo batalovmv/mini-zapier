@@ -1942,3 +1942,26 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-M: Repair live smoke after inspector copy update
+- **Статус**: `done`
+- **Цель**: починить production E2E smoke после UX-переименований в `HTTP Request`, чтобы тест больше не зависел от хрупких текстовых labels вроде `Optional headers` / `Show`
+- **Scope**:
+  - добавить стабильные test hooks в advanced headers block `HTTP Request`
+  - перевести Playwright smoke на эти hooks вместо copy-dependent selectors
+  - подтвердить, что `apps/web` по-прежнему собирается, а smoke suite парсится локально
+- **Не входит**:
+  - изменение продуктовой логики `HTTP Request`
+  - новый smoke coverage вне уже падающего сценария webhook → HTTP → Data Transform
+  - backend/VPS changes
+- **Файлы**:
+  - `apps/web/src/components/editor/config-forms/HttpRequestConfig.tsx`
+  - `apps/web/e2e/ui-smoke.spec.ts`
+- **Acceptance**:
+  - live smoke больше не ищет тексты `Optional headers` / `Show` в `HTTP Request`
+  - у headers advanced block есть стабильные `data-testid` для toggle и add-header action
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`

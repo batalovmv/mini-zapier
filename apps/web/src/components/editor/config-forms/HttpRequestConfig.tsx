@@ -302,6 +302,7 @@ export function HttpRequestConfig({
           </div>
           <button
             className="shrink-0 rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-200 hover:text-amber-700"
+            data-testid="http-headers-toggle"
             onClick={() => setHeadersOpen((value) => !value)}
             type="button"
           >
@@ -315,6 +316,7 @@ export function HttpRequestConfig({
               <span className="text-xs font-medium text-slate-500">{t.headers}</span>
               <button
                 className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+                data-testid="http-add-header-button"
                 onClick={addHeader}
                 type="button"
               >

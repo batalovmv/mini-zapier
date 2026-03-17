@@ -414,11 +414,8 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
 
     await httpNode.click();
     await page.getByLabel('HTTP request URL').fill(DEFAULT_ECHO_URL);
-    const headersSection = page
-      .getByText('Optional headers')
-      .locator('xpath=ancestor::div[3]');
-    await headersSection.getByRole('button', { name: 'Show' }).click();
-    await headersSection.getByRole('button', { name: 'Add header' }).click();
+    await page.getByTestId('http-headers-toggle').click();
+    await page.getByTestId('http-add-header-button').click();
     await page.getByLabel('Header key 1').fill('Content-Type');
     await page.getByLabel('Header value 1').fill('application/json');
     await page.getByLabel('Body field key 1').fill('name');
