@@ -474,7 +474,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
       .toBe('Success');
 
     const httpRequestCard = page.locator(
-      '[data-testid="step-log-item"][data-step-label="HTTP Request"]',
+      '[data-testid="step-log-item"][data-step-label="HTTP request"]',
     );
     await expect(httpRequestCard).toBeVisible();
     await httpRequestCard.getByText('Output data').click();
@@ -483,7 +483,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     ).toContainText(webhookPayload.name);
 
     const transformCard = page.locator(
-      '[data-testid="step-log-item"][data-step-label="Data Transform"]',
+      '[data-testid="step-log-item"][data-step-label="Data transform"]',
     );
     await expect(transformCard).toBeVisible();
     await transformCard.getByText('Output data').click();
