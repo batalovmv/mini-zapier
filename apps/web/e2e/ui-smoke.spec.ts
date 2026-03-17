@@ -4,7 +4,20 @@ const DEFAULT_ECHO_URL =
   process.env.MINI_ZAPIER_E2E_ECHO_URL || 'https://postman-echo.com/post';
 const LOCALE_STORAGE_KEY = 'mini-zapier:locale';
 const DEFAULT_E2E_EMAIL = 'admin@example.com';
+const LEGACY_E2E_RUN_SUFFIX =
+  process.env.GITHUB_RUN_ID?.trim() || Date.now().toString();
 const E2E_PASSWORD = process.env.MINI_ZAPIER_E2E_PASSWORD;
+let e2eUserProvisioned = false;
+
+function sanitizeEmailLocalPart(value: string): string {
+  const sanitized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return sanitized || 'admin';
+}
 
 function resolveE2eEmail(): string {
   const explicitEmail = process.env.MINI_ZAPIER_E2E_EMAIL?.trim();
@@ -18,7 +31,7 @@ function resolveE2eEmail(): string {
   if (legacyUsername) {
     return legacyUsername.includes('@')
       ? legacyUsername
-      : `${legacyUsername}@example.com`;
+      : `${sanitizeEmailLocalPart(legacyUsername)}+e2e-${LEGACY_E2E_RUN_SUFFIX}@example.com`;
   }
 
   return DEFAULT_E2E_EMAIL;
@@ -39,11 +52,34 @@ async function waitForDashboard(page: Page): Promise<void> {
   await expect(page.getByTestId('create-workflow-link')).toBeVisible();
 }
 
+async function ensureE2eUser(page: Page): Promise<void> {
+  if (e2eUserProvisioned) {
+    return;
+  }
+
+  const response = await page.request.post('/api/auth/register', {
+    data: {
+      email: E2E_EMAIL,
+      password: E2E_PASSWORD,
+    },
+  });
+
+  if (response.status() !== 201 && response.status() !== 409) {
+    throw new Error(
+      `Could not provision E2E user "${E2E_EMAIL}". /api/auth/register returned ${response.status()}.`,
+    );
+  }
+
+  e2eUserProvisioned = true;
+}
+
 async function signIn(page: Page): Promise<void> {
   if (!E2E_PASSWORD) {
     throw new Error('MINI_ZAPIER_E2E_PASSWORD is required for the UI smoke test.');
   }
 
+  await ensureE2eUser(page);
+  await page.context().clearCookies();
   await forceEnglishLocale(page);
   await page.goto('/login');
   await expect(page.getByRole('heading', { name: 'Mini-Zapier' })).toBeVisible();

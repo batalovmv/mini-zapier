@@ -1860,7 +1860,7 @@
 - **Статус**: `done`
 - **Цель**: вернуть зелёный live Playwright smoke после перехода UI на email-login и локализацию
 - **Scope**:
-  - обновить `apps/web/e2e/ui-smoke.spec.ts`, чтобы smoke логинился по email-contract c legacy fallback, жёстко фиксировал EN locale и ждал устойчивые dashboard/editor сигналы вместо хрупкого copy
+  - обновить `apps/web/e2e/ui-smoke.spec.ts`, чтобы smoke логинился по email-contract c legacy fallback, при отсутствии email самопровиженил валидного test user через публичный register endpoint, жёстко фиксировал EN locale и ждал устойчивые dashboard/editor сигналы вместо хрупкого copy
   - синхронизировать `.github/workflows/ci.yml` с email-based env (`MINI_ZAPIER_E2E_EMAIL`) без ломки legacy repository variable path
   - не менять backend auth API и не расширять smoke suite за пределы текущих сценариев
 - **Не входит**:
@@ -1873,7 +1873,7 @@
   - `backlog.md`
   - `handoff.md`
 - **Acceptance**:
-  - live smoke больше не падает из-за legacy `MINI_ZAPIER_E2E_USERNAME=admin` при email-login contract
+  - live smoke больше не зависит от заранее созданного prod user, если в CI остался только legacy `MINI_ZAPIER_E2E_USERNAME=admin`
   - smoke использует устойчивый post-login сигнал dashboard вместо хрупкого текста
   - locale в smoke стабилен и не зависит от browser default или сохранённого localStorage
   - `pnpm --filter @mini-zapier/web build` проходит
