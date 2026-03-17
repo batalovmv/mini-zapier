@@ -38,6 +38,12 @@ export function DataTransformConfig({
     Object.entries(mapping).length > 0
       ? Object.entries(mapping)
       : [['', '']];
+  const modeButtonClass = (active: boolean) =>
+    `rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+      active
+        ? 'bg-slate-900 text-white shadow-sm'
+        : 'bg-white text-slate-600 hover:bg-slate-100'
+    }`;
 
   function updateMappingKey(index: number, newKey: string) {
     onChange((prev) => {
@@ -97,21 +103,30 @@ export function DataTransformConfig({
 
   return (
     <div className="space-y-5">
-      <label className="block">
+      <div>
         <span className="muted-label">{t.mode}</span>
-        <select
-          aria-label={t.modeAriaLabel}
-          className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-          onChange={(event) => {
-            const value = event.target.value;
-            onChange((prev) => ({ ...prev, mode: value }));
-          }}
-          value={mode}
-        >
-          <option value="template">{t.templateMode}</option>
-          <option value="mapping">{t.mappingMode}</option>
-        </select>
-      </label>
+        <div className="mt-2 flex flex-wrap gap-1.5 rounded-[1.3rem] border border-slate-900/10 bg-slate-50 p-1">
+          <button
+            aria-pressed={mode === 'template'}
+            className={modeButtonClass(mode === 'template')}
+            onClick={() => onChange((prev) => ({ ...prev, mode: 'template' }))}
+            type="button"
+          >
+            {t.templateMode}
+          </button>
+          <button
+            aria-pressed={mode === 'mapping'}
+            className={modeButtonClass(mode === 'mapping')}
+            onClick={() => onChange((prev) => ({ ...prev, mode: 'mapping' }))}
+            type="button"
+          >
+            {t.mappingMode}
+          </button>
+        </div>
+        <p className="mt-2 text-xs leading-5 text-slate-500">
+          {mode === 'template' ? t.templateModeHint : t.mappingModeHint}
+        </p>
+      </div>
 
       {mode === 'template' ? (
         <TemplatedField

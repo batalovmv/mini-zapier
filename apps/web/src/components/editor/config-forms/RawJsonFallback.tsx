@@ -58,14 +58,22 @@ export function RawJsonFallback({
   }
 
   return (
-    <div>
-      <button
-        className="text-xs text-slate-400 transition hover:text-slate-600"
-        onClick={onToggle}
-        type="button"
-      >
-        {open ? hideLabel : showLabel}
-      </button>
+    <div className="rounded-[1.15rem] border border-dashed border-slate-900/12 bg-slate-50/70 px-4 py-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="muted-label">{t.expertEyebrow}</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            {t.expertDescription}
+          </p>
+        </div>
+        <button
+          className="shrink-0 rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-200 hover:text-amber-700"
+          onClick={onToggle}
+          type="button"
+        >
+          {open ? hideLabel : showLabel}
+        </button>
+      </div>
 
       {open && (
         <div className="mt-2">

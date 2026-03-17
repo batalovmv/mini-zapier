@@ -73,6 +73,7 @@ export function StepTestSection({
   const [unsupportedMessage, setUnsupportedMessage] = useState<string | null>(
     null,
   );
+  const [open, setOpen] = useState(Boolean(existingResult));
   const lastSyncedInputRef = useRef(defaultInputText);
 
   useEffect(() => {
@@ -89,6 +90,12 @@ export function StepTestSection({
 
     lastSyncedInputRef.current = defaultInputText;
   }, [defaultInputText, inputText, running]);
+
+  useEffect(() => {
+    if (existingResult || unsupportedMessage) {
+      setOpen(true);
+    }
+  }, [existingResult, unsupportedMessage]);
 
   const handleTest = useCallback(async () => {
     if (!workflowId) return;
@@ -148,132 +155,166 @@ export function StepTestSection({
   ]);
 
   const disabled = !workflowId || unsupportedMessage !== null;
+  const summaryText = existingResult
+    ? existingResult.status === 'SUCCESS'
+      ? t.successStatus
+      : t.failedStatus
+    : unsupportedMessage !== null
+      ? t.testButtonUnsupported
+      : !workflowId
+        ? t.testButtonSaveFirst
+        : t.sectionDescription;
 
   return (
     <section className={railSectionClass}>
-      <p className="muted-label">{t.sectionEyebrow}</p>
-      <p className="mt-2 text-sm leading-6 text-slate-600">
-        {t.sectionDescription}
-      </p>
-
-      {/* Input data */}
-      <div className="mt-3">
-        <button
-          className="text-xs font-medium text-slate-500 transition hover:text-slate-700"
-          onClick={() => setInputExpanded((v) => !v)}
-          type="button"
-        >
-          {inputExpanded ? t.collapseInput : t.expandInput}
-        </button>
-
-        {inputExpanded ? (
-          <div className="mt-2">
-            <label className="block">
-              <span className="text-xs font-medium text-slate-600">
-                {t.inputDataLabel}
-              </span>
-              <textarea
-                className="mt-1 w-full rounded-xl border border-slate-900/10 bg-white px-3 py-2 font-mono text-xs text-slate-800 outline-none transition focus:border-amber-500"
-                onChange={(e) => {
-                  setInputText(e.target.value);
-                  setJsonError(null);
-                }}
-                placeholder={t.inputDataPlaceholder}
-                rows={5}
-                value={inputText}
-              />
-            </label>
-
-            {previousStepOutput !== undefined ? (
-              <p className="mt-1 text-[11px] text-slate-400">
-                {t.inputDataFromPrevious}
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-50 text-xs font-bold text-violet-700">
+          3
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="muted-label">{t.sectionEyebrow}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {summaryText}
               </p>
-            ) : null}
-
-            {jsonError ? (
-              <p className="mt-1 text-xs text-rose-600">{jsonError}</p>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-
-      {/* Test button */}
-      <div className="mt-3">
-        <button
-          className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={disabled || running}
-          onClick={() => void handleTest()}
-          title={
-            unsupportedMessage !== null
-              ? t.testButtonUnsupported
-              : disabled
-                ? t.testButtonSaveFirst
-                : undefined
-          }
-          type="button"
-        >
-          {running ? t.testRunning : t.testButton}
-        </button>
-      </div>
-
-      {unsupportedMessage ? (
-        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-2 text-xs leading-5 text-amber-700 break-words whitespace-pre-wrap">
-          {unsupportedMessage}
-        </div>
-      ) : null}
-
-      {/* Results */}
-      {existingResult ? (
-        <div className="mt-4 border-t border-slate-900/8 pt-3">
-          <div className="flex items-center gap-2">
-            <span
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                existingResult.status === 'SUCCESS'
-                  ? 'bg-emerald-50 text-emerald-700'
-                  : 'bg-rose-50 text-rose-700'
-              }`}
+            </div>
+            <button
+              className="rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-violet-200 hover:text-violet-700"
+              onClick={() => setOpen((value) => !value)}
+              type="button"
             >
-              {existingResult.status === 'SUCCESS'
-                ? t.successStatus
-                : t.failedStatus}
-            </span>
-            <span className="text-xs text-slate-400">
-              {t.duration(existingResult.durationMs)}
-            </span>
+              {open ? t.closeSection : t.openSection}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {!open ? null : (
+        <>
+
+          {/* Input data */}
+          <div className="mt-3">
+            <button
+              className="text-xs font-medium text-slate-500 transition hover:text-slate-700"
+              onClick={() => setInputExpanded((v) => !v)}
+              type="button"
+            >
+              {inputExpanded ? t.collapseInput : t.expandInput}
+            </button>
+
+            {inputExpanded ? (
+              <div className="mt-2">
+                <label className="block">
+                  <span className="text-xs font-medium text-slate-600">
+                    {t.inputDataLabel}
+                  </span>
+                  <textarea
+                    className="mt-1 w-full rounded-xl border border-slate-900/10 bg-white px-3 py-2 font-mono text-xs text-slate-800 outline-none transition focus:border-amber-500"
+                    onChange={(e) => {
+                      setInputText(e.target.value);
+                      setJsonError(null);
+                    }}
+                    placeholder={t.inputDataPlaceholder}
+                    rows={5}
+                    value={inputText}
+                  />
+                </label>
+
+                {previousStepOutput !== undefined ? (
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    {t.inputDataFromPrevious}
+                  </p>
+                ) : null}
+
+                {jsonError ? (
+                  <p className="mt-1 text-xs text-rose-600">{jsonError}</p>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
-          {existingResult.errorMessage ? (
-            <div className="mt-2 rounded-xl border border-rose-200 bg-rose-50/90 px-3 py-2 text-xs leading-5 text-rose-700 break-words whitespace-pre-wrap">
-              {existingResult.errorMessage}
+          {/* Test button */}
+          <div className="mt-3">
+            <button
+              className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={disabled || running}
+              onClick={() => void handleTest()}
+              title={
+                unsupportedMessage !== null
+                  ? t.testButtonUnsupported
+                  : disabled
+                    ? t.testButtonSaveFirst
+                    : undefined
+              }
+              type="button"
+            >
+              {running ? t.testRunning : t.testButton}
+            </button>
+          </div>
+
+          {unsupportedMessage ? (
+            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-2 text-xs leading-5 text-amber-700 break-words whitespace-pre-wrap">
+              {unsupportedMessage}
             </div>
           ) : null}
 
-          {existingResult.status === 'SUCCESS' &&
-          existingResult.outputData !== undefined ? (
-            <div className="mt-2">
-              <button
-                className="text-xs font-medium text-slate-500 transition hover:text-slate-700"
-                onClick={() => setOutputExpanded((v) => !v)}
-                type="button"
-              >
-                {outputExpanded ? t.collapseOutput : t.expandOutput}
-              </button>
+          {/* Results */}
+          {existingResult ? (
+            <div className="mt-4 border-t border-slate-900/8 pt-3">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    existingResult.status === 'SUCCESS'
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'bg-rose-50 text-rose-700'
+                  }`}
+                >
+                  {existingResult.status === 'SUCCESS'
+                    ? t.successStatus
+                    : t.failedStatus}
+                </span>
+                <span className="text-xs text-slate-400">
+                  {t.duration(existingResult.durationMs)}
+                </span>
+              </div>
 
-              {outputExpanded ? (
-                <pre className="mt-1 max-h-48 overflow-auto rounded-xl border border-slate-900/10 bg-slate-50 px-3 py-2 font-mono text-[11px] text-slate-700 whitespace-pre-wrap break-words">
-                  {JSON.stringify(existingResult.outputData, null, 2)}
-                </pre>
+              {existingResult.errorMessage ? (
+                <div className="mt-2 rounded-xl border border-rose-200 bg-rose-50/90 px-3 py-2 text-xs leading-5 text-rose-700 break-words whitespace-pre-wrap">
+                  {existingResult.errorMessage}
+                </div>
+              ) : null}
+
+              {existingResult.status === 'SUCCESS' &&
+              existingResult.outputData !== undefined ? (
+                <div className="mt-2">
+                  <button
+                    className="text-xs font-medium text-slate-500 transition hover:text-slate-700"
+                    onClick={() => setOutputExpanded((v) => !v)}
+                    type="button"
+                  >
+                    {outputExpanded ? t.collapseOutput : t.expandOutput}
+                  </button>
+
+                  {outputExpanded ? (
+                    <pre className="mt-1 max-h-48 overflow-auto rounded-xl border border-slate-900/10 bg-slate-50 px-3 py-2 font-mono text-[11px] text-slate-700 whitespace-pre-wrap break-words">
+                      {JSON.stringify(existingResult.outputData, null, 2)}
+                    </pre>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {existingResult.status === 'SUCCESS' &&
+              existingResult.outputDataSchema &&
+              existingResult.outputDataSchema.length > 0 ? (
+                <p className="mt-2 text-xs text-emerald-600">
+                  {t.fieldsUpdated}
+                </p>
               ) : null}
             </div>
           ) : null}
-
-          {existingResult.status === 'SUCCESS' &&
-          existingResult.outputDataSchema &&
-          existingResult.outputDataSchema.length > 0 ? (
-            <p className="mt-2 text-xs text-emerald-600">{t.fieldsUpdated}</p>
-          ) : null}
-        </div>
-      ) : null}
+        </>
+      )}
     </section>
   );
 }

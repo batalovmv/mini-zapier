@@ -242,7 +242,7 @@ export function TemplatedField(props: TemplatedFieldProps) {
       </div>
 
       <button
-        className="mt-1 text-xs text-slate-400 transition hover:text-slate-600"
+        className="mt-2 rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:border-amber-200 hover:text-amber-700"
         onClick={() => {
           setMode((m) => (m === 'visual' ? 'code' : 'visual'));
           setInspectedChip(null);

@@ -90,6 +90,9 @@ export function HttpRequestConfig({
   const [bodyMode, setBodyMode] = useState<'fields' | 'json'>(() =>
     isBodyKvCompatible(config.body) ? 'fields' : 'json',
   );
+  const [headersOpen, setHeadersOpen] = useState(() =>
+    Object.keys(toStringRecord(config.headers)).length > 0,
+  );
 
   // Track extra empty placeholder rows (local UI state, not persisted).
   const [extraBodyRows, setExtraBodyRows] = useState(0);
@@ -108,6 +111,12 @@ export function HttpRequestConfig({
       setExtraBodyRows(0);
     }
   }, [config.body, bodyMode]);
+
+  useEffect(() => {
+    if (Object.keys(toStringRecord(config.headers)).length > 0) {
+      setHeadersOpen(true);
+    }
+  }, [config.headers]);
 
   const method = typeof config.method === 'string' ? config.method : 'POST';
   const hasBody = BODY_METHODS.has(method);
@@ -280,65 +289,83 @@ export function HttpRequestConfig({
       )}
 
       {/* Headers */}
-      <div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="muted-label">{t.headers}</span>
+      <div className="rounded-[1.15rem] border border-dashed border-slate-900/12 bg-slate-50/70 px-4 py-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <span className="muted-label">{t.headers}</span>
+            <p className="mt-1 text-xs leading-5 text-slate-500">{t.headersHint}</p>
+          </div>
           <button
-            className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
-            onClick={addHeader}
+            className="shrink-0 rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-200 hover:text-amber-700"
+            onClick={() => setHeadersOpen((value) => !value)}
             type="button"
           >
-            {t.addHeader}
+            {headersOpen ? t.hideAdvancedHeaders : t.showAdvancedHeaders}
           </button>
         </div>
 
-        <div className="mt-3 space-y-3">
-          {headerEntries.map(([key, value], index) => (
-            <div
-              key={`h-${key}-${index}`}
-              className="space-y-2 rounded-2xl border border-slate-900/10 bg-slate-50/60 p-3"
-            >
-              <div className="flex items-center gap-2">
-                <input
-                  aria-label={t.headerKeyAriaLabel(index + 1)}
-                  className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-                  onChange={(event) => updateHeaderKey(index, event.target.value)}
-                  placeholder={t.headerNamePlaceholder}
-                  type="text"
-                  value={key}
-                />
-                <button
-                  aria-label={t.removeHeaderRowAriaLabel(index + 1)}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                  onClick={() => removeHeader(index)}
-                  title={t.remove}
-                  type="button"
-                >
-                  &times;
-                </button>
-              </div>
-
-              {key.trim().length > 0 ? (
-                <TemplatedField
-                  ariaLabel={t.headerValueAriaLabel(index + 1)}
-                  label=""
-                  onValueChange={(v) => updateHeaderValue(index, v)}
-                  placeholder={t.headerValuePlaceholder}
-                  value={value}
-                />
-              ) : (
-                <input
-                  aria-label={t.headerValueAriaLabel(index + 1)}
-                  className="w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-                  onChange={(event) => updateHeaderValue(index, event.target.value)}
-                  placeholder={t.headerValuePlaceholder}
-                  type="text"
-                  value={value}
-                />
-              )}
+        {headersOpen ? (
+          <div className="mt-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-medium text-slate-500">{t.headers}</span>
+              <button
+                className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+                onClick={addHeader}
+                type="button"
+              >
+                {t.addHeader}
+              </button>
             </div>
-          ))}
-        </div>
+
+            <div className="mt-3 space-y-3">
+              {headerEntries.map(([key, value], index) => (
+                <div
+                  key={`h-${key}-${index}`}
+                  className="space-y-2 rounded-2xl border border-slate-900/10 bg-slate-50/60 p-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      aria-label={t.headerKeyAriaLabel(index + 1)}
+                      className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                      onChange={(event) => updateHeaderKey(index, event.target.value)}
+                      placeholder={t.headerNamePlaceholder}
+                      type="text"
+                      value={key}
+                    />
+                    <button
+                      aria-label={t.removeHeaderRowAriaLabel(index + 1)}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                      onClick={() => removeHeader(index)}
+                      title={t.remove}
+                      type="button"
+                    >
+                      &times;
+                    </button>
+                  </div>
+
+                  {key.trim().length > 0 ? (
+                    <TemplatedField
+                      ariaLabel={t.headerValueAriaLabel(index + 1)}
+                      label=""
+                      onValueChange={(v) => updateHeaderValue(index, v)}
+                      placeholder={t.headerValuePlaceholder}
+                      value={value}
+                    />
+                  ) : (
+                    <input
+                      aria-label={t.headerValueAriaLabel(index + 1)}
+                      className="w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                      onChange={(event) => updateHeaderValue(index, event.target.value)}
+                      placeholder={t.headerValuePlaceholder}
+                      type="text"
+                      value={value}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* Body */}

@@ -1823,3 +1823,35 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/api build`
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-I: Clarify editor inspector flow for beginners and power users
+- **Статус**: `done`
+- **Цель**: сделать правую панель editor понятнее по умолчанию, не убирая ручные advanced-пути для опытных пользователей
+- **Scope**:
+  - перестроить `ConfigPanel` в явный flow `подключение → настройка → проверка`
+  - сделать `Step Test` менее шумным и сворачиваемым по умолчанию
+  - спрятать manual JSON / code / extra headers в более явные локальные advanced-блоки вместо равноправных primary controls
+  - упростить copy в inspector и ключевых no-code формах (`HTTP Request`, `DB Query`, `Data Transform`, `Email Trigger`)
+- **Не входит**:
+  - redesign canvas и левой библиотеки узлов
+  - новый backend API
+  - глобальный app-wide toggle `beginner/pro`
+  - полная переработка каждой action form в wizard
+- **Файлы**:
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/components/editor/StepTestSection.tsx`
+  - `apps/web/src/components/editor/templated-input/TemplatedField.tsx`
+  - `apps/web/src/components/editor/config-forms/DataTransformConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/HttpRequestConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/RawJsonFallback.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - inspector сначала показывает следующий понятный шаг, а не только техническую свалку controls
+  - connection/setup/test читаются как последовательность, а не как три равноправных блока
+  - advanced/manual surfaces остаются доступными, но визуально вторичны
+  - `DB Query` по умолчанию открывается в visual mode для нового пустого шага
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`

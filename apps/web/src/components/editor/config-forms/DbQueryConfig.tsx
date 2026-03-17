@@ -335,11 +335,13 @@ export function DbQueryConfig({
     update: t.opUpdate,
     delete: t.opDelete,
   };
+  const hasExistingRawQuery =
+    typeof config.query === 'string' && config.query.trim().length > 0;
 
   // Backward compat: if _builderState exists → visual, else raw
   const initialBuilderState = normalizeBuilderState(config._builderState);
   const [mode, setMode] = useState<'visual' | 'raw'>(
-    initialBuilderState ? 'visual' : 'raw',
+    initialBuilderState || !hasExistingRawQuery ? 'visual' : 'raw',
   );
 
   // Raw SQL state
