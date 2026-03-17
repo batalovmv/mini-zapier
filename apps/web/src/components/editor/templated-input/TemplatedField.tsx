@@ -188,13 +188,8 @@ export function TemplatedField(props: TemplatedFieldProps) {
   return (
     <div className="block" ref={containerRef}>
       {label ? (
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="muted-label">{label}</span>
-          <FieldPicker
-            onOpenChange={handleFieldPickerOpenChange}
-            onSelect={handleFieldSelect}
-            open={fieldPickerOpen}
-          />
         </div>
       ) : null}
 
@@ -236,13 +231,11 @@ export function TemplatedField(props: TemplatedFieldProps) {
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        {!label ? (
-          <FieldPicker
-            onOpenChange={handleFieldPickerOpenChange}
-            onSelect={handleFieldSelect}
-            open={fieldPickerOpen}
-          />
-        ) : null}
+        <FieldPicker
+          onOpenChange={handleFieldPickerOpenChange}
+          onSelect={handleFieldSelect}
+          open={fieldPickerOpen}
+        />
         <button
           className="rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:border-amber-200 hover:text-amber-700"
           onClick={() => {

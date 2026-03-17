@@ -711,7 +711,7 @@ export function DbQueryConfig({
   const opTabClass = (active: boolean) =>
     `rounded-full px-3 py-1.5 text-xs font-semibold transition ${
       active
-        ? 'bg-amber-500 text-white shadow-sm'
+        ? 'bg-amber-100 text-amber-800 shadow-sm'
         : 'bg-white text-slate-600 hover:bg-amber-50'
     }`;
 
@@ -732,7 +732,8 @@ export function DbQueryConfig({
     <div className="min-w-0 space-y-5">
       {/* Mode toggle */}
       <div>
-        <div className="grid grid-cols-2 gap-1.5 rounded-[1.4rem] border border-slate-900/10 bg-slate-50 p-1">
+        <span className="muted-label">{t.modeLabel}</span>
+        <div className="mt-2 grid grid-cols-2 gap-1.5 rounded-[1.4rem] border border-slate-900/10 bg-slate-50 p-1">
           <button
             className={modeTabClass(mode === 'visual')}
             onClick={() => {
@@ -779,33 +780,6 @@ export function DbQueryConfig({
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Operation selector */}
-              <div className="grid grid-cols-2 gap-1.5 rounded-[1.4rem] border border-slate-900/10 bg-slate-50 p-1">
-                {OPERATIONS.map((op) => (
-                  <button
-                    key={op}
-                    className={opTabClass(builder.operation === op)}
-                    onClick={() =>
-                      updateBuilder({
-                        operation: op,
-                        // Reset operation-specific fields on switch
-                        ...(op !== builder.operation
-                          ? {
-                              columns: [],
-                              filters: [],
-                              setValues: [],
-                              orderBy: { column: '', direction: 'ASC' as const },
-                            }
-                          : {}),
-                      })
-                    }
-                    type="button"
-                  >
-                    {opLabels[op]}
-                  </button>
-                ))}
-              </div>
-
               {/* Table selector */}
               <label className="block">
                 <span className="muted-label">{t.selectTable}</span>
@@ -827,7 +801,7 @@ export function DbQueryConfig({
                     }
                     value={builder.table}
                   >
-                    <option value="">{t.selectTable}</option>
+                    <option value="">{t.selectTablePlaceholder}</option>
                     {tables.map((tbl) => (
                       <option key={tbl} value={tbl}>
                         {tbl}
@@ -849,6 +823,35 @@ export function DbQueryConfig({
                   </p>
                 )}
               </label>
+
+              {/* Operation selector */}
+              <div>
+                <span className="muted-label">{t.operationLabel}</span>
+                <div className="mt-2 grid grid-cols-2 gap-1.5 rounded-[1.4rem] border border-slate-900/10 bg-slate-50 p-1">
+                  {OPERATIONS.map((op) => (
+                    <button
+                      key={op}
+                      className={opTabClass(builder.operation === op)}
+                      onClick={() =>
+                        updateBuilder({
+                          operation: op,
+                          ...(op !== builder.operation
+                            ? {
+                                columns: [],
+                                filters: [],
+                                setValues: [],
+                                orderBy: { column: '', direction: 'ASC' as const },
+                              }
+                            : {}),
+                        })
+                      }
+                      type="button"
+                    >
+                      {opLabels[op]}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               {metaError && (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm leading-6 text-rose-700 break-words whitespace-pre-wrap">

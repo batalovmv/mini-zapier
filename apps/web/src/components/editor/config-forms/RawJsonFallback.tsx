@@ -58,10 +58,12 @@ export function RawJsonFallback({
   }
 
   return (
-    <div className="rounded-[1.15rem] border border-dashed border-slate-900/12 bg-slate-50/70 px-4 py-3">
+    <div className="rounded-[1.15rem] border border-slate-900/10 bg-slate-50/70 px-4 py-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="muted-label">{t.expertEyebrow}</p>
+          <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">
+            {t.expertEyebrow}
+          </p>
           <p className="mt-1 text-xs leading-5 text-slate-500">
             {t.expertDescription}
           </p>

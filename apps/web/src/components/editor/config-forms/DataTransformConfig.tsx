@@ -105,7 +105,7 @@ export function DataTransformConfig({
     <div className="space-y-5">
       <div>
         <span className="muted-label">{t.mode}</span>
-        <div className="mt-2 flex flex-wrap gap-1.5 rounded-[1.3rem] border border-slate-900/10 bg-slate-50 p-1">
+        <div className="mt-2 inline-flex flex-wrap gap-1.5 rounded-[1.3rem] border border-slate-900/10 bg-slate-50 p-1">
           <button
             aria-pressed={mode === 'template'}
             className={modeButtonClass(mode === 'template')}
@@ -143,7 +143,7 @@ export function DataTransformConfig({
           <div className="flex items-center justify-between gap-3">
             <span className="muted-label">{t.mapping}</span>
             <button
-              className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+              className="rounded-full border border-slate-900/10 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
               onClick={() =>
                 onChange((prev) => ({
                   ...prev,
@@ -164,7 +164,7 @@ export function DataTransformConfig({
             {mappingEntries.map(([key, value], index) => (
               <div
                 key={`${key}-${index}`}
-                className="space-y-2 rounded-2xl border border-slate-900/10 bg-slate-50/60 p-3"
+                className="space-y-2 rounded-[1.15rem] border border-slate-900/10 bg-white/72 p-3"
               >
                 <div className="flex items-center gap-2">
                   <input

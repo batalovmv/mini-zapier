@@ -1910,3 +1910,35 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/api build`
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-L: Refine inspector menu hierarchy + calm action forms
+- **Статус**: `done`
+- **Цель**: превратить правую панель editor в более собранную и понятную UX-surface без нагромождения, чтобы пользователь быстрее доходил до настройки текущего шага и не тратил экран на служебные статусы
+- **Scope**:
+  - убрать из inspector дублирующие и слишком громкие верхние блоки, заменив их на компактную hierarchy header + step summary
+  - перестроить секции `Подключение`, `Настройка`, `Проверка`, `Удаление` в более спокойные и плотные surfaces без лишней визуальной конкуренции
+  - переписать copy и режимы в `DB Query`, `HTTP Request`, `Data Transform`, manual JSON/manual input так, чтобы они были короче и понятнее новым пользователям на узкой панели
+  - снизить вложенность и визуальный шум в advanced/manual subsections без изменения бизнес-логики шагов
+- **Не входит**:
+  - новый editor workflow wizard или отдельный onboarding
+  - redesign canvas, node cards или левой библиотеки узлов
+  - изменение backend API, execution flow или connection semantics
+  - полноценный browser QA на production после deploy
+- **Файлы**:
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/components/editor/StepTestSection.tsx`
+  - `apps/web/src/components/editor/config-forms/DataTransformConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/HttpRequestConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/RawJsonFallback.tsx`
+  - `apps/web/src/components/editor/templated-input/TemplatedField.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - inspector показывает компактный header и step summary вместо громоздкого блока `Что делать сейчас` и oversized status cards
+  - активные секции `Подключение` / `Настройка` / `Проверка` / `Удаление` читаются как последовательный workflow, а не как набор равновесных карточек
+  - `DB Query`, `HTTP Request`, `Data Transform` и manual edit surfaces используют более короткие и понятные labels для узкой панели
+  - repeated/manual/advanced controls больше не создают лишний визуальный шум в верхней части каждого поля
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
