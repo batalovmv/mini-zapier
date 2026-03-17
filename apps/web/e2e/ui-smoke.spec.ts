@@ -2,14 +2,49 @@ import { expect, test, type Page } from '@playwright/test';
 
 const DEFAULT_ECHO_URL =
   process.env.MINI_ZAPIER_E2E_ECHO_URL || 'https://postman-echo.com/post';
-const E2E_EMAIL = process.env.MINI_ZAPIER_E2E_EMAIL ?? process.env.MINI_ZAPIER_E2E_USERNAME ?? 'admin@example.com';
+const LOCALE_STORAGE_KEY = 'mini-zapier:locale';
+const DEFAULT_E2E_EMAIL = 'admin@example.com';
 const E2E_PASSWORD = process.env.MINI_ZAPIER_E2E_PASSWORD;
+
+function resolveE2eEmail(): string {
+  const explicitEmail = process.env.MINI_ZAPIER_E2E_EMAIL?.trim();
+
+  if (explicitEmail) {
+    return explicitEmail;
+  }
+
+  const legacyUsername = process.env.MINI_ZAPIER_E2E_USERNAME?.trim();
+
+  if (legacyUsername) {
+    return legacyUsername.includes('@')
+      ? legacyUsername
+      : `${legacyUsername}@example.com`;
+  }
+
+  return DEFAULT_E2E_EMAIL;
+}
+
+const E2E_EMAIL = resolveE2eEmail();
+
+async function forceEnglishLocale(page: Page): Promise<void> {
+  await page.addInitScript((localeStorageKey: string) => {
+    window.localStorage.setItem(localeStorageKey, 'en');
+  }, LOCALE_STORAGE_KEY);
+}
+
+async function waitForDashboard(page: Page): Promise<void> {
+  await page.waitForURL((url) => url.pathname !== '/login', {
+    timeout: 20_000,
+  });
+  await expect(page.getByTestId('create-workflow-link')).toBeVisible();
+}
 
 async function signIn(page: Page): Promise<void> {
   if (!E2E_PASSWORD) {
     throw new Error('MINI_ZAPIER_E2E_PASSWORD is required for the UI smoke test.');
   }
 
+  await forceEnglishLocale(page);
   await page.goto('/login');
   await expect(page.getByRole('heading', { name: 'Mini-Zapier' })).toBeVisible();
 
@@ -17,7 +52,13 @@ async function signIn(page: Page): Promise<void> {
   await page.getByLabel('Password').fill(E2E_PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();
 
-  await expect(page.getByText('Operate workflows, monitor execution health and launch manual runs.')).toBeVisible();
+  try {
+    await waitForDashboard(page);
+  } catch {
+    throw new Error(
+      `Sign in did not reach the dashboard. Resolved MINI_ZAPIER_E2E_EMAIL="${E2E_EMAIL}". Set MINI_ZAPIER_E2E_EMAIL explicitly or update legacy MINI_ZAPIER_E2E_USERNAME to an email address.`,
+    );
+  }
 }
 
 async function dropPaletteItem(options: {
@@ -384,7 +425,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     expect(webhookResponse.status()).toBe(202);
 
     await page.getByRole('link', { name: '← Back' }).click();
-    await expect(page.getByText('Operate workflows, monitor execution health and launch manual runs.')).toBeVisible();
+    await waitForDashboard(page);
 
     await page.getByTestId(`workflow-${workflowId}-history`).click();
     await expect(page).toHaveURL(new RegExp(`/workflows/${workflowId}/history$`));

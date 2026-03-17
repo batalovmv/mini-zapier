@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-I — `clarify editor inspector flow`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт
+- **Последнее изменение**: TASK-J — `repair live E2E smoke auth and dashboard contract`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -22,8 +22,19 @@
   - **VPS verification (`api.memelab.ru/mini-zapier`, 2026-03-17)**: isolated redeploy `/opt/mini-zapier` уже вернул backend routes из TASK-052/TASK-054; direct unauth hits на `/api/connections/:id/introspect/tables` и `/api/workflows/:id/steps/test` теперь дают `401`, а не `404`
   - **TASK-H local build**: DB introspection больше не ограничен `public`; visual builder получает таблицы из доступных non-system schemas, умеет работать с `schema.table`, а generated SQL корректно quote-ит schema-qualified refs; `pnpm --filter @mini-zapier/api build` и `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-I local build**: inspector теперь ведёт пользователя по шагам `подключение → настройка → проверка`, manual JSON / code / extra headers переведены в локальные advanced surfaces, `DB Query` по умолчанию открывается в visual mode, `pnpm --filter @mini-zapier/web build` ✅
+  - **TASK-J local verification**: Playwright smoke теперь нормализует legacy `MINI_ZAPIER_E2E_USERNAME` в email-login contract, принудительно фиксирует `en` locale через `localStorage`, а post-login/back navigation ждут устойчивый dashboard marker `data-testid="create-workflow-link"` вместо хрупкого hero-copy; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
+  - **TASK-J root cause**: live GitHub Actions smoke падал не на deploy/build, а из-за рассинхрона после email-login migration: CI по-прежнему прокидывал legacy `MINI_ZAPIER_E2E_USERNAME`, а smoke ждал brittle dashboard text после входа
   - Console errors: 0 за всю сессию тестирования ✅
   - **Примечание**: после VPS redeploy выяснилось, что оставшаяся проблема visual DB Query была уже не в missing routes, а в том, что backend introspection искал таблицы только в `public`. Из-за пустого metadata list visual mode не мог дать выбрать таблицу и, как следствие, не мог сгенерировать SQL для кнопки `Тестировать запрос`
+- **Что сделано в TASK-J**:
+  - `apps/web/e2e/ui-smoke.spec.ts` — добавлен `resolveE2eEmail()` с legacy fallback `MINI_ZAPIER_E2E_USERNAME -> <username>@example.com`, принудительная фиксация `mini-zapier:locale=en` и helper `waitForDashboard()` на основе `data-testid="create-workflow-link"` вместо hero-copy
+  - `.github/workflows/ci.yml` — live E2E job теперь передаёт `MINI_ZAPIER_E2E_EMAIL` alongside legacy `MINI_ZAPIER_E2E_USERNAME`, так что CI может использовать явный email без ломки существующих repository vars
+  - **Проверки TASK-J**:
+    - `pnpm --filter @mini-zapier/web build` ✓
+    - `pnpm --filter @mini-zapier/web exec playwright test --list` ✓
+  - **Ограничения TASK-J**:
+    - локальный live Playwright run против Vercel не запускался: на этой машине нет `MINI_ZAPIER_E2E_PASSWORD`, поэтому покрытие до push ограничено build + parsing smoke suite
+    - если после push smoke снова упадёт, следующий кандидат уже не locale/copy drift, а фактические prod credentials или другая live UI-regression вне auth-contract
 - **Что сделано в TASK-I**:
   - `apps/web/src/components/editor/ConfigPanel.tsx` — правый inspector перестроен в более понятный guided-flow с блоком «что делать сейчас», шагами `1/2/3` и более спокойной danger-zone вместо конкурирующего destructive CTA
   - `apps/web/src/components/editor/StepTestSection.tsx` — секция проверки стала сворачиваемой по умолчанию и показывает короткий summary-state до раскрытия
@@ -563,10 +574,10 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-TASK-I закрыт локальным UX-pass и сборкой. Следующий практический шаг — ручной browser smoke editor на desktop + mobile ширине: пройти сценарии `Webhook → Telegram`, `HTTP Request`, `DB Query`, `Data Transform`, проверить понятность новой последовательности `подключение → настройка → проверка` и решить, нужен ли отдельный глобальный режим `новичок/профи` вместо текущего локального progressive disclosure. Если behaviour ок, следующий новый TASK — см. backlog.md.
+TASK-J закрывает локальный CI/e2e drift-fix. Ближайший практический шаг после push — подтвердить live GitHub Actions smoke на актуальном `main`; если run зелёный, можно возвращаться к ручному browser smoke editor на desktop + mobile ширине для UX-проверки TASK-I или брать следующий TASK из backlog.md.
 
 ## Блокеры
-- На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с новым email-login сценарием не запускался.
+- На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke против live Vercel не запускался; для TASK-J локальная проверка ограничена `build` + `playwright test --list`.
 - Docker daemon / локальный PostgreSQL на `5434` сейчас не подняты, поэтому `pnpm --filter @mini-zapier/api run prisma:migrate -- --name add_user_auth` локально не прогонялся; migration SQL добавлен вручную.
 
 - На машине во время проверки порт `3000` был занят внешним процессом (`D:\TZ\Finance_tracker\src\server.ts`), а порт `5173` — внешним Vite-процессом (`D:\TZ\Finance_tracker\client`). Для smoke-проверок использовались `3001`, `5174`, `5175`, `5176`, `5177`, `5178`.
@@ -577,7 +588,7 @@ TASK-I закрыт локальным UX-pass и сборкой. Следующ
 - Workflow node ids в create/update payload теперь трактуются только как client-local references для связи nodes ↔ edges; persisted ids генерируются сервером и приходят обратно в API response
 - Для `apps/web` Vite proxy по умолчанию шлёт `/api/*` на `http://localhost:3000`; для локального smoke можно переопределить target через `VITE_API_PROXY_TARGET`
 - `apps/web/playwright.config.ts` по умолчанию ждёт `MINI_ZAPIER_E2E_BASE_URL=http://127.0.0.1:5179`; если прогоняешь e2e на другом порту, передай env явно
-- `apps/web/e2e/ui-smoke.spec.ts` теперь логинится по `MINI_ZAPIER_E2E_EMAIL` (есть fallback на legacy `MINI_ZAPIER_E2E_USERNAME`) + `MINI_ZAPIER_E2E_PASSWORD`
+- `apps/web/e2e/ui-smoke.spec.ts` теперь логинится по `MINI_ZAPIER_E2E_EMAIL` (legacy `MINI_ZAPIER_E2E_USERNAME=admin` автоматически нормализуется в `admin@example.com`), жёстко фиксирует `mini-zapier:locale=en` и ждёт dashboard через `data-testid="create-workflow-link"`
 - В `ExecutionTable` колонка `trigger` сейчас показывает короткий preview из `triggerData`, потому что текущий `WorkflowExecutionDto` не содержит отдельного поля `source`; backend contract не менялся в рамках `TASK-016`
 - В `apps/web/package.json` scripts вызывают локальные бинарники через `node ./node_modules/...`, потому что Windows `.bin` shims в этом окружении срабатывали нестабильно
 - Для `ConnectionModule` и webhook secret-check нужен `APP_ENCRYPTION_KEY` в env процесса API; в smoke-проверке он передавался явно при запуске на `3001`
@@ -717,3 +728,4 @@ TASK-I закрыт локальным UX-pass и сборкой. Следующ
 | TASK-G | done | см. `git log` (`TASK-G: graceful fallback for missing editor API routes`) | Frontend distinguishes missing backend routes from real empty/error states in DB Query + Step Test and no longer overflows inspector on long route errors |
 | TASK-H | done | `892bd57` (`TASK-H: support non-public schemas in DB Query builder`) | DB introspection now scans available non-public schemas, visual SQL quotes `schema.table`; isolated VPS redeploy completed and public introspection/step-test routes still answer `401` instead of `404` |
 | TASK-I | done | см. `git log` (`TASK-I: clarify editor inspector flow`) | Guided inspector flow, calmer advanced/manual paths, friendlier editor copy for beginners while keeping power-user escape hatches |
+| TASK-J | done | см. `git log` (`TASK-J: repair live E2E smoke auth and dashboard contract`) | Live smoke now normalizes legacy username to email, forces EN locale, and waits for stable dashboard markers; CI also passes explicit `MINI_ZAPIER_E2E_EMAIL` |

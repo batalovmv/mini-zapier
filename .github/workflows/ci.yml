@@ -79,5 +79,6 @@ jobs:
         run: pnpm e2e
         env:
           MINI_ZAPIER_E2E_BASE_URL: ${{ vars.MINI_ZAPIER_E2E_BASE_URL }}
+          MINI_ZAPIER_E2E_EMAIL: ${{ vars.MINI_ZAPIER_E2E_EMAIL }}
           MINI_ZAPIER_E2E_PASSWORD: ${{ secrets.MINI_ZAPIER_E2E_PASSWORD }}
           MINI_ZAPIER_E2E_USERNAME: ${{ vars.MINI_ZAPIER_E2E_USERNAME }}
