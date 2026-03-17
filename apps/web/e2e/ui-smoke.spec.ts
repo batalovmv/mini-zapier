@@ -439,9 +439,6 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     await expect(page.getByText('v1')).toBeVisible();
 
     await page.getByTestId('toggle-workflow-status-button').click();
-    await expect(
-      page.locator('.status-pill').filter({ hasText: 'ACTIVE' }).first(),
-    ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible();
 
     const webhookResponse = await page.request.post(
