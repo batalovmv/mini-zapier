@@ -1771,3 +1771,29 @@
   - pending dialogs не закрываются через `Escape` и клик по backdrop
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-G: Graceful fallback for missing editor API capabilities
+- **Статус**: `done`
+- **Цель**: убрать сырые `Cannot GET/POST` ошибки в editor и различать пустое состояние от backend deployment mismatch
+- **Scope**:
+  - нормализовать frontend API errors для missing backend routes
+  - в `DB Query` различать `нет таблиц` и `metadata endpoint недоступен`, дать явный fallback в `Raw SQL`
+  - в `Step Test` показывать понятное сообщение вместо сырого `Cannot POST`, блокировать повторные бесполезные клики
+  - убрать горизонтальный overflow в проблемных error/toggle участках inspector panel
+- **Не входит**:
+  - изменения backend API
+  - VPS redeploy
+  - восстановление step test/introspection без обновления production backend
+- **Файлы**:
+  - `apps/web/src/lib/api/client.ts`
+  - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx`
+  - `apps/web/src/components/editor/StepTestSection.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - missing backend routes больше не показываются как сырые `Cannot GET/POST /api/...`
+  - `DB Query` не показывает misleading `Таблицы ... не найдены`, если introspection route отсутствует на backend
+  - `Step Test` показывает понятный unsupported-state и перестаёт спамить одинаковыми 404
+  - длинные route-ошибки и toggles не ломают ширину inspector panel
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`

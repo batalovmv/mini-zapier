@@ -378,6 +378,8 @@ export const en = {
     testButton: 'Test step',
     testRunning: 'Running...',
     testButtonSaveFirst: 'Save workflow first to test steps.',
+    testButtonUnsupported:
+      'The current API deployment does not support step test.',
     inputDataLabel: 'Input data (JSON)',
     inputDataPlaceholder: '{}',
     inputDataFromPrevious: 'Auto-filled from previous step test.',
@@ -392,6 +394,8 @@ export const en = {
     collapseInput: 'Hide input',
     expandOutput: 'Show output',
     collapseOutput: 'Hide output',
+    unsupported:
+      'Step test is unavailable on the current API deployment. Update the backend and reload the editor.',
   },
   connectionsPage: {
     eyebrow: 'Connections library',
@@ -706,6 +710,11 @@ export const en = {
       showJson: 'Show raw JSON',
       hideJson: 'Hide raw JSON',
       introspectionError: 'Failed to load metadata.',
+      metadataUnavailable:
+        'This API deployment does not support PostgreSQL metadata loading. Switch to Raw SQL or update the backend.',
+      testUnavailable:
+        'This API deployment does not support SQL test runs from the editor. Update the backend or run the workflow normally.',
+      switchToRawSql: 'Switch to Raw SQL',
       opSelect: 'Read',
       opInsert: 'Insert',
       opUpdate: 'Update',
@@ -877,6 +886,8 @@ export const en = {
   errors: {
     unexpectedFrontendError: 'Unexpected frontend error.',
     apiRequestFailed: 'API request failed.',
+    missingApiRoute:
+      'The current API deployment does not support this route.',
   },
   workflowValidation: {
     MISSING_NODE_REFERENCE:

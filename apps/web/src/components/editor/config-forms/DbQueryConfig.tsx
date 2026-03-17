@@ -7,7 +7,10 @@ import {
   testDbQuery,
   type ColumnInfo,
 } from '../../../lib/api/introspection';
-import { getApiErrorMessage } from '../../../lib/api/client';
+import {
+  getApiErrorMessage,
+  isMissingApiRouteError,
+} from '../../../lib/api/client';
 import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
 import { TemplatedField } from '../templated-input/TemplatedField';
@@ -341,12 +344,16 @@ export function DbQueryConfig({
   const [tablesLoading, setTablesLoading] = useState(false);
   const [columnsLoading, setColumnsLoading] = useState(false);
   const [metaError, setMetaError] = useState<string | null>(null);
+  const [metadataUnavailable, setMetadataUnavailable] = useState<string | null>(
+    null,
+  );
 
   // Test state
   const [testRows, setTestRows] = useState<unknown[] | null>(null);
   const [testRowCount, setTestRowCount] = useState<number | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
   const [testRunning, setTestRunning] = useState(false);
+  const [testUnavailable, setTestUnavailable] = useState<string | null>(null);
 
   // Raw JSON fallback
   const [jsonOpen, setJsonOpen] = useState(false);
@@ -400,6 +407,8 @@ export function DbQueryConfig({
     if (!connectionId) {
       setTables([]);
       setColumns([]);
+      setMetadataUnavailable(null);
+      setTestUnavailable(null);
       return;
     }
 
@@ -409,6 +418,8 @@ export function DbQueryConfig({
       setColumns([]);
       clearTestResults();
       setMetaError(null);
+      setMetadataUnavailable(null);
+      setTestUnavailable(null);
 
       // Clear config query/params so stale SQL cannot be tested against the new connection
       const fresh = { ...EMPTY_BUILDER };
@@ -424,15 +435,33 @@ export function DbQueryConfig({
     let cancelled = false;
     setTablesLoading(true);
     setMetaError(null);
+    setMetadataUnavailable(null);
 
     introspectTables(connectionId)
       .then((result) => {
-        if (!cancelled) setTables(result.tables);
+        if (!cancelled) {
+          setTables(result.tables);
+          setMetadataUnavailable(null);
+        }
       })
       .catch((err) => {
-        if (!cancelled) {
-          setMetaError(getApiErrorMessage(err, messages.errors));
+        if (cancelled) {
+          return;
         }
+
+        const errorMessage = getApiErrorMessage(err, {
+          ...messages.errors,
+          missingApiRoute: t.metadataUnavailable,
+        });
+
+        if (isMissingApiRouteError(err)) {
+          setTables([]);
+          setColumns([]);
+          setMetadataUnavailable(errorMessage);
+          return;
+        }
+
+        setMetaError(errorMessage);
       })
       .finally(() => {
         if (!cancelled) setTablesLoading(false);
@@ -442,7 +471,7 @@ export function DbQueryConfig({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- onChange is stable, intentionally omitted to avoid loops
-  }, [connectionId, messages.errors]);
+  }, [connectionId, messages.errors, t.metadataUnavailable]);
 
   /* ---- Load columns when table changes ---- */
   useEffect(() => {
@@ -453,15 +482,32 @@ export function DbQueryConfig({
 
     let cancelled = false;
     setColumnsLoading(true);
+    setMetaError(null);
 
     introspectColumns(connectionId, builder.table)
       .then((result) => {
-        if (!cancelled) setColumns(result.columns);
+        if (!cancelled) {
+          setColumns(result.columns);
+          setMetadataUnavailable(null);
+        }
       })
       .catch((err) => {
-        if (!cancelled) {
-          setMetaError(getApiErrorMessage(err, messages.errors));
+        if (cancelled) {
+          return;
         }
+
+        const errorMessage = getApiErrorMessage(err, {
+          ...messages.errors,
+          missingApiRoute: t.metadataUnavailable,
+        });
+
+        if (isMissingApiRouteError(err)) {
+          setColumns([]);
+          setMetadataUnavailable(errorMessage);
+          return;
+        }
+
+        setMetaError(errorMessage);
       })
       .finally(() => {
         if (!cancelled) setColumnsLoading(false);
@@ -470,7 +516,7 @@ export function DbQueryConfig({
     return () => {
       cancelled = true;
     };
-  }, [connectionId, builder.table, messages.errors]);
+  }, [connectionId, builder.table, messages.errors, t.metadataUnavailable]);
 
   /* ---- Push builder → config whenever builder changes ---- */
   const pushBuilderToConfig = useCallback(
@@ -544,6 +590,7 @@ export function DbQueryConfig({
 
     setTestRunning(true);
     setTestError(null);
+    setTestUnavailable(null);
     setTestRows(null);
     setTestRowCount(null);
 
@@ -557,7 +604,17 @@ export function DbQueryConfig({
         setTestRowCount(result.rowCount);
       }
     } catch (err) {
-      setTestError(getApiErrorMessage(err, messages.errors));
+      const errorMessage = getApiErrorMessage(err, {
+        ...messages.errors,
+        missingApiRoute: t.testUnavailable,
+      });
+
+      if (isMissingApiRouteError(err)) {
+        setTestUnavailable(errorMessage);
+        return;
+      }
+
+      setTestError(errorMessage);
     } finally {
       setTestRunning(false);
     }
@@ -575,6 +632,7 @@ export function DbQueryConfig({
   /* ---- Test button disabled logic ---- */
   const testDisabled = useMemo(() => {
     if (testRunning) return true;
+    if (testUnavailable !== null) return true;
 
     if (mode === 'visual') {
       const result = generateSql(builder, tables, knownColumnNames);
@@ -596,6 +654,7 @@ export function DbQueryConfig({
     knownColumnNames,
     config.query,
     paramsError,
+    testUnavailable,
   ]);
 
   /* ---- Mutation warning ---- */
@@ -653,19 +712,25 @@ export function DbQueryConfig({
     builder.operation === 'insert' || builder.operation === 'update';
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       {/* Mode toggle */}
-      <div className="flex gap-1.5 rounded-full border border-slate-900/10 bg-slate-50 p-1">
+      <div className="flex flex-wrap gap-1.5 rounded-[1.4rem] border border-slate-900/10 bg-slate-50 p-1">
         <button
           className={modeTabClass(mode === 'visual')}
-          onClick={() => { setMode('visual'); clearTestResults(); }}
+          onClick={() => {
+            setMode('visual');
+            clearTestResults();
+          }}
           type="button"
         >
           {t.modeVisual}
         </button>
         <button
           className={modeTabClass(mode === 'raw')}
-          onClick={() => { setMode('raw'); clearTestResults(); }}
+          onClick={() => {
+            setMode('raw');
+            clearTestResults();
+          }}
           type="button"
         >
           {t.modeRawSql}
@@ -679,10 +744,21 @@ export function DbQueryConfig({
             <p className="text-sm leading-6 text-slate-500">
               {t.selectConnectionHint}
             </p>
+          ) : metadataUnavailable ? (
+            <div className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm leading-6 text-amber-800 break-words">
+              <p>{metadataUnavailable}</p>
+              <button
+                className="rounded-full border border-amber-300 bg-white px-4 py-2 text-xs font-semibold text-amber-800 transition hover:bg-amber-100"
+                onClick={() => setMode('raw')}
+                type="button"
+              >
+                {t.switchToRawSql}
+              </button>
+            </div>
           ) : (
             <div className="space-y-4">
               {/* Operation selector */}
-              <div className="flex gap-1.5 rounded-full border border-slate-900/10 bg-slate-50 p-1">
+              <div className="flex flex-wrap gap-1.5 rounded-[1.4rem] border border-slate-900/10 bg-slate-50 p-1">
                 {OPERATIONS.map((op) => (
                   <button
                     key={op}
@@ -737,13 +813,16 @@ export function DbQueryConfig({
                     ))}
                   </select>
                 )}
-                {!tablesLoading && tables.length === 0 && connectionId && (
+                {!tablesLoading &&
+                  !metadataUnavailable &&
+                  tables.length === 0 &&
+                  connectionId && (
                   <p className="mt-2 text-xs text-slate-400">{t.noTables}</p>
                 )}
               </label>
 
               {metaError && (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm text-rose-700">
+                <div className="rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm leading-6 text-rose-700 break-words whitespace-pre-wrap">
                   {t.introspectionError}: {metaError}
                 </div>
               )}
@@ -815,9 +894,9 @@ export function DbQueryConfig({
                   <span className="muted-label">{t.setValues}</span>
                   <div className="mt-2 space-y-2">
                     {builder.setValues.map((row, index) => (
-                      <div key={index} className="flex items-center gap-2">
+                      <div key={index} className="flex flex-wrap items-start gap-2">
                         <select
-                          className="w-1/3 rounded-xl border border-slate-900/10 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500"
+                          className="min-w-[10rem] flex-1 rounded-xl border border-slate-900/10 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500"
                           onChange={(e) => {
                             const next = [...builder.setValues];
                             next[index] = { ...row, column: e.target.value };
@@ -886,9 +965,9 @@ export function DbQueryConfig({
                   <span className="muted-label">{t.filters}</span>
                   <div className="mt-2 space-y-2">
                     {builder.filters.map((filter, index) => (
-                      <div key={index} className="flex items-center gap-2">
+                      <div key={index} className="flex flex-wrap items-start gap-2">
                         <select
-                          className="w-1/3 rounded-xl border border-slate-900/10 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500"
+                          className="min-w-[10rem] flex-1 rounded-xl border border-slate-900/10 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500"
                           onChange={(e) => {
                             const next = [...builder.filters];
                             next[index] = { ...filter, column: e.target.value };
@@ -974,7 +1053,7 @@ export function DbQueryConfig({
 
               {/* Order by (SELECT only) */}
               {showOrderBy && builder.table && columns.length > 0 && (
-                <div className="flex items-end gap-3">
+                <div className="flex flex-wrap items-end gap-3">
                   <label className="flex-1">
                     <span className="muted-label">{t.orderBy}</span>
                     <select
@@ -1082,7 +1161,7 @@ export function DbQueryConfig({
       {sqlPreview && (
         <div>
           <span className="muted-label">{t.sqlPreview}</span>
-          <pre className="mt-2 overflow-x-auto rounded-2xl border border-slate-900/10 bg-slate-50 px-4 py-3 font-mono text-xs leading-5 text-slate-700">
+          <pre className="mt-2 overflow-x-auto rounded-2xl border border-slate-900/10 bg-slate-50 px-4 py-3 font-mono text-xs leading-5 text-slate-700 whitespace-pre-wrap break-words">
             {sqlPreview}
           </pre>
         </div>
@@ -1101,8 +1180,14 @@ export function DbQueryConfig({
           </button>
 
           {testError && (
-            <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm text-rose-700">
+            <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm leading-6 text-rose-700 break-words whitespace-pre-wrap">
               {t.testError}: {testError}
+            </div>
+          )}
+
+          {testUnavailable && (
+            <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm leading-6 text-amber-800 break-words whitespace-pre-wrap">
+              {testUnavailable}
             </div>
           )}
 
@@ -1153,7 +1238,7 @@ export function DbQueryConfig({
                           ).map((val, j) => (
                             <td
                               key={j}
-                              className="px-3 py-2 text-slate-700"
+                              className="px-3 py-2 text-slate-700 break-words"
                             >
                               {val === null
                                 ? 'NULL'

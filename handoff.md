@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-F — `improve modal accessibility`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт
+- **Последнее изменение**: TASK-G — `graceful fallback for missing editor API routes`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -18,8 +18,20 @@
   - **TASK-D local build**: editor create dialog и Connections dialog теперь используют один validation/pending contract, `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-E local build**: auth больше не дублирует blocking errors toast-ом, destructive dialogs меняют copy и блокируют cancel/close в pending state, `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-F local build**: `ModalShell` теперь даёт focus trap, initial/return focus и aria wiring; pending dialogs не закрываются через `Escape`/backdrop, `pnpm --filter @mini-zapier/web build` ✅
+  - **TASK-G local build**: editor нормализует missing backend routes в понятные unsupported-state сообщения, `DB Query` больше не врёт про пустую schema при 404 introspection, overflow в error/toggle зонах убран, `pnpm --filter @mini-zapier/web build` ✅
   - Console errors: 0 за всю сессию тестирования ✅
-  - **Примечание**: backend API на VPS (`api.memelab.ru`) не обновлялся с ~TASK-044; полный e2e (execution, step test) требует VPS redeploy
+  - **Примечание**: backend API на VPS (`api.memelab.ru`) всё ещё отстаёт от frontend deployment; пользовательские ошибки `Cannot GET /api/connections/:id/introspect/tables` и `Cannot POST /api/workflows/:id/steps/test` подтверждают, что production backend не содержит TASK-052/TASK-054 routes. TASK-G чинит UX деградацию на frontend, но сами возможности появятся на сайте только после VPS redeploy API/worker
+- **Что сделано в TASK-G**:
+  - `apps/web/src/lib/api/client.ts` — добавлен detector missing backend routes (`Cannot GET/POST ...`) и нормализация сырого payload/error message в дружелюбный frontend copy вместо route dump
+  - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx` — visual DB Query builder теперь различает `empty schema` и `introspection endpoint unsupported`; при missing route показывает явный fallback на `Raw SQL`, не рвёт layout длинными сообщениями и wrap-ит toggle/form rows на узкой панели
+  - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx` — SQL test surface теперь тоже различает real query failure и missing backend route, выводит unsupported-state отдельным callout и блокирует повторные бесполезные клики
+  - `apps/web/src/components/editor/StepTestSection.tsx` — step test больше не пишет сырой `Cannot POST /api/workflows/:id/steps/test`; unsupported backend route показывается как отдельный warning-state, после чего кнопка блокируется до reload
+  - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — добавлены EN/RU строки для missing-route fallback и DB Query/Step Test unsupported-states
+  - **Проверки TASK-G**:
+    - `pnpm --filter @mini-zapier/web build` ✓
+  - **Ограничения TASK-G**:
+    - production site всё ещё требует redeploy backend API/worker, иначе visual DB metadata и step test физически недоступны
+    - manual browser smoke на Vercel/VPS в этой сессии не запускался; покрытие подтверждено сборкой и code-path review
 - **Что сделано в TASK-F**:
   - `apps/web/src/components/ui/ModalShell.tsx` — добавлены focus trap по `Tab`/`Shift+Tab`, initial focus при открытии, restore focus на исходный trigger при закрытии, guard через `focusin`, а также безопасный backdrop close только при полном клике по overlay
   - `apps/web/src/components/ui/ModalShell.tsx` — dialog теперь получает `aria-labelledby` и `aria-describedby` через stable ids, а `Escape` обрабатывается внутри модалки и не протекает наружу; для non-dismissable состояния close-paths блокируются без новой библиотеки
@@ -527,7 +539,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-TASK-F закрыт. Следующий рекомендованный TASK — см. backlog.md.
+TASK-G закрыт. Следующий практический шаг вне кода — redeploy `apps/api` и `apps/worker` на VPS, затем вручную перепроверить на production `DB Query` metadata/test и `Step Test` для action nodes. После этого следующий новый TASK — см. backlog.md.
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke с новым email-login сценарием не запускался.
@@ -678,3 +690,4 @@ TASK-F закрыт. Следующий рекомендованный TASK — 
 | TASK-D | done | см. `git log` (`TASK-D: align connection dialog validation`) | Shared connection dialog validation/pending behavior; editor create now reuses the library form and rejects empty credential values |
 | TASK-E | done | см. `git log` (`TASK-E: refine notifications and destructive flows`) | Auth inline errors no longer duplicate toast, destructive delete dialogs have truthful pending copy/locking, connection update pending label matches action |
 | TASK-F | done | см. `git log` (`TASK-F: improve modal accessibility`) | ModalShell focus trap + initial/return focus + aria wiring; Confirmation/Connection dialogs marked non-dismissable during pending |
+| TASK-G | done | см. `git log` (`TASK-G: graceful fallback for missing editor API routes`) | Frontend distinguishes missing backend routes from real empty/error states in DB Query + Step Test and no longer overflows inspector on long route errors |

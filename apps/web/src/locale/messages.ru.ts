@@ -397,6 +397,8 @@ export const ru = {
     testButton: 'Тестировать шаг',
     testRunning: 'Выполняется...',
     testButtonSaveFirst: 'Сначала сохраните сценарий.',
+    testButtonUnsupported:
+      'Текущий API deployment не поддерживает тест шага.',
     inputDataLabel: 'Входные данные (JSON)',
     inputDataPlaceholder: '{}',
     inputDataFromPrevious: 'Заполнено из результата предыдущего шага.',
@@ -411,6 +413,8 @@ export const ru = {
     collapseInput: 'Скрыть входные данные',
     expandOutput: 'Показать результат',
     collapseOutput: 'Скрыть результат',
+    unsupported:
+      'Тест шага недоступен на текущем API deployment. Обновите backend и перезагрузите редактор.',
   },
   connectionsPage: {
     eyebrow: 'Библиотека подключений',
@@ -739,6 +743,11 @@ export const ru = {
       showJson: 'Показать raw JSON',
       hideJson: 'Скрыть raw JSON',
       introspectionError: 'Не удалось загрузить метаданные.',
+      metadataUnavailable:
+        'Текущий API deployment не поддерживает загрузку метаданных PostgreSQL. Переключитесь на Raw SQL или обновите backend.',
+      testUnavailable:
+        'Текущий API deployment не поддерживает тест SQL из редактора. Обновите backend или выполните workflow обычным запуском.',
+      switchToRawSql: 'Перейти в Raw SQL',
       opSelect: 'Чтение',
       opInsert: 'Вставка',
       opUpdate: 'Обновление',
@@ -910,6 +919,8 @@ export const ru = {
   errors: {
     unexpectedFrontendError: 'Неожиданная ошибка фронтенда.',
     apiRequestFailed: 'API-запрос завершился ошибкой.',
+    missingApiRoute:
+      'Текущий API deployment не поддерживает этот маршрут.',
   },
   workflowValidation: {
     MISSING_NODE_REFERENCE:

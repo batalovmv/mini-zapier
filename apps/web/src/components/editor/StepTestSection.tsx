@@ -1,7 +1,10 @@
 import { ActionType, type StepTestResponse } from '@mini-zapier/shared';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getApiErrorMessage } from '../../lib/api/client';
+import {
+  getApiErrorMessage,
+  isMissingApiRouteError,
+} from '../../lib/api/client';
 import { testStep } from '../../lib/api/executions';
 import { computeChainOrder } from '../../lib/editor-chain';
 import { useLocale } from '../../locale/LocaleProvider';
@@ -67,6 +70,9 @@ export function StepTestSection({
   const [running, setRunning] = useState(false);
   const [inputExpanded, setInputExpanded] = useState(true);
   const [outputExpanded, setOutputExpanded] = useState(true);
+  const [unsupportedMessage, setUnsupportedMessage] = useState<string | null>(
+    null,
+  );
   const lastSyncedInputRef = useRef(defaultInputText);
 
   useEffect(() => {
@@ -97,6 +103,7 @@ export function StepTestSection({
     }
 
     setJsonError(null);
+    setUnsupportedMessage(null);
     setRunning(true);
 
     try {
@@ -109,7 +116,15 @@ export function StepTestSection({
 
       setStepTestResult(nodeId, result);
     } catch (error) {
-      const errorMessage = getApiErrorMessage(error, messages.errors);
+      const errorMessage = getApiErrorMessage(error, {
+        ...messages.errors,
+        missingApiRoute: t.unsupported,
+      });
+
+      if (isMissingApiRouteError(error)) {
+        setUnsupportedMessage(errorMessage);
+        return;
+      }
 
       setStepTestResult(nodeId, {
         status: 'FAILED',
@@ -128,10 +143,11 @@ export function StepTestSection({
     nodeId,
     setStepTestResult,
     t.invalidJson,
+    t.unsupported,
     messages.errors,
   ]);
 
-  const disabled = !workflowId;
+  const disabled = !workflowId || unsupportedMessage !== null;
 
   return (
     <section className={railSectionClass}>
@@ -187,12 +203,24 @@ export function StepTestSection({
           className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
           disabled={disabled || running}
           onClick={() => void handleTest()}
-          title={disabled ? t.testButtonSaveFirst : undefined}
+          title={
+            unsupportedMessage !== null
+              ? t.testButtonUnsupported
+              : disabled
+                ? t.testButtonSaveFirst
+                : undefined
+          }
           type="button"
         >
           {running ? t.testRunning : t.testButton}
         </button>
       </div>
+
+      {unsupportedMessage ? (
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-2 text-xs leading-5 text-amber-700 break-words whitespace-pre-wrap">
+          {unsupportedMessage}
+        </div>
+      ) : null}
 
       {/* Results */}
       {existingResult ? (
@@ -215,7 +243,7 @@ export function StepTestSection({
           </div>
 
           {existingResult.errorMessage ? (
-            <div className="mt-2 rounded-xl border border-rose-200 bg-rose-50/90 px-3 py-2 text-xs text-rose-700">
+            <div className="mt-2 rounded-xl border border-rose-200 bg-rose-50/90 px-3 py-2 text-xs leading-5 text-rose-700 break-words whitespace-pre-wrap">
               {existingResult.errorMessage}
             </div>
           ) : null}
@@ -232,7 +260,7 @@ export function StepTestSection({
               </button>
 
               {outputExpanded ? (
-                <pre className="mt-1 max-h-48 overflow-auto rounded-xl border border-slate-900/10 bg-slate-50 px-3 py-2 font-mono text-[11px] text-slate-700">
+                <pre className="mt-1 max-h-48 overflow-auto rounded-xl border border-slate-900/10 bg-slate-50 px-3 py-2 font-mono text-[11px] text-slate-700 whitespace-pre-wrap break-words">
                   {JSON.stringify(existingResult.outputData, null, 2)}
                 </pre>
               ) : null}
