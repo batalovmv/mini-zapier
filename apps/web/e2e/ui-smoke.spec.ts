@@ -414,16 +414,11 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
 
     await httpNode.click();
     await page.getByLabel('HTTP request URL').fill(DEFAULT_ECHO_URL);
-    await page.getByLabel('Header key 1').fill('Content-Type');
-    await page.getByLabel('Header value 1').fill('application/json');
-    await page
-      .getByLabel('HTTP request body')
-      .fill(
-        JSON.stringify({
-          name: '{{input.name}}',
-          eventId: '{{input.eventId}}',
-        }),
-      );
+    await page.getByLabel('Body field key 1').fill('name');
+    await page.getByLabel('Body field value 1').fill('{{input.name}}');
+    await page.getByRole('button', { name: 'Add field' }).click();
+    await page.getByLabel('Body field key 2').fill('eventId');
+    await page.getByLabel('Body field value 2').fill('{{input.eventId}}');
 
     await transformNode.click();
     await page
