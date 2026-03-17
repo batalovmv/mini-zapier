@@ -85,6 +85,19 @@ function quoteIdent(name: string): string {
   return `"${name.replace(/"/g, '""')}"`;
 }
 
+function quoteTableRef(value: string): string {
+  const separatorIndex = value.indexOf('.');
+
+  if (separatorIndex === -1) {
+    return quoteIdent(value);
+  }
+
+  const schema = value.slice(0, separatorIndex);
+  const table = value.slice(separatorIndex + 1);
+
+  return `${quoteIdent(schema)}.${quoteIdent(table)}`;
+}
+
 /** Build WHERE clause from filter rows. Returns { sql, params } fragment. */
 function buildWhere(
   filters: FilterRow[],
@@ -149,7 +162,7 @@ function generateSelectSql(
 
   const where = buildWhere(builder.filters, knownColumns, 0);
 
-  let sql = `SELECT ${cols} FROM ${quoteIdent(builder.table)}${where.clause}`;
+  let sql = `SELECT ${cols} FROM ${quoteTableRef(builder.table)}${where.clause}`;
 
   if (
     builder.orderBy.column &&
@@ -180,7 +193,7 @@ function generateInsertSql(
   const params = rows.map((r) => r.value);
 
   return {
-    query: `INSERT INTO ${quoteIdent(builder.table)} (${colList}) VALUES (${valList})`,
+    query: `INSERT INTO ${quoteTableRef(builder.table)} (${colList}) VALUES (${valList})`,
     params,
   };
 }
@@ -203,7 +216,7 @@ function generateUpdateSql(
   const where = buildWhere(builder.filters, knownColumns, setParams.length);
 
   return {
-    query: `UPDATE ${quoteIdent(builder.table)} SET ${setClauses.join(', ')}${where.clause}`,
+    query: `UPDATE ${quoteTableRef(builder.table)} SET ${setClauses.join(', ')}${where.clause}`,
     params: [...setParams, ...where.params],
   };
 }
@@ -218,7 +231,7 @@ function generateDeleteSql(
   const where = buildWhere(builder.filters, knownColumns, 0);
 
   return {
-    query: `DELETE FROM ${quoteIdent(builder.table)}${where.clause}`,
+    query: `DELETE FROM ${quoteTableRef(builder.table)}${where.clause}`,
     params: where.params,
   };
 }

@@ -10,6 +10,36 @@ import { ConnectionService } from './connection.service';
 
 const PREVIEW_ROW_LIMIT = 50;
 const STATEMENT_TIMEOUT_MS = '10000';
+const SYSTEM_SCHEMAS = ['information_schema', 'pg_catalog'];
+
+function parseTableReference(value: string): {
+  schema: string;
+  table: string;
+} {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    throw new BadRequestException('Table name is required.');
+  }
+
+  const separatorIndex = trimmed.indexOf('.');
+
+  if (separatorIndex === -1) {
+    return {
+      schema: 'public',
+      table: trimmed,
+    };
+  }
+
+  const schema = trimmed.slice(0, separatorIndex).trim();
+  const table = trimmed.slice(separatorIndex + 1).trim();
+
+  if (!schema || !table) {
+    throw new BadRequestException('Table name must use schema.table format.');
+  }
+
+  return { schema, table };
+}
 
 // Reuse worker's credential parsing pattern (db-query.action.ts:29-51)
 function readPort(value: string | undefined): number | undefined {
@@ -123,14 +153,30 @@ export class IntrospectionService {
     try {
       await client.connect();
 
-      const result = await client.query<{ table_name: string }>(
-        `SELECT table_name
+      const result = await client.query<{
+        table_schema: string;
+        table_name: string;
+      }>(
+        `SELECT table_schema, table_name
          FROM information_schema.tables
-         WHERE table_schema = 'public'
-         ORDER BY table_name`,
+         WHERE table_type = 'BASE TABLE'
+           AND table_schema NOT IN (${SYSTEM_SCHEMAS.map((_, index) => `$${index + 1}`).join(', ')})
+           AND table_schema NOT LIKE 'pg_toast%'
+           AND table_schema NOT LIKE 'pg_temp_%'
+         ORDER BY
+           CASE WHEN table_schema = 'public' THEN 0 ELSE 1 END,
+           table_schema,
+           table_name`,
+        SYSTEM_SCHEMAS,
       );
 
-      return { tables: result.rows.map((row) => row.table_name) };
+      return {
+        tables: result.rows.map((row) =>
+          row.table_schema === 'public'
+            ? row.table_name
+            : `${row.table_schema}.${row.table_name}`,
+        ),
+      };
     } finally {
       await client.end().catch(() => undefined);
     }
@@ -142,6 +188,7 @@ export class IntrospectionService {
     table: string,
   ): Promise<{ columns: ColumnInfo[] }> {
     const client = await this.createClient(userId, connectionId);
+    const tableRef = parseTableReference(table);
 
     try {
       await client.connect();
@@ -153,9 +200,9 @@ export class IntrospectionService {
       }>(
         `SELECT column_name, data_type, is_nullable
          FROM information_schema.columns
-         WHERE table_schema = 'public' AND table_name = $1
+         WHERE table_schema = $1 AND table_name = $2
          ORDER BY ordinal_position`,
-        [table],
+        [tableRef.schema, tableRef.table],
       );
 
       return {

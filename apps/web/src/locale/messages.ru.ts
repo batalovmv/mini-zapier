@@ -713,7 +713,7 @@ export const ru = {
       modeRawSql: 'Raw SQL',
       selectTable: 'Выберите таблицу',
       loadingTables: 'Загрузка таблиц\u2026',
-      noTables: 'Таблицы в public-схеме не найдены.',
+      noTables: 'Таблицы в доступных схемах не найдены.',
       columns: 'Колонки',
       allColumns: 'Все колонки',
       loadingColumns: 'Загрузка колонок\u2026',

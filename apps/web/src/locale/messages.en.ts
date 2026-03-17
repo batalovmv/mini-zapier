@@ -680,7 +680,7 @@ export const en = {
       modeRawSql: 'Raw SQL',
       selectTable: 'Select table',
       loadingTables: 'Loading tables\u2026',
-      noTables: 'No tables found in public schema.',
+      noTables: 'No tables found in available schemas.',
       columns: 'Columns',
       allColumns: 'All columns',
       loadingColumns: 'Loading columns\u2026',

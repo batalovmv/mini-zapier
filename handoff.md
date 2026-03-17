@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-G — `graceful fallback for missing editor API routes`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт
+- **Последнее изменение**: TASK-H — `support non-public schemas in DB Query builder`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -19,8 +19,20 @@
   - **TASK-E local build**: auth больше не дублирует blocking errors toast-ом, destructive dialogs меняют copy и блокируют cancel/close в pending state, `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-F local build**: `ModalShell` теперь даёт focus trap, initial/return focus и aria wiring; pending dialogs не закрываются через `Escape`/backdrop, `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-G local build**: editor нормализует missing backend routes в понятные unsupported-state сообщения, `DB Query` больше не врёт про пустую schema при 404 introspection, overflow в error/toggle зонах убран, `pnpm --filter @mini-zapier/web build` ✅
+  - **VPS verification (`api.memelab.ru/mini-zapier`, 2026-03-17)**: isolated redeploy `/opt/mini-zapier` уже вернул backend routes из TASK-052/TASK-054; direct unauth hits на `/api/connections/:id/introspect/tables` и `/api/workflows/:id/steps/test` теперь дают `401`, а не `404`
+  - **TASK-H local build**: DB introspection больше не ограничен `public`; visual builder получает таблицы из доступных non-system schemas, умеет работать с `schema.table`, а generated SQL корректно quote-ит schema-qualified refs; `pnpm --filter @mini-zapier/api build` и `pnpm --filter @mini-zapier/web build` ✅
   - Console errors: 0 за всю сессию тестирования ✅
-  - **Примечание**: backend API на VPS (`api.memelab.ru`) всё ещё отстаёт от frontend deployment; пользовательские ошибки `Cannot GET /api/connections/:id/introspect/tables` и `Cannot POST /api/workflows/:id/steps/test` подтверждают, что production backend не содержит TASK-052/TASK-054 routes. TASK-G чинит UX деградацию на frontend, но сами возможности появятся на сайте только после VPS redeploy API/worker
+  - **Примечание**: после VPS redeploy выяснилось, что оставшаяся проблема visual DB Query была уже не в missing routes, а в том, что backend introspection искал таблицы только в `public`. Из-за пустого metadata list visual mode не мог дать выбрать таблицу и, как следствие, не мог сгенерировать SQL для кнопки `Тестировать запрос`
+- **Что сделано в TASK-H**:
+  - `apps/api/src/connection/introspection.service.ts` — metadata introspection теперь читает `BASE TABLE` из доступных non-system schemas, отдаёт `schema.table` для non-public tables и корректно принимает schema-qualified table refs при загрузке колонок
+  - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx` — visual DB Query builder теперь генерирует `SELECT` / `INSERT` / `UPDATE` / `DELETE` с корректным quoting для `schema.table`, поэтому non-public tables остаются тестируемыми и в visual mode
+  - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — empty-state copy больше не утверждает, что поиск идёт только в `public`
+  - **Проверки TASK-H**:
+    - `pnpm --filter @mini-zapier/api build` ✓
+    - `pnpm --filter @mini-zapier/web build` ✓
+  - **Ограничения TASK-H**:
+    - manual browser smoke с реальной PostgreSQL connection в этой сессии ещё не запускался; покрытие подтверждено сборкой и code-path review
+    - если после redeploy visual mode всё ещё пустой, следующий кандидат уже не frontend/API route, а реальные права пользователя БД или фактическое отсутствие таблиц в доступных schemas
 - **Что сделано в TASK-G**:
   - `apps/web/src/lib/api/client.ts` — добавлен detector missing backend routes (`Cannot GET/POST ...`) и нормализация сырого payload/error message в дружелюбный frontend copy вместо route dump
   - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx` — visual DB Query builder теперь различает `empty schema` и `introspection endpoint unsupported`; при missing route показывает явный fallback на `Raw SQL`, не рвёт layout длинными сообщениями и wrap-ит toggle/form rows на узкой панели
@@ -30,7 +42,7 @@
   - **Проверки TASK-G**:
     - `pnpm --filter @mini-zapier/web build` ✓
   - **Ограничения TASK-G**:
-    - production site всё ещё требует redeploy backend API/worker, иначе visual DB metadata и step test физически недоступны
+    - backend route gap был закрыт отдельным VPS redeploy после TASK-G; историческое ограничение снято, но без TASK-H visual DB всё ещё мог оставаться пустым для non-public schemas
     - manual browser smoke на Vercel/VPS в этой сессии не запускался; покрытие подтверждено сборкой и code-path review
 - **Что сделано в TASK-F**:
   - `apps/web/src/components/ui/ModalShell.tsx` — добавлены focus trap по `Tab`/`Shift+Tab`, initial focus при открытии, restore focus на исходный trigger при закрытии, guard через `focusin`, а также безопасный backdrop close только при полном клике по overlay

@@ -1797,3 +1797,29 @@
   - длинные route-ошибки и toggles не ломают ширину inspector panel
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-H: Support non-public schemas in DB Query visual builder
+- **Статус**: `done`
+- **Цель**: восстановить visual DB Query для PostgreSQL connections, где рабочие таблицы лежат не только в `public`
+- **Scope**:
+  - backend introspection возвращает таблицы из доступных non-system schemas, а не только из `public`
+  - columns introspection принимает `schema.table` и корректно читает колонки для schema-qualified table refs
+  - frontend visual DB builder генерирует SQL с корректным quoting для `schema.table`
+  - copy empty-state больше не врёт про `public-схему`, если таблицы ищутся шире
+- **Не входит**:
+  - redesign visual DB builder
+  - schema permissions fixes на стороне пользовательской БД
+  - поддержка экзотических quoted identifiers с точкой внутри имени
+- **Файлы**:
+  - `apps/api/src/connection/introspection.service.ts`
+  - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - visual mode видит таблицы из non-public schemas
+  - выбор `schema.table` подгружает колонки и позволяет сгенерировать SQL preview
+  - `SELECT` / `INSERT` / `UPDATE` / `DELETE` из visual builder корректно quote-ят schema-qualified table refs
+  - empty-state сообщает про доступные schemas, а не только про `public`
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/api build`
+  - `pnpm --filter @mini-zapier/web build`
