@@ -414,6 +414,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
 
     await httpNode.click();
     await page.getByLabel('HTTP request URL').fill(DEFAULT_ECHO_URL);
+    await page.getByTestId('http-advanced-toggle').click();
     await page.getByTestId('http-headers-toggle').click();
     await page.getByTestId('http-add-header-button').click();
     await page.getByLabel('Header key 1').fill('Content-Type');

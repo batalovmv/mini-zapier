@@ -2113,3 +2113,26 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+### TASK-N6: repair live smoke after HTTP advanced nesting
+- **Статус**: `done`
+- **Цель**: вернуть зелёный live E2E smoke после того, как `HTTP Request` advanced headers переехали внутрь local advanced section и текущий сценарий больше не мог дойти до `http-headers-toggle`
+- **Scope**:
+  - добавить стабильный hook на toggle local advanced section в `HTTP Request`
+  - обновить Playwright smoke, чтобы он сначала раскрывал local advanced section, а затем уже работал с `http-headers-toggle` и `http-add-header-button`
+  - подтвердить локально, что `apps/web` по-прежнему собирается, а smoke suite парсится
+- **Не входит**:
+  - изменение продуктовой логики `HTTP Request`
+  - новые smoke-сценарии
+  - backend/VPS changes
+- **Файлы**:
+  - `apps/web/src/components/editor/config-forms/HttpRequestConfig.tsx`
+  - `apps/web/e2e/ui-smoke.spec.ts`
+- **Acceptance**:
+  - live smoke больше не пытается кликать `http-headers-toggle`, пока local advanced section ещё скрыт
+  - `HTTP Request` advanced section имеет стабильный `data-testid="http-advanced-toggle"`
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`
