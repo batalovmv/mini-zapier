@@ -69,7 +69,7 @@ function FlowCanvasInner() {
   const workflowVersion = useWorkflowEditorStore((state) => state.workflowVersion);
   const nodes = useWorkflowEditorStore((state) => state.nodes);
   const edges = useWorkflowEditorStore((state) => state.edges);
-  const selectedNodeId = useWorkflowEditorStore((state) => state.selectedNodeId);
+
   const viewport = useWorkflowEditorStore((state) => state.viewport);
   const onNodesChange = useWorkflowEditorStore((state) => state.onNodesChange);
   const onEdgesChange = useWorkflowEditorStore((state) => state.onEdgesChange);
@@ -88,26 +88,6 @@ function FlowCanvasInner() {
     [nodes],
   );
   const actionCount = nodes.length - triggerCount;
-  const selectedNodeLabel = useMemo(() => {
-    if (selectedNodeId === null) {
-      return null;
-    }
-
-    const selectedNode = nodes.find((node) => node.id === selectedNodeId);
-
-    if (!selectedNode) {
-      return null;
-    }
-
-    const definition = getNodeDefinition(
-      selectedNode.data.nodeKind,
-      selectedNode.data.nodeType,
-    );
-
-    return definition
-      ? messages.editorDefinitions[definition.id].label
-      : selectedNode.data.label;
-  }, [messages.editorDefinitions, nodes, selectedNodeId]);
   const dragPreviewDefinition = dragPreview
     ? getNodeDefinition(dragPreview.nodeKind, dragPreview.nodeType)
     : undefined;
@@ -267,41 +247,12 @@ function FlowCanvasInner() {
 
   return (
     <div className="app-panel editor-canvas-shell relative flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="border-b border-slate-900/10 px-4 py-3.5">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-          <div className="min-w-0">
-            <p className="muted-label">{messages.flowCanvas.eyebrow}</p>
-            <div className="mt-1.5 flex flex-wrap items-center gap-2">
-              <h2 className="text-[1.22rem] font-semibold tracking-tight text-slate-900">
-                {isEmpty ? messages.flowCanvas.emptyTitle : messages.flowCanvas.workspaceTitle}
-              </h2>
-              <span className="app-pill">
-                {isEmpty
-                  ? messages.flowCanvas.stepCounterEmpty
-                  : messages.flowCanvas.stepCounter(triggerCount, actionCount)}
-              </span>
-            </div>
-            <p className="mt-2 max-w-2xl text-[13px] leading-5 text-slate-600">
-              {isEmpty
-                ? messages.flowCanvas.emptyDescription
-                : messages.flowCanvas.workspaceDescription}
-            </p>
-          </div>
-
-          <div className="max-w-sm xl:text-right">
-            <p className="muted-label">{messages.flowCanvas.inspectorEyebrow}</p>
-            <p className="mt-1.5 text-sm font-semibold text-slate-800">
-              {selectedNodeLabel
-                ? messages.flowCanvas.editing(selectedNodeLabel)
-                : messages.flowCanvas.noNodeSelected}
-            </p>
-            <p className="mt-1 text-[12px] leading-5 text-slate-500">
-              {selectedNodeLabel
-                ? messages.flowCanvas.inspectorSelectedDescription
-                : messages.flowCanvas.inspectorEmptyDescription}
-            </p>
-          </div>
-        </div>
+      <div className="flex h-9 items-center border-b border-slate-900/10 px-4">
+        <span className="app-pill">
+          {isEmpty
+            ? messages.flowCanvas.stepCounterEmpty
+            : messages.flowCanvas.stepCounter(triggerCount, actionCount)}
+        </span>
       </div>
 
       <div

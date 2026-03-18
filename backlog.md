@@ -2742,3 +2742,21 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+### TASK-R4: reduce canvas header chrome to compact step counter
+- **Статус**: `done`
+- **Цель**: убрать eyebrow, title, description и inspector status из canvas header, оставив только compact step counter pill
+- **Scope**:
+  - убрать eyebrow, title, description text
+  - убрать правый inspector status block
+  - оставить только step counter pill в компактной строке ~36px
+  - удалить мёртвые locale keys из EN/RU
+  - удалить неиспользуемый `selectedNodeLabel` useMemo и `selectedNodeId` selector
+- **Не входит**: изменения нод, NodeSidebar, ConfigPanel, editor store/API, drop/connect логика
+- **Файлы**:
+  - `apps/web/src/components/editor/FlowCanvas.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build` ✅
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` ✅

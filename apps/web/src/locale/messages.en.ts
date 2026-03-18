@@ -641,20 +641,9 @@ export const en = {
       CYCLE_RISK:
         'Connection rejected: this link would create a cycle in the workflow.',
     } as Record<EditorConnectionRejectionCode, string>,
-    eyebrow: 'Workflow canvas',
-    emptyTitle: 'Start with one trigger',
-    workspaceTitle: 'Workspace',
     stepCounter: (triggerCount: number, actionCount: number) =>
       `${formatCount('en-US', triggerCount)} ${pluralizeEn(triggerCount, 'trigger')} / ${formatCount('en-US', actionCount)} ${pluralizeEn(actionCount, 'action')}`,
     stepCounterEmpty: 'Step 1: trigger',
-    emptyDescription: 'Drop the first trigger from the left rail to start the flow.',
-    workspaceDescription:
-      'Keep the chain linear and open the selected step on the right.',
-    inspectorEyebrow: 'Selection',
-    editing: (label: string) => `Editing: ${label}`,
-    noNodeSelected: 'No node selected',
-    inspectorSelectedDescription: 'Settings stay in the right panel.',
-    inspectorEmptyDescription: 'Select a node to open its settings.',
     dropSpecific: (label: string) => `Release to place ${label} here.`,
     dropGeneric: 'Release to place the node on the canvas.',
     emptyEditorEyebrow: 'Empty canvas',

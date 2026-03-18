@@ -681,9 +681,6 @@ export const ru = {
       CYCLE_RISK:
         'Связь отклонена: эта связь создаст цикл в сценарии.',
     } as Record<EditorConnectionRejectionCode, string>,
-    eyebrow: 'Canvas сценария',
-    emptyTitle: 'Начните с одного триггера',
-    workspaceTitle: 'Рабочая область',
     stepCounter: (triggerCount: number, actionCount: number) =>
       `${formatCount('ru-RU', triggerCount)} ${pluralizeRu(
         triggerCount,
@@ -697,14 +694,6 @@ export const ru = {
         'действий',
       )}`,
     stepCounterEmpty: 'Шаг 1: триггер',
-    emptyDescription: 'Перетащите первый триггер из левой панели, чтобы начать сценарий.',
-    workspaceDescription:
-      'Держите цепочку линейной и настраивайте выбранный шаг справа.',
-    inspectorEyebrow: 'Выбор',
-    editing: (label: string) => `Редактирование: ${label}`,
-    noNodeSelected: 'Узел не выбран',
-    inspectorSelectedDescription: 'Параметры остаются в правой панели.',
-    inspectorEmptyDescription: 'Выберите узел, чтобы открыть его настройки.',
     dropSpecific: (label: string) => `Отпустите, чтобы разместить ${label}.`,
     dropGeneric: 'Отпустите, чтобы разместить узел на canvas.',
     emptyEditorEyebrow: 'Пустой холст',
