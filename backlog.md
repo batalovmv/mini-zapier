@@ -2275,7 +2275,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-O3: redesign dashboard workflow list
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: заменить декоративные workflow cards на более плотный operational list, который быстрее сканируется и лучше поддерживает рабочие действия
 - **Scope**:
   - убрать дубль статуса сценария

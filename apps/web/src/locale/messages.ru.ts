@@ -69,6 +69,7 @@ export const ru = {
     activate: 'Активировать',
     pause: 'Приостановить',
     run: 'Запустить',
+    open: 'Открыть',
     save: 'Сохранить',
     delete: 'Удалить',
     edit: 'Редактировать',
@@ -166,8 +167,8 @@ export const ru = {
   },
   workflowList: {
     eyebrow: 'Список сценариев',
-    title: 'Быстро оценивайте состояние и действуйте',
-    refreshing: 'Обновляем карточки сценариев и последние запуски...',
+    title: 'Операционный список сценариев',
+    refreshing: 'Обновляем список сценариев...',
     loadedCount: (count: number) =>
       `${formatCount('ru-RU', count)} ${pluralizeRu(
         count,
@@ -186,6 +187,7 @@ export const ru = {
     eyebrow: 'Сценарий',
     workflowStatusEyebrow: 'Статус сценария',
     lastExecutionEyebrow: 'Последний запуск',
+    attentionEyebrow: 'Требует внимания',
     loadingLatestExecution: 'Загружаем последний запуск...',
     syncing: 'Синхронизация',
     noDescription: 'Описание сценария не задано.',
@@ -193,8 +195,23 @@ export const ru = {
     timezoneLabel: 'Часовой пояс',
     nodesLabel: 'Узлы',
     updatedLabel: 'Обновлён',
+    nodesMeta: (count: number) =>
+      `${formatCount('ru-RU', count)} ${pluralizeRu(
+        count,
+        'узел',
+        'узла',
+        'узлов',
+      )}`,
+    updatedMeta: (value: string) => `Обновлён ${value}`,
     workflowVersion: (version: number) => `Версия сценария ${version}`,
-    noExecutions: 'Запусков пока нет.',
+    noExecutions: 'Запусков ещё не было.',
+    runManually: 'Запустить вручную',
+    attentionReasons: {
+      failed: 'Последний запуск завершился ошибкой',
+      paused: 'Сценарий сейчас на паузе',
+      draft: 'Сценарий остаётся черновиком',
+      activeWithoutRuns: 'Сценарий активен, но ещё не запускался',
+    },
     running: 'Запуск...',
     updating: 'Обновление...',
     deleting: 'Удаление...',

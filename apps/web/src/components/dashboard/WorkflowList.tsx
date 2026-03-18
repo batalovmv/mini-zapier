@@ -29,11 +29,11 @@ export function WorkflowList({
   const { messages } = useLocale();
 
   return (
-    <section className="app-panel overflow-hidden p-6 sm:p-7">
-      <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-5 lg:flex-row lg:items-end lg:justify-between">
+    <section className="app-panel overflow-hidden p-5 sm:p-6">
+      <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="muted-label">{messages.workflowList.eyebrow}</p>
-          <h2 className="mt-2 text-[1.8rem] font-semibold tracking-tight text-slate-900 sm:text-[2rem]">
+          <h2 className="mt-2 text-[1.45rem] font-semibold tracking-tight text-slate-900 sm:text-[1.65rem]">
             {messages.workflowList.title}
           </h2>
         </div>
@@ -45,7 +45,7 @@ export function WorkflowList({
         </p>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-4">
         {loading ? (
           <LoadingState
             compact
@@ -58,7 +58,7 @@ export function WorkflowList({
             title={messages.workflowList.emptyTitle}
           />
         ) : (
-          <div className="space-y-3">
+          <div className="workflow-list-shell">
             {workflows.map((workflow) => (
               <WorkflowCard
                 key={workflow.id}
