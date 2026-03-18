@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CronExpressionParser } from 'cron-parser';
 
 import { useLocale } from '../../../locale/LocaleProvider';
@@ -11,6 +11,7 @@ interface CronConfigProps {
 }
 
 type Preset = 'none' | 'every_minute' | 'every_hour' | 'every_day' | 'every_week' | 'custom';
+type VisualPreset = Exclude<Preset, 'none' | 'custom'>;
 
 const DAY_BITS = [1, 2, 3, 4, 5, 6, 0] as const; // Mon–Sun (cron: 1=Mon … 0=Sun)
 
@@ -112,15 +113,27 @@ export function CronConfig({ config, onChange }: CronConfigProps) {
 
   const detected = useMemo(() => detectPreset(cronStr), [cronStr]);
 
-  const [mode, setMode] = useState<'visual' | 'code'>(
-    detected.preset === 'custom' ? 'code' : 'visual',
-  );
   const [preset, setPreset] = useState<Preset>(detected.preset);
   const [hour, setHour] = useState(detected.hour);
   const [minute, setMinute] = useState(detected.minute);
   const [days, setDays] = useState<number[]>(detected.days);
+  const [advancedOpen, setAdvancedOpen] = useState(() => detected.preset === 'custom');
 
   const cron = messages.configForms.cron;
+
+  useEffect(() => {
+    if (detected.preset === 'custom') {
+      setPreset('custom');
+      return;
+    }
+
+    if (preset === 'custom') {
+      setPreset(detected.preset);
+      setHour(detected.hour);
+      setMinute(detected.minute);
+      setDays(detected.days);
+    }
+  }, [detected.days, detected.hour, detected.minute, detected.preset, preset]);
 
   const setCronExpression = useCallback(
     (value: string) => {
@@ -132,26 +145,37 @@ export function CronConfig({ config, onChange }: CronConfigProps) {
   function handlePresetChange(next: Preset) {
     setPreset(next);
     if (next === 'custom') {
-      setMode('code');
+      setAdvancedOpen(true);
       return;
     }
-    setMode('visual');
     const expr = buildCron(next, hour, minute, days);
     setCronExpression(expr);
   }
 
   function handleTimeChange(nextHour: string, nextMinute: string) {
+    const activePreset: VisualPreset | null =
+      preset === 'every_hour' || preset === 'every_day' || preset === 'every_week'
+        ? preset
+        : null;
+    if (!activePreset) {
+      return;
+    }
+
     setHour(nextHour);
     setMinute(nextMinute);
-    const expr = buildCron(preset, nextHour, nextMinute, days);
+    const expr = buildCron(activePreset, nextHour, nextMinute, days);
     setCronExpression(expr);
   }
 
   function handleDayToggle(day: number) {
+    if (preset !== 'every_week') {
+      return;
+    }
+
     const next = days.includes(day) ? days.filter((d) => d !== day) : [...days, day];
     if (next.length === 0) return; // at least one day
     setDays(next);
-    const expr = buildCron(preset, hour, minute, next);
+    const expr = buildCron('every_week', hour, minute, next);
     setCronExpression(expr);
   }
 
@@ -178,130 +202,112 @@ export function CronConfig({ config, onChange }: CronConfigProps) {
   const showTimePicker = preset === 'every_day' || preset === 'every_week';
   const showMinutePicker = preset === 'every_hour';
   const showDayPicker = preset === 'every_week';
+  const isCustomPreset = preset === 'custom';
 
   return (
-    <div className="space-y-4">
-      {/* Preset selector */}
-      <div>
-        <span className="muted-label">{cron.scheduleLabel}</span>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {presetButtons.map((btn) => (
-            <button
-              key={btn.key}
-              className={`${presetBtnBase} ${preset === btn.key ? presetBtnActive : presetBtnInactive}`}
-              onClick={() => handlePresetChange(btn.key)}
-              type="button"
-            >
-              {btn.label}
-            </button>
-          ))}
+    <div className="space-y-5">
+      <div className="space-y-5 rounded-[1.25rem] border border-slate-900/10 bg-white px-4 py-4">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">
+            {cron.mainEyebrow}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            {cron.mainDescription}
+          </p>
         </div>
-      </div>
 
-      {/* Minute picker for "every hour" */}
-      {mode === 'visual' && showMinutePicker ? (
-        <label className="block">
-          <span className="muted-label">{cron.timeLabel}</span>
-          <div className="mt-2 flex items-center gap-2">
-            <span className="text-sm text-slate-500">:</span>
-            <input
-              className={inputClass + ' !w-20 text-center'}
-              max="59"
-              min="0"
-              onChange={(e) => handleTimeChange(hour, e.target.value.padStart(2, '0'))}
-              type="number"
-              value={Number(minute)}
-            />
-            <span className="text-xs text-slate-500">min</span>
-          </div>
-        </label>
-      ) : null}
-
-      {/* Time picker for daily/weekly */}
-      {mode === 'visual' && showTimePicker ? (
-        <label className="block">
-          <span className="muted-label">{cron.timeLabel}</span>
-          <div className="mt-2 flex items-center gap-2">
-            <input
-              className={inputClass + ' !w-20 text-center'}
-              max="23"
-              min="0"
-              onChange={(e) => handleTimeChange(e.target.value.padStart(2, '0'), minute)}
-              type="number"
-              value={Number(hour)}
-            />
-            <span className="text-sm text-slate-500">:</span>
-            <input
-              className={inputClass + ' !w-20 text-center'}
-              max="59"
-              min="0"
-              onChange={(e) => handleTimeChange(hour, e.target.value.padStart(2, '0'))}
-              type="number"
-              value={Number(minute)}
-            />
-          </div>
-        </label>
-      ) : null}
-
-      {/* Day-of-week picker */}
-      {mode === 'visual' && showDayPicker ? (
         <div>
-          <span className="muted-label">{cron.daysLabel}</span>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {DAY_BITS.map((day) => (
+          <span className="muted-label">{cron.scheduleLabel}</span>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {presetButtons.map((btn) => (
               <button
-                key={day}
-                className={`${dayBtnBase} ${days.includes(day) ? dayBtnActive : dayBtnInactive}`}
-                onClick={() => handleDayToggle(day)}
+                key={btn.key}
+                className={`${presetBtnBase} ${preset === btn.key ? presetBtnActive : presetBtnInactive}`}
+                onClick={() => handlePresetChange(btn.key)}
                 type="button"
               >
-                {dayLabels[day]}
+                {btn.label}
               </button>
             ))}
           </div>
         </div>
-      ) : null}
 
-      {/* Raw cron input (code mode or always for custom) */}
-      {mode === 'code' ? (
-        <label className="block">
-          <span className="muted-label">{cron.label}</span>
-          <input
-            className={inputClass}
-            onChange={(e) => setCronExpression(e.target.value)}
-            placeholder={cron.placeholder}
-            type="text"
-            value={cronStr}
-          />
-          <span className="mt-2 block text-xs leading-5 text-slate-500">{cron.help}</span>
-        </label>
-      ) : null}
+        {showMinutePicker ? (
+          <label className="block">
+            <span className="muted-label">{cron.timeLabel}</span>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-sm text-slate-500">:</span>
+              <input
+                className={inputClass + ' !w-20 text-center'}
+                max="59"
+                min="0"
+                onChange={(e) => handleTimeChange(hour, e.target.value.padStart(2, '0'))}
+                type="number"
+                value={Number(minute)}
+              />
+              <span className="text-xs text-slate-500">min</span>
+            </div>
+          </label>
+        ) : null}
 
-      {/* Toggle visual ↔ code */}
-      <button
-        className="text-xs font-medium text-amber-700 underline decoration-amber-300 underline-offset-2 transition hover:text-amber-900"
-        onClick={() => {
-          if (mode === 'visual') {
-            setMode('code');
-          } else {
-            // Switching back to visual — re-detect preset from current cron
-            const re = detectPreset(cronStr);
-            setPreset(re.preset);
-            setHour(re.hour);
-            setMinute(re.minute);
-            setDays(re.days);
-            setMode(re.preset === 'custom' ? 'code' : 'visual');
-          }
-        }}
-        type="button"
-      >
-        {mode === 'visual' ? cron.editAsCode : cron.editVisually}
-      </button>
+        {showTimePicker ? (
+          <label className="block">
+            <span className="muted-label">{cron.timeLabel}</span>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                className={inputClass + ' !w-20 text-center'}
+                max="23"
+                min="0"
+                onChange={(e) => handleTimeChange(e.target.value.padStart(2, '0'), minute)}
+                type="number"
+                value={Number(hour)}
+              />
+              <span className="text-sm text-slate-500">:</span>
+              <input
+                className={inputClass + ' !w-20 text-center'}
+                max="59"
+                min="0"
+                onChange={(e) => handleTimeChange(hour, e.target.value.padStart(2, '0'))}
+                type="number"
+                value={Number(minute)}
+              />
+            </div>
+          </label>
+        ) : null}
 
-      {/* Next run preview */}
+        {showDayPicker ? (
+          <div>
+            <span className="muted-label">{cron.daysLabel}</span>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {DAY_BITS.map((day) => (
+                <button
+                  key={day}
+                  className={`${dayBtnBase} ${days.includes(day) ? dayBtnActive : dayBtnInactive}`}
+                  onClick={() => handleDayToggle(day)}
+                  type="button"
+                >
+                  {dayLabels[day]}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {isCustomPreset ? (
+          <div className="rounded-2xl border border-slate-900/10 bg-slate-50/70 px-4 py-3 text-sm leading-6 text-slate-600">
+            {cron.customHint}
+          </div>
+        ) : null}
+      </div>
+
       {cronStr ? (
-        <div className="rounded-xl border border-slate-900/8 bg-slate-50/60 px-3 py-2.5">
-          <span className="text-xs font-semibold text-slate-500">{cron.nextRun}</span>
+        <div className="rounded-[1.15rem] border border-slate-900/10 bg-slate-50/70 px-4 py-3">
+          <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">
+            {cron.nextRunEyebrow}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            {cron.nextRunDescription}
+          </p>
           <p className="mt-0.5 text-sm text-slate-800">
             {nextRun ?? cron.nextRunUnknown}
           </p>
@@ -312,6 +318,42 @@ export function CronConfig({ config, onChange }: CronConfigProps) {
           ) : null}
         </div>
       ) : null}
+
+      <div className="rounded-[1.15rem] border border-slate-900/10 bg-slate-50/70 px-4 py-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">
+              {cron.advancedEyebrow}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              {isCustomPreset ? cron.advancedDescriptionCustom : cron.advancedDescription}
+            </p>
+          </div>
+          <button
+            className="shrink-0 rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-200 hover:text-amber-700"
+            onClick={() => setAdvancedOpen((value) => !value)}
+            type="button"
+          >
+            {advancedOpen ? cron.hideAdvanced : cron.showAdvanced}
+          </button>
+        </div>
+
+        {advancedOpen ? (
+          <div className="mt-4 border-t border-slate-900/10 pt-4">
+            <label className="block">
+              <span className="muted-label">{cron.label}</span>
+              <input
+                className={inputClass}
+                onChange={(e) => setCronExpression(e.target.value)}
+                placeholder={cron.placeholder}
+                type="text"
+                value={cronStr}
+              />
+              <span className="mt-2 block text-xs leading-5 text-slate-500">{cron.help}</span>
+            </label>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

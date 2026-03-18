@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-N3 — `align remaining action forms with inspector shell`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт
+- **Последнее изменение**: TASK-N4 — `align trigger forms with inspector shell`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -30,9 +30,19 @@
   - **TASK-N1 local build**: inspector shell стал более контекстным и спокойным: верхний progress-summary и `AC/TR` убраны, connection section сведён к select + `Создать новое` + `Обновить список`, `Step Test` стал secondary и свёрнутым по умолчанию, а delete action переехал в quiet footer; `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-N2 local build**: `DB Query` теперь использует primary visual flow `Что сделать` → `Таблица` → operation-specific controls без верхнего `Builder/SQL` toggle; raw SQL, params и `RawJsonFallback` перенесены в локальную advanced section, legacy raw steps сохраняют `query`/`params`, а SQL preview остаётся только у visual path; `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-N3 local verification**: оставшиеся action-формы выровнены под inspector hierarchy: `HTTP Request` начинается с `method → url → body`, headers и step JSON живут в local advanced section, `Email`/`Telegram` держат preview как secondary confidence block, helper по `chatId` стал тише, `Data Transform` центрируется вокруг `mode + active config`; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
+  - **TASK-N4 local build**: trigger-формы теперь используют тот же inspector rhythm, но без action-like пустот: `Webhook` и `Email Trigger` поднимают URL в dominant block, security/provider guidance уходит в quieter secondary help surfaces, а `Cron` ведёт через visual presets/time/day controls, держит `Next run` отдельно и переносит raw cron в local advanced path без потери existing custom expressions; `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-J root cause**: live GitHub Actions smoke падал не на deploy/build, а из-за двойного рассинхрона после email-login migration: CI по-прежнему прокидывал только legacy `MINI_ZAPIER_E2E_USERNAME=admin`, а smoke ожидал существующий prod user и brittle dashboard text после входа
   - Console errors: 0 за всю сессию тестирования ✅
   - **Примечание**: после VPS redeploy выяснилось, что оставшаяся проблема visual DB Query была уже не в missing routes, а в том, что backend introspection искал таблицы только в `public`. Из-за пустого metadata list visual mode не мог дать выбрать таблицу и, как следствие, не мог сгенерировать SQL для кнопки `Тестировать запрос`
+- **Что сделано в TASK-N4**:
+  - `apps/web/src/components/editor/config-forms/WebhookConfig.tsx` — URL и copy-actions собраны в dominant primary block, при этом сохранены `webhook-url-input`, `Copy URL`, `Copy curl` и честный placeholder для несохранённого workflow; security и dedupe перенесены в quieter secondary help block
+  - `apps/web/src/components/editor/config-forms/EmailTriggerConfig.tsx` — inbound URL стал главным surface для настройки триггера, а provider/signature guidance вынесен в отдельный secondary help block без добавления preview/test behavior
+  - `apps/web/src/components/editor/config-forms/CronConfig.tsx` — первый экран теперь ведёт через visual-first path (`schedule preset + time/day controls`), `Next run` вынесен в отдельный secondary confidence block, а raw cron expression живёт в local advanced section; existing custom cron expressions остаются доступными и не теряют данные при редактировании
+  - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — trigger-copy выровнен под новый inspector-pattern: main setup говорит о предметном решении, а security/provider/raw guidance уходит во вторичный слой
+  - **Проверки TASK-N4**:
+    - `pnpm --filter @mini-zapier/web build` ✓
+  - **Ограничения TASK-N4**:
+    - manual browser QA на live/Vercel для `Webhook`, `Cron` и `Email Trigger` в этой сессии не запускался; покрытие подтверждено локальной сборкой и code-path review
 - **Что сделано в TASK-N3**:
   - `apps/web/src/components/editor/config-forms/HttpRequestConfig.tsx` — основной блок перестроен в порядке `method → url → body`; headers и `RawJsonFallback` вынесены в local advanced section, при этом сохранены body fields/json compatibility logic и `data-testid` `http-headers-toggle` / `http-add-header-button`
   - `apps/web/src/components/editor/config-forms/EmailActionConfig.tsx`, `apps/web/src/components/editor/config-forms/TelegramConfig.tsx` — основной путь теперь ведёт через поля сообщения, `MessagePreview` живёт в более слабом secondary confidence block, а step JSON переехал в local advanced section; helper по `chatId` перенесён под поле и стал quieter helper surface
@@ -642,7 +652,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-TASK-N3 закрыт локально: следующий практический шаг — отправить commit в `main`, дождаться зелёной сборки и затем отдельно руками проверить live inspector для `HTTP Request`, `Email`, `Telegram` и `Data Transform`, чтобы подтвердить новую primary/secondary hierarchy уже в браузере.
+TASK-N4 закрыт локально: следующий практический шаг — отправить commit в `main`, дождаться зелёной сборки и затем отдельно руками проверить live inspector для `Webhook`, `Cron` и `Email Trigger`, чтобы подтвердить новую primary/secondary hierarchy уже в браузере.
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke против live Vercel не запускался; для TASK-J локальная проверка ограничена `build` + `playwright test --list`.
@@ -803,3 +813,4 @@ TASK-N3 закрыт локально: следующий практически
 | TASK-N1 | done | см. `git log` (`TASK-N1: refactor editor inspector shell`) | Inspector shell now uses a contextual header, simplified connection/main/test hierarchy, quiet footer delete action, and a single guidance empty state block |
 | TASK-N2 | done | см. `git log` (`TASK-N2: redesign DB query inspector flow`) | DB Query now starts with a visual-first inspector flow (`Action` → `Table` → operation-specific controls), while raw SQL, params and JSON fallback live in a local advanced section and legacy raw steps keep their existing data |
 | TASK-N3 | done | см. `git log` (`TASK-N3: align remaining action forms with inspector shell`) | Remaining action forms now share the inspector hierarchy: HTTP starts with `method → url → body`, Email/Telegram keep preview secondary, Telegram helper is quieter, and Data Transform centers on output shaping while manual JSON stays in advanced |
+| TASK-N4 | done | см. `git log` (`TASK-N4: align trigger forms with inspector shell`) | Trigger inspectors now share the same shell rhythm: Webhook/Email keep the URL primary, Cron leads with visual scheduling, and security/raw guidance moves into secondary help/advanced surfaces |

@@ -681,6 +681,8 @@ export const ru = {
   },
   configForms: {
     cron: {
+      mainEyebrow: 'Расписание',
+      mainDescription: 'Выберите, когда этот сценарий должен запускаться.',
       label: 'Cron-выражение',
       placeholder: '*/5 * * * *',
       help: 'Сохраняется как есть и валидируется API при сохранении.',
@@ -699,11 +701,23 @@ export const ru = {
       dayFri: 'Пт',
       daySat: 'Сб',
       daySun: 'Вс',
+      customHint:
+        'Сейчас этот сценарий работает по своему cron-выражению. Продолжайте редактировать его в разделе дополнительно.',
       editAsCode: 'Редактировать как код',
       editVisually: 'Редактировать визуально',
+      nextRunEyebrow: 'Следующий запуск',
+      nextRunDescription:
+        'Предпросмотр строится по текущему cron и часовому поясу сценария.',
       nextRun: 'Следующий запуск',
       nextRunUnknown: 'Не удалось вычислить следующий запуск',
       timezoneNote: (tz: string) => `Часовой пояс: ${tz}`,
+      advancedEyebrow: 'Дополнительно',
+      advancedDescription:
+        'Нужно raw cron-выражение? Правьте его здесь.',
+      advancedDescriptionCustom:
+        'Это расписание сейчас управляется raw cron-выражением. Продолжайте редактировать его здесь.',
+      showAdvanced: 'Открыть дополнительно',
+      hideAdvanced: 'Скрыть дополнительно',
     },
     dataTransform: {
       mainEyebrow: 'Результат',
@@ -842,11 +856,17 @@ export const ru = {
       hideJson: 'Скрыть JSON шага',
     },
     emailTrigger: {
-      info:
-        'Подключите почтовый сервис так, чтобы он отправлял входящее письмо POST-запросом на адрес ниже. Подключение WEBHOOK хранит secret для проверки подписи.',
+      mainEyebrow: 'Адрес приёма',
+      mainDescription:
+        'Передайте этот адрес почтовому провайдеру, чтобы новые письма попадали в сценарий.',
       urlLabel: 'URL входящей почты',
       saveWorkflowPlaceholder:
         'Сохраните сценарий, чтобы получить адрес для входящих писем',
+      helpEyebrow: 'Подсказка по провайдеру',
+      providerInfo:
+        'Настройте почтовый сервис так, чтобы он отправлял входящее письмо POST-запросом на этот адрес.',
+      signatureInfo:
+        'Подключение WEBHOOK хранит signing secret, по которому проверяется подпись провайдера.',
     },
     httpRequest: {
       mainEyebrow: 'Запрос',
@@ -936,6 +956,9 @@ export const ru = {
       deleteField: 'Удалить',
     },
     webhook: {
+      mainEyebrow: 'Endpoint',
+      mainDescription:
+        'Используйте этот URL как публичную точку входа для входящих запросов.',
       urlLabel: 'Webhook URL',
       saveWorkflowPlaceholder:
         'Сохраните сценарий, чтобы сгенерировать webhook URL',
@@ -943,6 +966,7 @@ export const ru = {
       copyCurl: 'Копировать curl',
       copied: 'Скопировано!',
       copyFailed: 'Не удалось скопировать, проверьте разрешения браузера.',
+      helpEyebrow: 'Безопасность и дедупликация',
       info:
         'Входящие запросы используют этот endpoint. Если привязано подключение WEBHOOK, отправитель также должен передавать заголовок `X-Webhook-Secret`.',
       dedupe:

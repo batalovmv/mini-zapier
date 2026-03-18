@@ -648,6 +648,8 @@ export const en = {
   },
   configForms: {
     cron: {
+      mainEyebrow: 'Schedule',
+      mainDescription: 'Choose when this workflow should run.',
       label: 'Cron expression',
       placeholder: '*/5 * * * *',
       help: 'Stored as-is and validated by the API on save.',
@@ -666,11 +668,20 @@ export const en = {
       dayFri: 'Fri',
       daySat: 'Sat',
       daySun: 'Sun',
+      customHint: 'This workflow is using a custom cron expression. Keep editing it in advanced.',
       editAsCode: 'Edit as code',
       editVisually: 'Edit visually',
+      nextRunEyebrow: 'Next run',
+      nextRunDescription: 'Previewed from the current cron and workflow timezone.',
       nextRun: 'Next run',
       nextRunUnknown: 'Could not compute next run',
       timezoneNote: (tz: string) => `Timezone: ${tz}`,
+      advancedEyebrow: 'Advanced',
+      advancedDescription: 'Need the raw cron expression? Edit it here.',
+      advancedDescriptionCustom:
+        'This schedule is currently driven by a raw cron expression. Keep editing it here.',
+      showAdvanced: 'Open advanced',
+      hideAdvanced: 'Hide advanced',
     },
     dataTransform: {
       mainEyebrow: 'Output',
@@ -807,11 +818,17 @@ export const en = {
       hideJson: 'Hide step JSON',
     },
     emailTrigger: {
-      info:
-        'Set up your mail provider to POST incoming email data to the address below. The WEBHOOK connection stores the secret used to verify the signature.',
+      mainEyebrow: 'Inbound URL',
+      mainDescription:
+        'Give this address to your mail provider so new email reaches this workflow.',
       urlLabel: 'Inbound email URL',
       saveWorkflowPlaceholder:
         'Save the workflow to get the inbound email address',
+      helpEyebrow: 'Provider guidance',
+      providerInfo:
+        'Configure your mail provider to POST incoming email data to this address.',
+      signatureInfo:
+        'The WEBHOOK connection stores the signing secret used to verify the provider signature.',
     },
     httpRequest: {
       mainEyebrow: 'Request',
@@ -901,12 +918,15 @@ export const en = {
       deleteField: 'Delete',
     },
     webhook: {
+      mainEyebrow: 'Endpoint',
+      mainDescription: 'Use this URL as the public entry point for incoming requests.',
       urlLabel: 'Webhook URL',
       saveWorkflowPlaceholder: 'Save workflow to generate webhook URL',
       copyUrl: 'Copy URL',
       copyCurl: 'Copy curl',
       copied: 'Copied!',
       copyFailed: 'Failed to copy, check browser permissions.',
+      helpEyebrow: 'Security & dedupe',
       info:
         'Incoming requests use this endpoint. If a WEBHOOK connection is attached, callers must also send the configured `X-Webhook-Secret` header.',
       dedupe:

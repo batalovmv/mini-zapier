@@ -2055,3 +2055,32 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+### TASK-N4: align trigger forms with inspector shell
+- **Статус**: `done`
+- **Цель**: выровнять три trigger-формы под inspector-архитектуру из `TASK-N1`/`TASK-N2`/`TASK-N3`, чтобы триггеры читались как contextual property inspectors с одним dominant setup block, без искусственного `Step Test` и без лишних action-like блоков
+- **Scope**:
+  - `Webhook Trigger`: оставить `webhook URL`, `Copy URL`, `Copy curl` и `webhook-url-input`, сделать URL + copy-actions главным блоком, а security/dedupe увести в secondary help block
+  - `Cron Trigger`: перестроить первый экран вокруг visual-first path (`schedule preset + time/day controls`), вынести `Next run` в отдельный secondary confidence block и убрать raw cron expression из primary path в local advanced section
+  - `Email Trigger`: сделать inbound URL главным блоком, а provider/signature guidance вынести во secondary help block
+  - сохранить честные placeholder-ы для несохранённого workflow и backward compatibility для existing custom cron expressions без потери данных
+  - обновить EN/RU copy только для trigger-форм; не менять `StepTestSection`, action-формы, `DbQueryConfig`, backend API и зависимости
+- **Не входит**:
+  - изменения `StepTestSection`, action-форм, `DbQueryConfig` и backend API
+  - новый preview/test behavior для trigger-форм
+  - новые зависимости
+- **Файлы**:
+  - `apps/web/src/components/editor/config-forms/WebhookConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/CronConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/EmailTriggerConfig.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+  - `ConfigPanel.tsx` — только если нужен compile-fix
+- **Acceptance**:
+  - `Webhook`, `Cron` и `Email Trigger` читаются как часть одного inspector-pattern
+  - у trigger-форм нет ощущения пустого action-inspector
+  - `Cron` ведёт visual-first и держит raw cron во вторичном advanced-path
+  - `Webhook` и `Email Trigger` держат URL как primary surface, а guidance как secondary block
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
