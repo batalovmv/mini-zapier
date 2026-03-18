@@ -2192,3 +2192,167 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+---
+
+## Срез O: Dashboard как операционная консоль
+
+### TASK-O0: plan dashboard redesign slices
+- **Статус**: `done`
+- **Цель**: зафиксировать последовательный UX/IA план переработки главной страницы, чтобы следующие срезы выполнялись без расширения scope и без спорной приоритизации
+- **Scope**:
+  - сверить роль dashboard с текущим продуктом из `spec-v1.md`
+  - зафиксировать основные UX/IA проблемы главной страницы
+  - разложить redesign на последовательные задачи `TASK-O1`–`TASK-O5` с чёткими границами, acceptance и проверками
+  - обновить handoff так, чтобы следующий исполнитель начинал с первого рабочего среза
+- **Не входит**:
+  - реализация dashboard redesign
+  - изменения backend/frontend beyond project docs
+  - новые зависимости
+- **Файлы**:
+  - `backlog.md`
+  - `handoff.md`
+- **Acceptance**:
+  - в backlog добавлены последовательные `TASK-O1`–`TASK-O5`
+  - `handoff.md` указывает `TASK-O1` как следующий рабочий шаг
+  - planning-срез оформлен отдельной завершённой задачей
+- **Проверка**:
+  - docs-only task; build/test не требуются
+
+### TASK-O1: dashboard summary data contract
+- **Статус**: `todo`
+- **Цель**: убрать N+1 загрузку и дать dashboard один компактный контракт данных, достаточный для операционной главной страницы
+- **Scope**:
+  - добавить dedicated dashboard endpoint или безопасное dashboard-mode расширение существующего API без поломки текущих клиентов
+  - вернуть summary stats, workflow summaries и recent executions в одном сценарии загрузки
+  - получить `lastExecution` per workflow без отдельных HTTP-запросов по каждому сценарию
+  - перевести dashboard store/page на новый контракт без визуального redesign
+- **Не входит**:
+  - новый UI dashboard
+  - global executions page
+  - redesign editor/connections
+  - новые зависимости
+- **Файлы**:
+  - `apps/api/src/stats/`
+  - `apps/api/src/workflow/`
+  - `apps/web/src/stores/dashboard.store.ts`
+  - `apps/web/src/pages/DashboardPage.tsx`
+  - `apps/web/src/lib/api/`
+- **Acceptance**:
+  - initial load dashboard больше не делает per-workflow `executions` fetch
+  - текущая страница продолжает показывать workflows, stats и last execution
+  - `pnpm --filter @mini-zapier/api build` проходит
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/api build`
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-O2: redesign dashboard top-level IA
+- **Статус**: `todo`
+- **Цель**: убрать hero-подход и превратить верх главной страницы в compact operational header с явным attention layer
+- **Scope**:
+  - заменить большой hero на компактный верхний блок страницы
+  - оставить один CTA `Создать сценарий` без дублей в hero/content area
+  - добавить attention strip с actionable состояниями вроде `ошибки`, `на паузе`, `активные без запусков`, `черновики`
+  - сделать stats-витрину компактнее и вторичной по визуальному весу
+- **Не входит**:
+  - redesign списка сценариев
+  - поиск/фильтры/сортировка
+  - новые backend API сверх compile-fix
+  - новые зависимости
+- **Файлы**:
+  - `apps/web/src/pages/DashboardPage.tsx`
+  - `apps/web/src/components/dashboard/StatsOverview.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+  - `apps/web/src/index.css`
+- **Acceptance**:
+  - above-the-fold показывает действия и внимание, а не общий marketing-like текст
+  - duplicate CTA убран
+  - stats визуально secondary к attention layer
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-O3: redesign dashboard workflow list
+- **Статус**: `todo`
+- **Цель**: заменить декоративные workflow cards на более плотный operational list, который быстрее сканируется и лучше поддерживает рабочие действия
+- **Scope**:
+  - убрать дубль статуса сценария
+  - снизить визуальный вес `version/timezone/nodes`
+  - поднять в иерархии `name`, короткий summary, `last run`, `status`, `attention reason`
+  - выстроить action hierarchy: primary `Открыть/Редактировать`, secondary `Запустить вручную`, quieter status toggle, quiet delete
+  - сохранить все текущие действия без изменения продуктовой логики
+- **Не входит**:
+  - поиск/фильтры/сортировка
+  - новый backend API сверх compile-fix
+  - global executions page
+  - новые зависимости
+- **Файлы**:
+  - `apps/web/src/components/dashboard/WorkflowList.tsx`
+  - `apps/web/src/components/dashboard/WorkflowCard.tsx`
+  - `apps/web/src/pages/DashboardPage.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+  - `apps/web/src/index.css`
+- **Acceptance**:
+  - список сценариев стал плотнее и быстрее сканируется
+  - статус сценария не дублируется двумя равноценными блоками
+  - все текущие действия сохранены
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-O4: add dashboard controls and recent activity
+- **Статус**: `todo`
+- **Цель**: дать пользователю быстрый triage на главной странице через search/filter/sort и recent activity block
+- **Scope**:
+  - добавить поиск по названию и описанию сценария
+  - добавить фильтры по `status` и `attention`
+  - добавить сортировку `требуют внимания` / `обновлены недавно` / `по названию`
+  - использовать `recentExecutions` для компактного блока последних запусков и ошибок с переходами в историю сценария
+  - проработать empty/results states для filtered list
+- **Не входит**:
+  - отдельная global executions page
+  - folders/tags
+  - новые зависимости
+- **Файлы**:
+  - `apps/web/src/pages/DashboardPage.tsx`
+  - `apps/web/src/components/dashboard/WorkflowList.tsx`
+  - `apps/web/src/components/dashboard/StatsOverview.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+  - `apps/web/src/index.css`
+- **Acceptance**:
+  - пользователь может быстро выделить проблемные сценарии
+  - на главной есть компактный блок recent runs / recent failures
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-O5: dashboard copy polish, responsive pass and smoke stabilization
+- **Статус**: `todo`
+- **Цель**: завершить redesign главной страницы через copy polish, responsive pass и stabilization тестов после изменения структуры dashboard
+- **Scope**:
+  - выровнять RU/EN copy под короткий operational tone
+  - проверить dashboard на desktop и mobile ширинах
+  - добавить/обновить stable test ids там, где DOM dashboard поменялся
+  - обновить smoke selectors, если старые завязаны на хрупкую структуру или copy
+- **Не входит**:
+  - новые продуктовые фичи
+  - redesign других страниц
+  - новые зависимости
+- **Файлы**:
+  - `apps/web/src/pages/DashboardPage.tsx`
+  - `apps/web/src/components/dashboard/`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+  - `apps/web/e2e/ui-smoke.spec.ts`
+- **Acceptance**:
+  - RU/EN copy согласован
+  - dashboard читается на mobile и desktop
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`
