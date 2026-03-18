@@ -2220,7 +2220,7 @@
   - docs-only task; build/test не требуются
 
 ### TASK-O1: dashboard summary data contract
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: убрать N+1 загрузку и дать dashboard один компактный контракт данных, достаточный для операционной главной страницы
 - **Scope**:
   - добавить dedicated dashboard endpoint или безопасное dashboard-mode расширение существующего API без поломки текущих клиентов

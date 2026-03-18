@@ -1,23 +1,22 @@
-import { WorkflowDto } from '@mini-zapier/shared';
 import { create } from 'zustand';
 
-import { getStats } from '../lib/api/stats';
-import { StatsResponse } from '../lib/api/types';
+import { getDashboardSummary } from '../lib/api/stats';
 import {
-  deleteWorkflow as deleteWorkflowRequest,
-  listWorkflows,
-} from '../lib/api/workflows';
+  DashboardRecentExecutionSummary,
+  DashboardSummaryResponse,
+  DashboardSummaryStats,
+  DashboardWorkflowSummary,
+} from '../lib/api/types';
+import { deleteWorkflow as deleteWorkflowRequest } from '../lib/api/workflows';
 
 interface DashboardStore {
-  workflows: WorkflowDto[];
-  stats: StatsResponse | null;
+  workflows: DashboardWorkflowSummary[];
+  recentExecutions: DashboardRecentExecutionSummary[];
+  stats: DashboardSummaryStats | null;
   loading: boolean;
-  fetchWorkflows: () => Promise<WorkflowDto[]>;
-  fetchStats: () => Promise<StatsResponse>;
+  fetchDashboardSummary: () => Promise<DashboardSummaryResponse>;
   deleteWorkflow: (workflowId: string) => Promise<void>;
 }
-
-const WORKFLOW_PAGE_SIZE = 100;
 
 let pendingRequests = 0;
 
@@ -38,29 +37,21 @@ async function runWithLoading<T>(
 
 export const useDashboardStore = create<DashboardStore>((set) => ({
   workflows: [],
+  recentExecutions: [],
   stats: null,
   loading: false,
 
-  async fetchWorkflows() {
+  async fetchDashboardSummary() {
     return runWithLoading(set, async () => {
-      const response = await listWorkflows({
-        page: 1,
-        limit: WORKFLOW_PAGE_SIZE,
+      const summary = await getDashboardSummary();
+
+      set({
+        workflows: summary.workflows,
+        recentExecutions: summary.recentExecutions,
+        stats: summary.stats,
       });
 
-      set({ workflows: response.items });
-
-      return response.items;
-    });
-  },
-
-  async fetchStats() {
-    return runWithLoading(set, async () => {
-      const stats = await getStats();
-
-      set({ stats });
-
-      return stats;
+      return summary;
     });
   },
 
@@ -70,6 +61,9 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
 
       set((state) => ({
         workflows: state.workflows.filter((workflow) => workflow.id !== workflowId),
+        recentExecutions: state.recentExecutions.filter(
+          (execution) => execution.workflowId !== workflowId,
+        ),
       }));
     });
   },

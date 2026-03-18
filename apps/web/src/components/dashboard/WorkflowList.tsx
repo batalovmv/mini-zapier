@@ -1,28 +1,26 @@
-import { WorkflowDto, WorkflowExecutionDto } from '@mini-zapier/shared';
 import { Link } from 'react-router-dom';
 
 import { useLocale } from '../../locale/LocaleProvider';
+import { DashboardWorkflowSummary } from '../../lib/api/types';
 import { EmptyState } from '../ui/EmptyState';
 import { LoadingState } from '../ui/LoadingState';
 import { WorkflowCard, WorkflowCardAction } from './WorkflowCard';
 
 interface WorkflowListProps {
-  workflows: WorkflowDto[];
-  lastExecutionsByWorkflowId: Record<string, WorkflowExecutionDto | undefined>;
+  workflows: DashboardWorkflowSummary[];
   loading: boolean;
   refreshing: boolean;
   pendingAction: {
     workflowId: string;
     action: WorkflowCardAction;
   } | null;
-  onRun: (workflow: WorkflowDto) => void;
-  onToggleStatus: (workflow: WorkflowDto) => void;
-  onDelete: (workflow: WorkflowDto) => void;
+  onRun: (workflow: DashboardWorkflowSummary) => void;
+  onToggleStatus: (workflow: DashboardWorkflowSummary) => void;
+  onDelete: (workflow: DashboardWorkflowSummary) => void;
 }
 
 export function WorkflowList({
   workflows,
-  lastExecutionsByWorkflowId,
   loading,
   refreshing,
   pendingAction,
@@ -75,7 +73,6 @@ export function WorkflowList({
               <WorkflowCard
                 key={workflow.id}
                 executionLoading={refreshing}
-                lastExecution={lastExecutionsByWorkflowId[workflow.id]}
                 onDelete={onDelete}
                 onRun={onRun}
                 onToggleStatus={onToggleStatus}

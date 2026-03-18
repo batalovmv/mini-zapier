@@ -1,4 +1,3 @@
-import type { WorkflowDto, WorkflowExecutionDto } from '@mini-zapier/shared';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
@@ -9,68 +8,31 @@ import { WorkflowList } from '../components/dashboard/WorkflowList';
 import { ConfirmationDialog } from '../components/ui/ConfirmationDialog';
 import { useLocale } from '../locale/LocaleProvider';
 import { getApiErrorMessage } from '../lib/api/client';
-import {
-  executeWorkflow,
-  listWorkflowExecutions,
-} from '../lib/api/executions';
+import { executeWorkflow } from '../lib/api/executions';
+import { DashboardWorkflowSummary } from '../lib/api/types';
 import { updateWorkflowStatus } from '../lib/api/workflows';
 import { useDashboardStore } from '../stores/dashboard.store';
 
-type LastExecutionsByWorkflowId = Record<string, WorkflowExecutionDto | undefined>;
-const ACTIVE_STATUS = 'ACTIVE' as WorkflowDto['status'];
-const PAUSED_STATUS = 'PAUSED' as WorkflowDto['status'];
-
-async function fetchLastExecutions(
-  workflows: WorkflowDto[],
-): Promise<LastExecutionsByWorkflowId> {
-  if (workflows.length === 0) {
-    return {};
-  }
-
-  const results = await Promise.allSettled(
-    workflows.map(async (workflow) => {
-      const response = await listWorkflowExecutions(workflow.id, {
-        page: 1,
-        limit: 1,
-      });
-
-      return [workflow.id, response.items[0]] as const;
-    }),
-  );
-
-  const lastExecutions: LastExecutionsByWorkflowId = {};
-
-  for (const result of results) {
-    if (result.status !== 'fulfilled') {
-      continue;
-    }
-
-    const [workflowId, execution] = result.value;
-    lastExecutions[workflowId] = execution;
-  }
-
-  return lastExecutions;
-}
+const ACTIVE_STATUS = 'ACTIVE' as DashboardWorkflowSummary['status'];
+const PAUSED_STATUS = 'PAUSED' as DashboardWorkflowSummary['status'];
 
 export function DashboardPage() {
   const { messages } = useLocale();
   const workflows = useDashboardStore((state) => state.workflows);
   const stats = useDashboardStore((state) => state.stats);
   const loading = useDashboardStore((state) => state.loading);
-  const fetchWorkflows = useDashboardStore((state) => state.fetchWorkflows);
-  const fetchStats = useDashboardStore((state) => state.fetchStats);
+  const fetchDashboardSummary = useDashboardStore(
+    (state) => state.fetchDashboardSummary,
+  );
   const deleteWorkflow = useDashboardStore((state) => state.deleteWorkflow);
 
   const [dashboardError, setDashboardError] = useState<string | null>(null);
-  const [lastExecutions, setLastExecutions] =
-    useState<LastExecutionsByWorkflowId>({});
-  const [lastExecutionsLoading, setLastExecutionsLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     workflowId: string;
     action: WorkflowCardAction;
   } | null>(null);
   const [workflowPendingDelete, setWorkflowPendingDelete] =
-    useState<WorkflowDto | null>(null);
+    useState<DashboardWorkflowSummary | null>(null);
 
   async function refreshDashboardDataAfterAction(): Promise<void> {
     try {
@@ -82,21 +44,11 @@ export function DashboardPage() {
 
   async function refreshDashboardData() {
     setDashboardError(null);
-    setLastExecutionsLoading(true);
 
     try {
-      const [loadedWorkflows] = await Promise.all([
-        fetchWorkflows(),
-        fetchStats(),
-      ]);
-      const nextLastExecutions = await fetchLastExecutions(loadedWorkflows);
-
-      setLastExecutions(nextLastExecutions);
+      await fetchDashboardSummary();
     } catch (error) {
       setDashboardError(getApiErrorMessage(error, messages.errors));
-      setLastExecutions({});
-    } finally {
-      setLastExecutionsLoading(false);
     }
   }
 
@@ -104,7 +56,7 @@ export function DashboardPage() {
     void refreshDashboardData();
   }, []);
 
-  async function handleRun(workflow: WorkflowDto) {
+  async function handleRun(workflow: DashboardWorkflowSummary) {
     setPendingAction({
       workflowId: workflow.id,
       action: 'run',
@@ -122,7 +74,7 @@ export function DashboardPage() {
     }
   }
 
-  async function handleToggleStatus(workflow: WorkflowDto) {
+  async function handleToggleStatus(workflow: DashboardWorkflowSummary) {
     setPendingAction({
       workflowId: workflow.id,
       action: 'status',
@@ -150,7 +102,7 @@ export function DashboardPage() {
     }
   }
 
-  function handleDelete(workflow: WorkflowDto) {
+  function handleDelete(workflow: DashboardWorkflowSummary) {
     setWorkflowPendingDelete(workflow);
   }
 
@@ -179,11 +131,9 @@ export function DashboardPage() {
     }
   }
 
-  const statsLoading = stats === null && (loading || lastExecutionsLoading);
-  const workflowsLoading =
-    workflows.length === 0 && (loading || lastExecutionsLoading);
-  const refreshing =
-    (loading || lastExecutionsLoading) && !(statsLoading || workflowsLoading);
+  const statsLoading = stats === null && loading;
+  const workflowsLoading = workflows.length === 0 && loading;
+  const refreshing = loading && !(statsLoading || workflowsLoading);
 
   return (
     <div className="space-y-7 xl:space-y-8">
@@ -226,13 +176,12 @@ export function DashboardPage() {
       />
 
       <WorkflowList
-        lastExecutionsByWorkflowId={lastExecutions}
         loading={workflowsLoading}
         onDelete={handleDelete}
         onRun={handleRun}
         onToggleStatus={handleToggleStatus}
         pendingAction={pendingAction}
-        refreshing={refreshing || lastExecutionsLoading}
+        refreshing={refreshing}
         workflows={workflows}
       />
 

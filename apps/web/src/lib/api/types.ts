@@ -81,6 +81,50 @@ export interface StatsResponse {
   recentExecutions: WorkflowExecutionDto[];
 }
 
+export interface DashboardSummaryStats {
+  totalWorkflows: number;
+  activeWorkflows: number;
+  pausedWorkflows: number;
+  totalExecutions: number;
+  successfulExecutions: number;
+  failedExecutions: number;
+  successRate: number;
+}
+
+export interface DashboardExecutionSummary {
+  id: string;
+  workflowId: string;
+  workflowVersion: number;
+  status: WorkflowExecutionDto['status'];
+  startedAt?: string | null;
+  completedAt?: string | null;
+  errorMessage?: string | null;
+  createdAt: string;
+}
+
+export interface DashboardWorkflowSummary {
+  id: string;
+  name: string;
+  description?: string | null;
+  status: WorkflowStatus;
+  version: number;
+  timezone: string;
+  nodeCount: number;
+  updatedAt: string;
+  lastExecution: DashboardExecutionSummary | null;
+}
+
+export interface DashboardRecentExecutionSummary
+  extends DashboardExecutionSummary {
+  workflowName: string;
+}
+
+export interface DashboardSummaryResponse {
+  stats: DashboardSummaryStats;
+  workflows: DashboardWorkflowSummary[];
+  recentExecutions: DashboardRecentExecutionSummary[];
+}
+
 export interface AvailableFieldsPosition {
   position: number;
   fields: string[];

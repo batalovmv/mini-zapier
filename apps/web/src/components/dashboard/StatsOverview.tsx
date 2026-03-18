@@ -1,9 +1,9 @@
-import { StatsResponse } from '../../lib/api/types';
+import { DashboardSummaryStats } from '../../lib/api/types';
 import { useLocale } from '../../locale/LocaleProvider';
 import { Spinner } from '../ui/Spinner';
 
 interface StatsOverviewProps {
-  stats: StatsResponse | null;
+  stats: DashboardSummaryStats | null;
   loading: boolean;
   refreshing: boolean;
 }

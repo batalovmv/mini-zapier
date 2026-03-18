@@ -1,23 +1,25 @@
-import type { WorkflowDto, WorkflowExecutionDto } from '@mini-zapier/shared';
 import { Link } from 'react-router-dom';
 
 import { useLocale } from '../../locale/LocaleProvider';
+import {
+  DashboardExecutionSummary,
+  DashboardWorkflowSummary,
+} from '../../lib/api/types';
 import { Spinner } from '../ui/Spinner';
 
 export type WorkflowCardAction = 'run' | 'status' | 'delete';
 
 interface WorkflowCardProps {
-  workflow: WorkflowDto;
-  lastExecution?: WorkflowExecutionDto;
+  workflow: DashboardWorkflowSummary;
   executionLoading: boolean;
   pendingAction: WorkflowCardAction | null;
-  onRun: (workflow: WorkflowDto) => void;
-  onToggleStatus: (workflow: WorkflowDto) => void;
-  onDelete: (workflow: WorkflowDto) => void;
+  onRun: (workflow: DashboardWorkflowSummary) => void;
+  onToggleStatus: (workflow: DashboardWorkflowSummary) => void;
+  onDelete: (workflow: DashboardWorkflowSummary) => void;
 }
 
-type WorkflowStatus = WorkflowDto['status'];
-type ExecutionStatus = WorkflowExecutionDto['status'];
+type WorkflowStatus = DashboardWorkflowSummary['status'];
+type ExecutionStatus = DashboardExecutionSummary['status'];
 
 const workflowStatusClassNames = {
   ACTIVE: 'border-emerald-200 bg-emerald-50 text-emerald-700',
@@ -32,13 +34,12 @@ const executionStatusClassNames = {
   FAILED: 'border-rose-200 bg-rose-50 text-rose-700',
 } as Record<ExecutionStatus, string>;
 
-function getExecutionDisplayTime(execution: WorkflowExecutionDto): string {
+function getExecutionDisplayTime(execution: DashboardExecutionSummary): string {
   return execution.completedAt ?? execution.startedAt ?? execution.createdAt;
 }
 
 export function WorkflowCard({
   workflow,
-  lastExecution,
   executionLoading,
   pendingAction,
   onRun,
@@ -99,7 +100,7 @@ export function WorkflowCard({
                 {messages.workflowCard.nodesLabel}
               </dt>
               <dd className="mt-1 text-sm font-medium text-slate-700">
-                {formatNumber(workflow.nodes.length)}
+                {formatNumber(workflow.nodeCount)}
               </dd>
             </div>
             <div>
@@ -139,28 +140,32 @@ export function WorkflowCard({
                 ) : null}
               </div>
 
-              {executionLoading && !lastExecution ? (
+              {executionLoading && !workflow.lastExecution ? (
                 <div className="mt-3 flex items-center gap-3 text-sm text-slate-500">
                   <Spinner size="sm" />
                   <span>{messages.workflowCard.loadingLatestExecution}</span>
                 </div>
-              ) : lastExecution ? (
+              ) : workflow.lastExecution ? (
                 <div className="mt-3">
                   <div className="flex flex-wrap items-center gap-2.5">
                     <span
-                      className={`inline-flex items-center rounded-full border px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] shadow-sm ${executionStatusClassNames[lastExecution.status]}`}
+                      className={`inline-flex items-center rounded-full border px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] shadow-sm ${executionStatusClassNames[workflow.lastExecution.status]}`}
                     >
-                      {messages.common.executionStatusLabels[lastExecution.status]}
+                      {messages.common.executionStatusLabels[workflow.lastExecution.status]}
                     </span>
                     <span className="text-sm font-medium text-slate-600">
-                      {messages.common.executionStatusDescriptions[lastExecution.status]}
+                      {messages.common.executionStatusDescriptions[workflow.lastExecution.status]}
                     </span>
                   </div>
                   <p className="mt-3 text-base font-semibold text-slate-950">
-                    {formatDateTime(getExecutionDisplayTime(lastExecution))}
+                    {formatDateTime(
+                      getExecutionDisplayTime(workflow.lastExecution),
+                    )}
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    {messages.workflowCard.workflowVersion(lastExecution.workflowVersion)}
+                    {messages.workflowCard.workflowVersion(
+                      workflow.lastExecution.workflowVersion,
+                    )}
                   </p>
                 </div>
               ) : (
