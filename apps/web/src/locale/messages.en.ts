@@ -397,12 +397,23 @@ export const en = {
     headerMainFields: 'Main fields are below.',
     selectConnection: (connectionType: string) =>
       `Choose a ${connectionType} connection`,
+    openConnectionPicker: 'Open',
+    closeConnectionPicker: 'Close',
+    searchConnectionsPlaceholder: 'Search by name',
+    searchEmptyConnections: (query: string) => `No matches for "${query}".`,
+    selectedConnectionButtonFallback: 'Selected connection',
+    clearConnection: 'Clear',
+    connectionPickerSelected: 'Selected',
+    connectionPickerItemMeta: (usageCount: string, fieldCount: string) =>
+      `Used ${usageCount} / Fields ${fieldCount}`,
     createConnection: 'New',
     refreshConnections: 'Refresh',
     noConnectionsDescription: (connectionType: string) =>
       `No ${connectionType} connections yet. Create one to use it here.`,
     nodeSettingsEyebrow: 'Main',
     loadingConnectionsDescription: 'Loading saved connections.',
+    loadingMoreConnections: 'Loading more...',
+    loadMoreConnections: 'More',
     deleteNode: 'Delete step',
     deleteNodeDialogTitle: 'Delete selected step?',
     deleteNodeDialogDescription: (label: string) =>

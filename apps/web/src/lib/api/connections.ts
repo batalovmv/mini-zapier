@@ -12,12 +12,6 @@ import {
   UpdateConnectionInput,
 } from './types';
 
-export async function listConnections(): Promise<ConnectionDto[]> {
-  const response = await apiClient.get<ConnectionDto[]>('/connections');
-
-  return response.data;
-}
-
 export interface ListConnectionsCatalogParams {
   page?: number;
   limit?: number;

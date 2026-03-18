@@ -1,15 +1,20 @@
-import type { ConnectionDto, ConnectionType } from '@mini-zapier/shared';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import type {
+  ConnectionCatalogItemDto,
+  ConnectionDto,
+  ConnectionType,
+} from '@mini-zapier/shared';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import {
   createConnection,
-  listConnections,
+  getConnection,
 } from '../../lib/api/connections';
 import { getApiErrorMessage } from '../../lib/api/client';
 import { useLocale } from '../../locale/LocaleProvider';
 import { useWorkflowEditorStore } from '../../stores/workflow-editor.store';
 import { ConfirmationDialog } from '../ui/ConfirmationDialog';
+import { ConnectionPicker } from './ConnectionPicker';
 import { ConnectionCreateDialog } from './ConnectionCreateDialog';
 import { CronConfig } from './config-forms/CronConfig';
 import { DataTransformConfig } from './config-forms/DataTransformConfig';
@@ -35,6 +40,19 @@ const railSectionMutedClass =
   'editor-inspector-panel editor-inspector-panel-secondary editor-inspector-panel-muted px-3.5 py-3.5';
 const sectionEyebrowClass = 'editor-inspector-eyebrow';
 
+function toConnectionCatalogItem(
+  connection: ConnectionDto,
+): ConnectionCatalogItemDto {
+  return {
+    id: connection.id,
+    name: connection.name,
+    type: connection.type,
+    usageCount: 0,
+    credentialFieldCount: Object.keys(connection.credentials).length,
+    updatedAt: connection.updatedAt,
+  };
+}
+
 export function ConfigPanel({ workflowId }: ConfigPanelProps) {
   const { messages } = useLocale();
   const nodes = useWorkflowEditorStore((state) => state.nodes);
@@ -48,12 +66,14 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
   const updateNodeMeta = useWorkflowEditorStore((state) => state.updateNodeMeta);
   const removeNode = useWorkflowEditorStore((state) => state.removeNode);
 
-  const [connections, setConnections] = useState<ConnectionDto[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [connectionsError, setConnectionsError] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [connectionCreating, setConnectionCreating] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedConnectionSummary, setSelectedConnectionSummary] =
+    useState<ConnectionCatalogItemDto | null>(null);
+  const [connectionPickerRefreshToken, setConnectionPickerRefreshToken] =
+    useState(0);
+  const selectedConnectionRequestIdRef = useRef(0);
 
   const selectedNode = useMemo(
     () => nodes.find((node) => node.id === selectedNodeId) ?? null,
@@ -71,36 +91,52 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
       ? messages.common.connectionTypeLabels[definition.connectionType as ConnectionType]
       : null;
 
-  const loadConnections = useCallback(async () => {
-    setLoading(true);
-    setConnectionsError(null);
-
-    try {
-      const nextConnections = await listConnections();
-      setConnections(nextConnections);
-      return nextConnections;
-    } catch (error) {
-      const message = getApiErrorMessage(error, messages.errors);
-      setConnectionsError(message);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [messages.errors]);
-
   useEffect(() => {
-    let cancelled = false;
+    const selectedConnectionId = selectedNode?.data.connectionId ?? null;
+    const requiredConnectionType = definition?.connectionType ?? null;
 
-    void loadConnections().catch(() => {
-      if (cancelled) {
-        return;
-      }
-    });
+    if (!selectedConnectionId || !requiredConnectionType) {
+      selectedConnectionRequestIdRef.current += 1;
+      setSelectedConnectionSummary(null);
+      return;
+    }
 
-    return () => {
-      cancelled = true;
-    };
-  }, [loadConnections]);
+    if (
+      selectedConnectionSummary?.id === selectedConnectionId &&
+      selectedConnectionSummary.type === requiredConnectionType
+    ) {
+      return;
+    }
+
+    const requestId = selectedConnectionRequestIdRef.current + 1;
+    selectedConnectionRequestIdRef.current = requestId;
+
+    void getConnection(selectedConnectionId)
+      .then((connection) => {
+        if (requestId !== selectedConnectionRequestIdRef.current) {
+          return;
+        }
+
+        if (connection.type !== requiredConnectionType) {
+          setSelectedConnectionSummary(null);
+          return;
+        }
+
+        setSelectedConnectionSummary(toConnectionCatalogItem(connection));
+      })
+      .catch(() => {
+        if (requestId !== selectedConnectionRequestIdRef.current) {
+          return;
+        }
+
+        setSelectedConnectionSummary(null);
+      });
+  }, [
+    definition?.connectionType,
+    selectedConnectionSummary?.id,
+    selectedConnectionSummary?.type,
+    selectedNode?.data.connectionId,
+  ]);
 
   async function handleCreateConnection(payload: {
     name: string;
@@ -119,13 +155,8 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
         credentials: payload.credentials,
       });
 
-      setConnections((currentConnections) => [
-        ...currentConnections.filter(
-          (connection) => connection.id !== createdConnection.id,
-        ),
-        createdConnection,
-      ]);
-      setConnectionsError(null);
+      setSelectedConnectionSummary(toConnectionCatalogItem(createdConnection));
+      setConnectionPickerRefreshToken((currentToken) => currentToken + 1);
       updateNodeMeta(selectedNode.id, {
         connectionId: createdConnection.id,
       });
@@ -136,6 +167,19 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
     } finally {
       setConnectionCreating(false);
     }
+  }
+
+  function handleSelectConnection(
+    connection: ConnectionCatalogItemDto | null,
+  ): void {
+    if (!selectedNode) {
+      return;
+    }
+
+    setSelectedConnectionSummary(connection);
+    updateNodeMeta(selectedNode.id, {
+      connectionId: connection?.id ?? null,
+    });
   }
 
   function handleDeleteNode(): void {
@@ -235,18 +279,13 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
     );
   }
 
-  const availableConnections =
-    definition?.connectionType === null
-      ? []
-      : connections.filter(
-          (connection) => connection.type === definition?.connectionType,
-        );
   const selectedConnection =
     selectedNode.data.connectionId === null
       ? null
-      : availableConnections.find(
-          (connection) => connection.id === selectedNode.data.connectionId,
-        ) ?? null;
+      : selectedConnectionSummary?.id === selectedNode.data.connectionId &&
+          selectedConnectionSummary.type === definition?.connectionType
+        ? selectedConnectionSummary
+        : null;
   const existingStepTestResult = stepTestResults[selectedNode.id] ?? null;
   const requiresConnection = Boolean(definition?.connectionType);
   const isActionNode = selectedNode.data.nodeKind === 'action';
@@ -305,72 +344,16 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                 </h3>
               </div>
 
-              <div className="mt-3 space-y-3">
-                <select
-                  aria-label={messages.configPanel.selectConnection(
-                    connectionTypeLabel ?? definition.connectionType,
-                  )}
-                  className="w-full rounded-xl border border-slate-900/10 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-                  data-testid="connection-select"
-                  onChange={(event) =>
-                    updateNodeMeta(selectedNode.id, {
-                      connectionId:
-                        event.target.value.length > 0 ? event.target.value : null,
-                    })
-                  }
-                  value={selectedNode.data.connectionId ?? ''}
-                >
-                  <option value="">
-                    {messages.configPanel.selectConnection(
-                      connectionTypeLabel ?? definition.connectionType,
-                    )}
-                  </option>
-                  {availableConnections.map((connection) => (
-                    <option
-                      key={connection.id}
-                      value={connection.id}
-                    >
-                      {connection.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <button
-                    className="editor-inspector-toggle"
-                    data-testid="create-connection-button"
-                    onClick={() => setCreateDialogOpen(true)}
-                    type="button"
-                  >
-                    {messages.configPanel.createConnection}
-                  </button>
-                  <button
-                    className="editor-inspector-link"
-                    onClick={() => void loadConnections().catch(() => undefined)}
-                    type="button"
-                  >
-                    {messages.configPanel.refreshConnections}
-                  </button>
-                </div>
-
-                {loading ? (
-                  <p className="text-xs leading-5 text-slate-500">
-                    {messages.configPanel.loadingConnectionsDescription}
-                  </p>
-                ) : null}
-
-                {!loading && availableConnections.length === 0 ? (
-                  <p className="text-xs leading-5 text-slate-500">
-                    {messages.configPanel.noConnectionsDescription(
-                      connectionTypeLabel ?? definition.connectionType,
-                    )}
-                  </p>
-                ) : null}
-
-                {connectionsError ? (
-                  <div className="rounded-xl border border-rose-200 bg-rose-50/90 px-3 py-2.5 text-sm text-rose-700">
-                    {connectionsError}
-                  </div>
-                ) : null}
+              <div className="mt-3">
+                <ConnectionPicker
+                  key={selectedNode.id}
+                  connectionType={definition.connectionType as ConnectionType}
+                  onCreateConnection={() => setCreateDialogOpen(true)}
+                  onSelectConnection={handleSelectConnection}
+                  refreshToken={connectionPickerRefreshToken}
+                  selectedConnectionId={selectedNode.data.connectionId ?? null}
+                  selectedConnectionName={selectedConnection?.name ?? null}
+                />
               </div>
             </section>
           ) : null}
@@ -392,12 +375,6 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                 connectionId: selectedNode.data.connectionId ?? null,
               })}
             </div>
-
-            {!definition?.connectionType && connectionsError ? (
-              <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50/90 px-3 py-2.5 text-sm text-rose-700">
-                {connectionsError}
-              </div>
-            ) : null}
           </section>
 
           {selectedNode.data.nodeKind === 'action' ? (

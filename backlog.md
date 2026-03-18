@@ -2685,7 +2685,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-Q4: scale the editor connection picker
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: убрать деградацию в inspector при большом числе connections
 - **Scope**:
   - searchable type-scoped picker вместо plain select

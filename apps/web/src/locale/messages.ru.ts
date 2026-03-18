@@ -432,12 +432,24 @@ export const ru = {
     headerMainFields: 'Основные поля ниже.',
     selectConnection: (connectionType: string) =>
       `Выберите подключение ${connectionType}`,
+    openConnectionPicker: 'Открыть',
+    closeConnectionPicker: 'Закрыть',
+    searchConnectionsPlaceholder: 'Поиск по имени',
+    searchEmptyConnections: (query: string) =>
+      `Совпадений по запросу "${query}" нет.`,
+    selectedConnectionButtonFallback: 'Выбранное подключение',
+    clearConnection: 'Очистить',
+    connectionPickerSelected: 'Выбрано',
+    connectionPickerItemMeta: (usageCount: string, fieldCount: string) =>
+      `Исп. ${usageCount} / Полей ${fieldCount}`,
     createConnection: 'Новое',
     refreshConnections: 'Обновить',
     noConnectionsDescription: (connectionType: string) =>
       `Подключений ${connectionType} пока нет. Создайте новое, чтобы выбрать его здесь.`,
     nodeSettingsEyebrow: 'Основное',
     loadingConnectionsDescription: 'Загружаем подключения.',
+    loadingMoreConnections: 'Загружаем ещё...',
+    loadMoreConnections: 'Ещё',
     deleteNode: 'Удалить шаг',
     deleteNodeDialogTitle: 'Удалить выбранный шаг?',
     deleteNodeDialogDescription: (label: string) =>
