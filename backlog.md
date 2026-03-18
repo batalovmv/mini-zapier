@@ -2606,3 +2606,113 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+---
+
+## Срез Q: Connections catalog redesign
+
+### TASK-Q0: plan connections catalog redesign slices
+- **Статус**: `done`
+- **Цель**: зафиксировать последовательный redesign/scale track для connections catalog без изменения product scope
+- **Scope**:
+  - разложить connections catalog redesign на последовательные рабочие slices `TASK-Q1`–`TASK-Q5`
+  - зафиксировать границы track: без расширения product scope и без смешивания planning с implementation
+  - синхронизировать `backlog.md` и `handoff.md`, чтобы следующий исполнитель начинал с первого рабочего среза
+- **Не входит**:
+  - код, API, UI, зависимости и тесты
+  - RBAC, sharing, OAuth reconnect, health checks, tags, bulk actions
+- **Файлы**:
+  - `backlog.md`
+  - `handoff.md`
+- **Acceptance**:
+  - в backlog добавлены последовательные задачи `TASK-Q1`–`TASK-Q5`
+  - `handoff.md` указывает `TASK-Q1` как следующий рабочий шаг для connections catalog track
+  - planning-срез оформлен отдельной завершённой задачей
+- **Проверка**:
+  - docs-only task; build/test не требуются
+
+### TASK-Q1: add scalable connections catalog summary API
+- **Статус**: `todo`
+- **Цель**: дать фронту легковесный контракт для больших библиотек подключений
+- **Scope**:
+  - новый summary endpoint каталога с `query` / `type` / `usage` / `sort` / `page` / `limit`
+  - summary item = `id`, `name`, `type`, `usageCount`, `credentialFieldCount`, `updatedAt`
+  - существующие `GET /connections` и `GET /connections/:id` не ломать
+- **Не входит**:
+  - workflow names list
+  - last used
+  - health check
+  - breaking CRUD changes
+- **Acceptance**:
+  - `api/shared` build
+  - Swagger/DTO contract готов
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/api build`
+  - `pnpm --filter @mini-zapier/shared build`
+
+### TASK-Q2: rebuild connections page into an operational catalog shell
+- **Статус**: `todo`
+- **Цель**: заменить hero + per-type sections на server-driven catalog shell
+- **Scope**:
+  - compact header
+  - search/filter/sort controls
+  - pagination or load-more
+  - summary endpoint wiring
+  - create/edit/delete flows preserved
+  - full connection detail fetch only on edit open
+- **Не входит**:
+  - final visual density polish
+  - editor picker
+- **Acceptance**:
+  - web build passes
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-Q3: tighten connections list hierarchy and row density
+- **Статус**: `todo`
+- **Цель**: сделать список быстрее для сканирования
+- **Scope**:
+  - denser rows/cards with `name`, `type`, `usageCount`, `updatedAt`, `fieldCount`
+  - убрать credential-key chip wall из default list
+  - quieter destructive action
+  - empty/no-results states
+- **Не входит**:
+  - detail page
+  - bulk actions
+- **Acceptance**:
+  - web build passes
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-Q4: scale the editor connection picker
+- **Статус**: `todo`
+- **Цель**: убрать деградацию в inspector при большом числе connections
+- **Scope**:
+  - searchable type-scoped picker вместо plain select
+  - тот же summary endpoint
+  - сохранить inline create и текущую required/selected logic
+- **Не входит**:
+  - sharing
+  - multi-select
+  - health checks
+- **Acceptance**:
+  - web build passes
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+
+### TASK-Q5: connections QA, smoke stabilization and copy polish
+- **Статус**: `todo`
+- **Цель**: закрыть residual defects после track
+- **Scope**:
+  - manual QA `/connections` + editor picker
+  - stable test ids
+  - smoke selector updates
+  - RU/EN copy polish
+  - only confirmed residual fixes
+- **Не входит**:
+  - новые features
+- **Acceptance**:
+  - `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` pass
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`
