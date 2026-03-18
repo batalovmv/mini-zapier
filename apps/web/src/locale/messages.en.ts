@@ -985,6 +985,14 @@ export const en = {
       dedupe:
         'To enable deduplication, include an `Idempotency-Key` or `X-Event-ID` header. Duplicate events will be ignored.',
     },
+    availableFields: {
+      eyebrow: 'Available fields',
+      description: 'Fields from the previous step output.',
+      emptyHint: 'Run the previous step to see available fields.',
+      sourceTest: 'From test run',
+      sourceExecution: 'From last execution',
+      loading: 'Loading…',
+    },
     messagePreview: {
       toggle: 'Preview',
       loading: 'Loading preview data…',

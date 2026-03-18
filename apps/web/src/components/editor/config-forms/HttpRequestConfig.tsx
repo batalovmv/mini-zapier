@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { usePreviewData } from '../../../hooks/usePreviewData';
 import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
 import { TemplatedField } from '../templated-input';
 
+import { AvailableFieldsBlock } from './AvailableFieldsBlock';
 import { RawJsonFallback } from './RawJsonFallback';
 
 function toStringRecord(value: unknown): Record<string, string> {
@@ -95,6 +97,7 @@ export function HttpRequestConfig({
 }: HttpRequestConfigProps) {
   const { messages } = useLocale();
   const t = messages.configForms.httpRequest;
+  const preview = usePreviewData(true);
 
   const [showJson, setShowJson] = useState(false);
   const [bodyMode, setBodyMode] = useState<'fields' | 'json'>(() =>
@@ -434,6 +437,8 @@ export function HttpRequestConfig({
           )}
         </div>
       </div>
+
+      <AvailableFieldsBlock preview={preview} />
 
       <section className={secondarySectionClass}>
         <div className="editor-inspector-panel-head">

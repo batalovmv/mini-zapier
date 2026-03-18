@@ -11,9 +11,11 @@ import {
   getApiErrorMessage,
   isMissingApiRouteError,
 } from '../../../lib/api/client';
+import { usePreviewData } from '../../../hooks/usePreviewData';
 import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
 import { TemplatedField } from '../templated-input/TemplatedField';
+import { AvailableFieldsBlock } from './AvailableFieldsBlock';
 import { RawJsonFallback } from './RawJsonFallback';
 
 /* ------------------------------------------------------------------ */
@@ -328,6 +330,7 @@ export function DbQueryConfig({
 }: DbQueryConfigProps) {
   const { messages } = useLocale();
   const t = messages.configForms.dbQuery;
+  const preview = usePreviewData(true);
 
   const opLabels: Record<DbOperation, string> = {
     select: t.opSelect,
@@ -1178,6 +1181,8 @@ export function DbQueryConfig({
           ) : null}
         </div>
       )}
+
+      <AvailableFieldsBlock preview={preview} />
 
       <section className={secondarySectionClass}>
         <div className="editor-inspector-panel-head">

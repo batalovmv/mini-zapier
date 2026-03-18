@@ -1,9 +1,11 @@
 import { useState } from 'react';
 
+import { usePreviewData } from '../../../hooks/usePreviewData';
 import { useLocale } from '../../../locale/LocaleProvider';
 import type { ConfigUpdater } from '../ConfigPanel';
 import { TemplatedField } from '../templated-input';
 
+import { AvailableFieldsBlock } from './AvailableFieldsBlock';
 import { RawJsonFallback } from './RawJsonFallback';
 
 function toStringRecord(value: unknown): Record<string, string> {
@@ -32,6 +34,7 @@ export function DataTransformConfig({
 }: DataTransformConfigProps) {
   const { messages } = useLocale();
   const t = messages.configForms.dataTransform;
+  const preview = usePreviewData(true);
 
   const [showJson, setShowJson] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -227,6 +230,8 @@ export function DataTransformConfig({
           </div>
         )}
       </div>
+
+      <AvailableFieldsBlock preview={preview} />
 
       <section className={secondarySectionClass}>
         <div className="editor-inspector-panel-head">

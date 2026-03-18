@@ -3,7 +3,7 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-R10 — `move "Create workflow" from nav pill to separate CTA button`
+- **Последнее изменение**: TASK-R11 — `add upstream data preview to HTTP, DB Query and Data Transform config forms`
 - **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт + TASK-O5 закрыт + TASK-O6 закрыт + TASK-P1 закрыт + TASK-P2 закрыт + TASK-P3 закрыт + TASK-P4 закрыт + TASK-P5 закрыт + TASK-P6 закрыт + TASK-P7 закрыт + TASK-Q0 закрыт + TASK-Q1 закрыт + TASK-Q2 закрыт + TASK-Q3 закрыт + TASK-Q4 закрыт + TASK-Q5 закрыт + TASK-R1 закрыт + TASK-R2 закрыт + TASK-R3 закрыт + TASK-R4 закрыт + TASK-R5 закрыт + TASK-R6 закрыт + TASK-R7 закрыт; connections catalog track закрыт, `/connections` и editor connection picker получили стабильные QA hooks, а smoke больше не зависит от старого `<select>` semantics; известные backend error messages теперь локализуются на фронте
 - **TASK-Q0 planning**: connections catalog redesign/scale track разложен на последовательные задачи `TASK-Q1`–`TASK-Q5`; первый implementation slice добавляет scalable summary API для больших библиотек подключений, не ломая существующие `GET /connections` и `GET /connections/:id`
 - **TASK-Q1 local build**: добавлен owner-scoped `GET /api/connections/catalog` с backend pagination/filter/sort/query (`page`, `limit`, `query`, `type`, `usage`, `sort`), summary-only payload без `credentials`, shared enums/contracts для catalog response, Swagger query/response DTO и page-level `usageCount` aggregation; существующие `GET /api/connections` и `GET /api/connections/:id` сохранены без breaking changes. Локально подтверждены `pnpm --filter @mini-zapier/shared build` и `pnpm --filter @mini-zapier/api build` ✅
@@ -786,7 +786,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-Следующий рабочий срез: не назначен.
+Следующий рабочий срез: не назначен. TASK-R11 закрыт.
 
 Перед новым кодовым срезом:
 - connections catalog track `TASK-Q0`–`TASK-Q5` закрыт; не открывать новый follow-up по `/connections` или editor picker без нового TASK-ID
@@ -987,3 +987,4 @@
 | TASK-R8 | done | см. `git log` (`TASK-R8: add editor keyboard shortcuts — Ctrl+S save, Delete remove node`) | Ctrl+S/Cmd+S calls handleSave with preventDefault; Delete/Backspace on selected node (outside input/textarea/select/contenteditable) opens confirmation dialog; page-level ConfirmationDialog reuses same messages as ConfigPanel delete; web build + Playwright test list passed |
 | TASK-R9 | done | см. `git log` (`TASK-R9: add password show/hide toggle on login and register pages`) | Eye icon toggle (inline SVG) on password inputs in LoginPage and RegisterPage; type toggles between password/text; button uses tabIndex={-1} to preserve input focus; styled text-slate-400 hover:text-slate-600; web build + Playwright test list passed |
 | TASK-R10 | done | см. `git log` (`TASK-R10: move "Create workflow" from nav pill to separate CTA button`) | "Create workflow" removed from nav pill array, added as standalone amber CTA Link (not NavLink — no active state); nav pills now only Dashboard + Connections; web build + Playwright test list passed |
+| TASK-R11 | done | см. `git log` (`TASK-R11: add upstream data preview to HTTP, DB Query and Data Transform config forms`) | New AvailableFieldsBlock component reuses usePreviewData hook; added to HttpRequestConfig, DbQueryConfig, DataTransformConfig between main fields and advanced section; EN/RU locale strings added; web build + Playwright test list passed |
