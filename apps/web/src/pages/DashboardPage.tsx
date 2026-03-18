@@ -327,7 +327,7 @@ export function DashboardPage() {
     (execution) => execution.status === 'FAILED',
   ).length;
 
-  const attentionItems = [
+  const allAttentionItems = [
     {
       key: 'failed',
       count: failedWorkflowCount,
@@ -366,6 +366,11 @@ export function DashboardPage() {
       badgeClass: 'border border-slate-200 bg-white text-slate-700',
     },
   ];
+  const visibleAttentionItems = hasDashboardData
+    ? allAttentionItems.filter((item) => item.count > 0)
+    : allAttentionItems;
+  const allAttentionClear =
+    hasDashboardData && visibleAttentionItems.length === 0;
 
   const workflowSummaryLabel = hasDashboardData
     ? messages.dashboardPage.workflowCount(stats.totalWorkflows)
@@ -449,78 +454,69 @@ export function DashboardPage() {
       </section>
 
       <section
-        className="dashboard-panel dashboard-panel-strong app-panel app-panel-strong overflow-hidden p-4 sm:p-5"
+        className={`dashboard-panel dashboard-panel-strong app-panel app-panel-strong overflow-hidden ${allAttentionClear ? 'px-4 py-3 sm:px-5 sm:py-3.5' : 'p-4 sm:p-5'}`}
         data-testid="dashboard-attention-strip"
       >
-        <div className="flex flex-col gap-2.5 border-b border-slate-900/10 pb-3.5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="muted-label">
-              {messages.dashboardPage.attentionEyebrow}
+        {allAttentionClear ? (
+          <div className="flex items-center gap-3">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            <p className="text-sm font-medium text-slate-600">
+              {messages.dashboardPage.allClearSummary}
             </p>
-            <h2 className="mt-1.5 text-[1.25rem] font-semibold tracking-tight text-slate-900 sm:text-[1.45rem]">
-              {messages.dashboardPage.attentionTitle}
-            </h2>
           </div>
+        ) : (
+          <>
+            <div className="flex flex-col gap-2.5 border-b border-slate-900/10 pb-3.5 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="muted-label">
+                  {messages.dashboardPage.attentionEyebrow}
+                </p>
+                <h2 className="mt-1.5 text-[1.25rem] font-semibold tracking-tight text-slate-900 sm:text-[1.45rem]">
+                  {messages.dashboardPage.attentionTitle}
+                </h2>
+              </div>
 
-          <p className="dashboard-chip w-fit max-w-full whitespace-normal">
-            {attentionSummaryLabel}
-          </p>
-        </div>
+              <p className="dashboard-chip w-fit max-w-full whitespace-normal">
+                {attentionSummaryLabel}
+              </p>
+            </div>
 
-        <div className="mt-3.5 grid gap-2.5 md:grid-cols-2 xl:grid-cols-4">
-          {attentionItems.map((item) => {
-            const isActive = hasDashboardData && item.count > 0;
+            <div className={`mt-3.5 grid gap-2.5 md:grid-cols-2 ${visibleAttentionItems.length >= 4 ? 'xl:grid-cols-4' : visibleAttentionItems.length === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-2'}`}>
+              {visibleAttentionItems.map((item) => (
+                <article
+                  key={item.key}
+                  className={`dashboard-attention-card ${item.activeClass}`}
+                  data-active={true}
+                  data-testid={`dashboard-attention-${item.key}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`h-2.5 w-2.5 rounded-full ${item.dotClass}`}
+                        />
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-600">
+                          {item.label}
+                        </p>
+                      </div>
 
-            return (
-              <article
-                key={item.key}
-                className={`dashboard-attention-card ${
-                  isActive ? item.activeClass : 'border-slate-200/80 bg-white/80'
-                }`}
-                data-active={isActive}
-                data-testid={`dashboard-attention-${item.key}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`h-2.5 w-2.5 rounded-full ${
-                          isActive ? item.dotClass : 'bg-slate-300'
-                        }`}
-                      />
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-600">
-                        {item.label}
+                      <p className="mt-3 text-sm leading-6 text-slate-600">
+                        {item.description}
                       </p>
                     </div>
 
-                    <p className="mt-3 text-sm leading-6 text-slate-600">
-                      {item.description}
-                    </p>
+                    <div
+                      className={`inline-flex min-w-[3rem] justify-center rounded-full px-3 py-1.5 text-lg font-semibold tracking-tight ${item.badgeClass}`}
+                    >
+                      {formatNumber(item.count)}
+                    </div>
                   </div>
-
-                  <div
-                    className={`inline-flex min-w-[3rem] justify-center rounded-full px-3 py-1.5 text-lg font-semibold tracking-tight ${
-                      isActive
-                        ? item.badgeClass
-                        : 'border border-slate-200 bg-white text-slate-500'
-                    }`}
-                  >
-                    {hasDashboardData
-                      ? formatNumber(item.count)
-                      : messages.common.emptyValue}
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
       </section>
-
-      <StatsOverview
-        loading={statsLoading}
-        refreshing={refreshing}
-        stats={stats}
-      />
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.72fr)_minmax(18rem,0.9fr)] xl:items-start xl:gap-5">
         <WorkflowList
@@ -672,6 +668,12 @@ export function DashboardPage() {
           </div>
         </section>
       </div>
+
+      <StatsOverview
+        loading={statsLoading}
+        refreshing={refreshing}
+        stats={stats}
+      />
 
       {workflowPendingDelete ? (
         <ConfirmationDialog
