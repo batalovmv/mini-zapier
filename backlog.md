@@ -2485,3 +2485,96 @@
   - desktop widths `1280` / `1440` / `>=1600`
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+### TASK-P4: plan action inspector density follow-up
+- **Статус**: `done`
+- **Цель**: зафиксировать последовательный plan для следующего redesign inspector rail, чтобы убрать лишнюю вложенность, вернуть полезную ширину полям и не смешать structural flatten с residual overflow QA
+- **Scope**:
+  - сверить текущий action inspector shell и action config forms с реальными narrow-rail проблемами
+  - выделить отдельный рабочий срез на flatten/density/chrome cleanup без расширения product scope
+  - выделить отдельный follow-up на overflow/responsive/test stabilization
+  - обновить `handoff.md`, чтобы следующий исполнитель начинал с первого рабочего editor follow-up
+- **Не входит**:
+  - реализация inspector redesign
+  - backend/API changes
+  - новые зависимости
+- **Файлы**:
+  - `backlog.md`
+  - `handoff.md`
+- **Acceptance**:
+  - в backlog добавлены последовательные `TASK-P5` и `TASK-P6`
+  - `handoff.md` указывает `TASK-P5` как следующий рабочий шаг
+  - planning-срез оформлен отдельной завершённой задачей
+- **Проверка**:
+  - docs-only task; build/test не требуются
+
+### TASK-P5: flatten action inspector hierarchy and reclaim rail width
+- **Статус**: `todo`
+- **Цель**: пересобрать правый action inspector в более плоский и плотный tool-panel, чтобы основные поля занимали почти всю ширину rail, а interface перестал ощущаться как stack of cards inside cards
+- **Scope**:
+  - упростить shell selected action inspector в `ConfigPanel` без изменения product flow `connection -> main fields -> step test -> delete`
+  - переработать action forms `HTTP Request`, `Email`, `Telegram`, `DB Query`, `Data Transform` под flatter narrow-rail pattern
+  - убрать лишние nested surfaces там, где они не добавляют новой структуры: inner white cards, repeated row cards, тяжёлые preview/advanced wrappers
+  - перевести repeated structures (`body fields`, `headers`, `mapping rows`, `filters`, `set values`) в более плоские row groups вместо mini-cards
+  - сделать `Preview`, `Advanced`, helper-секции и `Step Test` визуально secondary и компактнее без изменения handlers, execution logic или config semantics
+  - ужать rail-specific padding/radius/shadow/chip weight в editor CSS только там, где это помогает вернуть ширину контенту
+  - сократить только тот RU/EN copy, который сам раздувает узкую panel
+- **Не входит**:
+  - trigger forms redesign
+  - backend/API/store changes
+  - новые product features, новый onboarding, bulk actions
+  - новые зависимости
+- **Файлы**:
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/components/editor/StepTestSection.tsx`
+  - `apps/web/src/components/editor/config-forms/HttpRequestConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/EmailActionConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/TelegramConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/DataTransformConfig.tsx`
+  - `apps/web/src/index.css`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - inspector больше не читается как `panel -> section -> card -> sub-card -> row-card`
+  - основные поля action forms используют большую часть доступной ширины rail
+  - `Preview`, `Advanced`, helper и `Step Test` визуально secondary и не спорят с main setup
+  - repeated rows больше не завернуты в тяжёлые декоративные cards без явной необходимости
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+### TASK-P6: inspector overflow, responsive QA and smoke stabilization
+- **Статус**: `todo`
+- **Цель**: после structural flatten закрыть residual defects narrow inspector rail: long-text overflow, placeholder clipping, narrow-width regressions и хрупкие selectors после обновления DOM
+- **Scope**:
+  - исправить переполнение и clipping длинных URL/template/SQL/JSON значений в narrow inspector, включая single-line `TemplatedInput`
+  - пройти manual QA для action forms `HTTP Request`, `Email`, `Telegram`, `DB Query`, `Data Transform` на desktop widths с узким inspector rail
+  - обновить stable `data-testid` и smoke selectors, если `TASK-P5` поменял структуру inspector-а и прежние hooks стали хрупкими
+  - закрыть только residual UI defects после `TASK-P5`, не открывая новый redesign track
+- **Не входит**:
+  - новый backend/API
+  - новый redesign action forms beyond residual polish
+  - новые зависимости
+- **Файлы**:
+  - `apps/web/src/components/editor/templated-input/TemplatedField.tsx`
+  - `apps/web/src/components/editor/templated-input/TemplatedInput.tsx`
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/components/editor/StepTestSection.tsx`
+  - `apps/web/src/components/editor/config-forms/`
+  - `apps/web/src/index.css`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+  - `apps/web/e2e/ui-smoke.spec.ts`
+- **Acceptance**:
+  - длинные placeholder/value/template строки больше не выезжают за видимые границы controls
+  - inspector остаётся читаемым на desktop widths `1280` / `1440` / `>=1600`
+  - smoke hooks не завязаны на хрупкую copy старой inspector structure
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - manual browser QA
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`
