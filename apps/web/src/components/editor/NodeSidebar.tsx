@@ -1,7 +1,6 @@
-import { useEffect, useState, type DragEvent } from 'react';
+import type { DragEvent } from 'react';
 
 import { useLocale } from '../../locale/LocaleProvider';
-import { useWorkflowEditorStore } from '../../stores/workflow-editor.store';
 import {
   createNodeSections,
   type EditorPaletteItem,
@@ -41,69 +40,14 @@ function handleDragStart(
 export function NodeSidebar() {
   const { messages } = useLocale();
   const sections = createNodeSections();
-  const nodeCount = useWorkflowEditorStore((state) => state.nodes.length);
-  const [flowHintCollapsed, setFlowHintCollapsed] = useState(nodeCount > 0);
-  const flowOrderSummary = `1. ${messages.common.nodeKindLabels.trigger} -> 2. ${messages.common.nodeKindLabels.action}`;
-
-  useEffect(() => {
-    if (nodeCount > 0) {
-      setFlowHintCollapsed(true);
-    }
-  }, [nodeCount]);
 
   return (
     <aside className="app-panel editor-rail flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="border-b border-slate-900/10 px-4 py-4">
+      <div className="border-b border-slate-900/10 px-4 py-3">
         <p className="muted-label">{messages.nodeSidebar.eyebrow}</p>
-        <div className="mt-2 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="text-[1.35rem] font-semibold tracking-tight text-slate-900">
-              {messages.nodeSidebar.title}
-            </h2>
-            <p className="mt-2 max-w-xs text-[13px] leading-5 text-slate-600">
-              {messages.nodeSidebar.description}
-            </p>
-          </div>
-          <span className="app-pill shrink-0 px-3 py-1 text-[10px] tracking-[0.16em]">
-            {messages.nodeSidebar.flowOrderLabel}
-          </span>
-        </div>
-
-        <div className="mt-4 rounded-[1.1rem] border border-slate-900/10 bg-white/70 px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="muted-label">{messages.nodeSidebar.flowOrderLabel}</p>
-              <p className="mt-1 text-[11px] font-semibold tracking-[0.12em] text-slate-500">
-                {flowOrderSummary}
-              </p>
-            </div>
-            <button
-              aria-expanded={!flowHintCollapsed}
-              className="shrink-0 rounded-full border border-slate-900/10 bg-white/92 px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:border-amber-500/30 hover:text-slate-900"
-              onClick={() => setFlowHintCollapsed((value) => !value)}
-              type="button"
-            >
-              {flowHintCollapsed
-                ? messages.nodeSidebar.showFlowHint
-                : messages.nodeSidebar.hideFlowHint}
-            </button>
-          </div>
-
-          {!flowHintCollapsed ? (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center rounded-full border border-emerald-200 bg-white/92 px-3 py-1 text-xs font-semibold text-emerald-700">
-                1. {messages.common.nodeKindLabels.trigger}
-              </span>
-              <span className="h-px w-4 bg-slate-300" />
-              <span className="inline-flex items-center rounded-full border border-sky-200 bg-white/92 px-3 py-1 text-xs font-semibold text-sky-700">
-                2. {messages.common.nodeKindLabels.action}
-              </span>
-            </div>
-          ) : null}
-        </div>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+      <div className="flex-1 space-y-3.5 overflow-y-auto px-4 py-3">
         {sections.map((section) => {
           const tone = sectionTone[section.title];
           const sectionMeta = messages.nodeSidebar.sectionMeta[section.title];

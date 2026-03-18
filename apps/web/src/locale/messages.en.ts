@@ -640,9 +640,6 @@ export const en = {
       },
     ],
     eyebrow: 'Toolbox',
-    title: 'Add steps',
-    description:
-      'Drop one trigger first, then chain actions after it.',
     sectionMeta: {
       Triggers: {
         title: 'Trigger',
@@ -655,9 +652,6 @@ export const en = {
         badge: 'Then',
       },
     },
-    flowOrderLabel: 'Flow order',
-    showFlowHint: 'Details',
-    hideFlowHint: 'Less',
     dragHint: 'Drag',
     startsWorkflow: 'Starts the workflow',
     runsAfterTrigger: 'Runs after the trigger',

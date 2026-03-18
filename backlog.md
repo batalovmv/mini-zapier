@@ -2578,3 +2578,31 @@
   - manual browser QA
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+### TASK-P7: remove redundant editor palette guidance
+- **Статус**: `done`
+- **Цель**: убрать из левой палитры editor-а дублирующий explanatory hero/help block, чтобы rail стартовала компактно и не повторяла guidance, уже показанный на canvas
+- **Scope**:
+  - удалить из `NodeSidebar` громкий header/help cluster с title, order chip, explanatory text и collapsible flow-order card
+  - подтянуть top spacing/padding левой rail после удаления hero-зоны, не меняя список шагов и категорий
+  - удалить неиспользуемые RU/EN locale keys, связанные с убранным palette guidance
+- **Не входит**:
+  - правый action inspector
+  - backend/API/store logic
+  - drag-and-drop behavior, node definitions, product flow
+  - новые зависимости
+- **Файлы**:
+  - `apps/web/src/components/editor/NodeSidebar.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+  - `backlog.md`
+  - `handoff.md`
+- **Acceptance**:
+  - левая палитра больше не дублирует инструкцию с canvas
+  - rail визуально стартует компактнее и чище, без пустой hero-зоны
+  - список шагов и категорий в палитре не сломан
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`

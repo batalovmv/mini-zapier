@@ -689,9 +689,6 @@ export const ru = {
       },
     ],
     eyebrow: 'Палитра',
-    title: 'Добавляйте шаги',
-    description:
-      'Сначала перетащите один триггер, затем выстраивайте действия.',
     sectionMeta: {
       Triggers: {
         title: 'Триггер',
@@ -704,9 +701,6 @@ export const ru = {
         badge: 'Дальше',
       },
     },
-    flowOrderLabel: 'Порядок',
-    showFlowHint: 'Подробнее',
-    hideFlowHint: 'Свернуть',
     dragHint: 'Тянуть',
     startsWorkflow: 'Запускает сценарий',
     runsAfterTrigger: 'Выполняется после триггера',
