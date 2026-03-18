@@ -696,6 +696,8 @@ export const en = {
     dragHint: 'Drag',
     startsWorkflow: 'Starts the workflow',
     runsAfterTrigger: 'Runs after the trigger',
+    collapseToolbox: 'Collapse toolbox',
+    expandToolbox: 'Node palette',
   },
   configForms: {
     cron: {

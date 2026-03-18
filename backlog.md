@@ -2760,3 +2760,22 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build` ✅
   - `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
+
+### TASK-R5: collapsible editor toolbox with localStorage persistence
+- **Статус**: `done`
+- **Цель**: сделать NodeSidebar (toolbox) сворачиваемым для освобождения canvas space
+- **Scope**:
+  - toggle button для сворачивания/разворачивания toolbox
+  - collapsed state: 48px с кнопкой "+" для раскрытия
+  - expanded state: layout как раньше (300px / canvas / 320px)
+  - localStorage persistence (ключ `mini-zapier:toolbox-collapsed`)
+  - по умолчанию expanded для первого визита
+- **Не входит**: изменение inspector ширины, изменение NodeSidebar контента, backend, canvas/node изменения
+- **Файлы**:
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+  - `apps/web/src/components/editor/NodeSidebar.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build` ✅
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` ✅

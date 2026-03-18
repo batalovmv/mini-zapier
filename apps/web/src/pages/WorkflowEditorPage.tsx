@@ -24,6 +24,7 @@ import {
 
 const ACTIVE_STATUS = 'ACTIVE' as WorkflowDto['status'];
 const PAUSED_STATUS = 'PAUSED' as WorkflowDto['status'];
+const TOOLBOX_COLLAPSED_KEY = 'mini-zapier:toolbox-collapsed';
 
 function getStatusClasses(status: WorkflowDto['status']): string {
   switch (status) {
@@ -67,6 +68,17 @@ export function WorkflowEditorPage() {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [running, setRunning] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [toolboxCollapsed, setToolboxCollapsed] = useState(() =>
+    localStorage.getItem(TOOLBOX_COLLAPSED_KEY) === 'true',
+  );
+
+  function toggleToolbox() {
+    setToolboxCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem(TOOLBOX_COLLAPSED_KEY, String(next));
+      return next;
+    });
+  }
   const { allowNextNavigation } = useUnsavedChangesGuard({
     when: hasUnsavedChanges,
     message: messages.workflowEditorPage.unsavedChangesConfirm,
@@ -299,9 +311,15 @@ export function WorkflowEditorPage() {
         ) : null}
       </section>
 
-      <section className="mx-auto grid min-h-0 w-full max-w-[1740px] flex-1 gap-3 overflow-hidden xl:grid-cols-[300px_minmax(0,1fr)_320px] xl:grid-rows-[minmax(0,1fr)] 2xl:grid-cols-[312px_minmax(0,1fr)_336px]">
+      <section
+        className={`mx-auto grid min-h-0 w-full max-w-[1740px] flex-1 gap-3 overflow-hidden xl:grid-rows-[minmax(0,1fr)] ${
+          toolboxCollapsed
+            ? 'xl:grid-cols-[48px_minmax(0,1fr)_320px] 2xl:grid-cols-[48px_minmax(0,1fr)_336px]'
+            : 'xl:grid-cols-[300px_minmax(0,1fr)_320px] 2xl:grid-cols-[312px_minmax(0,1fr)_336px]'
+        }`}
+      >
         <div className="min-h-0 overflow-hidden">
-          <NodeSidebar />
+          <NodeSidebar collapsed={toolboxCollapsed} onToggle={toggleToolbox} />
         </div>
 
         <div className="min-h-0 overflow-hidden">

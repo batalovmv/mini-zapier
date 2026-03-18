@@ -8,6 +8,11 @@ import {
 
 const DRAG_DATA_KEY = 'application/x-mini-zapier-node';
 
+interface NodeSidebarProps {
+  collapsed?: boolean;
+  onToggle?: () => void;
+}
+
 const sectionTone = {
   Triggers: {
     rule: 'bg-emerald-500',
@@ -37,14 +42,53 @@ function handleDragStart(
   );
 }
 
-export function NodeSidebar() {
+export function NodeSidebar({ collapsed, onToggle }: NodeSidebarProps) {
   const { messages } = useLocale();
   const sections = createNodeSections();
 
+  if (collapsed) {
+    return (
+      <aside className="flex h-full min-h-0 items-start justify-center pt-3">
+        <button
+          className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-900/10 bg-white/90 text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:text-slate-800 hover:shadow-md"
+          onClick={onToggle}
+          title={messages.nodeSidebar.expandToolbox}
+          type="button"
+        >
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 4v16m-8-8h16" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </aside>
+    );
+  }
+
   return (
     <aside className="app-panel editor-rail flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="border-b border-slate-900/10 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-slate-900/10 px-4 py-3">
         <p className="muted-label">{messages.nodeSidebar.eyebrow}</p>
+        <button
+          className="flex h-6 w-6 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+          onClick={onToggle}
+          title={messages.nodeSidebar.collapseToolbox}
+          type="button"
+        >
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path d="M11 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
 
       <div className="flex-1 space-y-3.5 overflow-y-auto px-4 py-3">

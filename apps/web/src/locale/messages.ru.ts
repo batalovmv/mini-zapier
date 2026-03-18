@@ -747,6 +747,8 @@ export const ru = {
     dragHint: 'Тянуть',
     startsWorkflow: 'Запускает сценарий',
     runsAfterTrigger: 'Выполняется после триггера',
+    collapseToolbox: 'Свернуть палитру',
+    expandToolbox: 'Палитра нод',
   },
   configForms: {
     cron: {
