@@ -1,5 +1,5 @@
 import toast from 'react-hot-toast';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 
 import {
   getUnsavedChangesBypassState,
@@ -40,10 +40,6 @@ export function AppHeader() {
     {
       to: '/connections',
       label: messages.header.navigation.connections,
-    },
-    {
-      to: '/workflows/new',
-      label: messages.header.navigation.createWorkflow,
     },
   ];
 
@@ -100,6 +96,13 @@ export function AppHeader() {
               </NavLink>
             ))}
           </nav>
+
+          <Link
+            className="rounded-full bg-amber-600 px-4 py-2 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-amber-700"
+            to="/workflows/new"
+          >
+            {messages.header.navigation.createWorkflow}
+          </Link>
 
           <div className="flex items-center justify-between gap-3 sm:justify-end">
             <div
