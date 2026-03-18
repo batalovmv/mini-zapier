@@ -84,6 +84,7 @@ export const ru = {
     navigation: {
       dashboard: 'Панель',
       connections: 'Подключения',
+      executions: 'Запуски',
       createWorkflow: 'Создать сценарий',
     },
     logout: 'Выйти',
@@ -279,6 +280,17 @@ export const ru = {
     running: 'Запуск...',
     updating: 'Обновление...',
     deleting: 'Удаление...',
+  },
+  globalExecutionHistoryPage: {
+    eyebrow: 'Все запуски',
+    title: 'История запусков',
+    tableTitle: 'Все запуски сценариев',
+    allWorkflows: 'Все сценарии',
+    emptyTitle: 'Запусков пока нет',
+    emptyDescription: 'Запустите сценарий, чтобы увидеть историю здесь.',
+    columns: {
+      workflow: 'Сценарий',
+    },
   },
   executionHistoryPage: {
     eyebrow: 'История запусков',

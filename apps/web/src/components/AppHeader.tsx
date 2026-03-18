@@ -41,6 +41,10 @@ export function AppHeader() {
       to: '/connections',
       label: messages.header.navigation.connections,
     },
+    {
+      to: '/executions',
+      label: messages.header.navigation.executions,
+    },
   ];
 
   async function handleLogout() {

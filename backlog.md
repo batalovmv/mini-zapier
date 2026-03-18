@@ -2789,3 +2789,23 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build` ✅
   - `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
+
+### TASK-R12: add global execution history page with filters
+- **Статус**: `done`
+- **Цель**: глобальная страница /executions со списком всех запусков пользователя, фильтрами по status и workflow, pagination
+- **Scope**: backend endpoint GET /api/executions + frontend page + nav pill
+- **Файлы**:
+  - `apps/api/src/execution/execution.controller.ts`
+  - `apps/api/src/execution/execution.service.ts`
+  - `apps/api/src/execution/dto/list-all-executions-query.dto.ts`
+  - `apps/web/src/pages/GlobalExecutionHistoryPage.tsx`
+  - `apps/web/src/App.tsx`
+  - `apps/web/src/components/AppHeader.tsx`
+  - `apps/web/src/lib/api/executions.ts`
+  - `apps/web/src/lib/api/types.ts`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/api build` ✅
+  - `pnpm --filter @mini-zapier/web build` ✅
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` — 4 smoke tests ✅

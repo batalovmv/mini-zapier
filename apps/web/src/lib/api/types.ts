@@ -150,3 +150,19 @@ export interface ExecutionListResponse
   extends PaginatedResponse<WorkflowExecutionDto> {
   counts: ExecutionCounts;
 }
+
+export interface GlobalExecutionItem extends WorkflowExecutionDto {
+  workflowName: string;
+}
+
+export interface GlobalExecutionListParams {
+  page?: number;
+  limit?: number;
+  status?: ExecutionListStatusFilter;
+  workflowId?: string;
+}
+
+export interface GlobalExecutionListResponse
+  extends PaginatedResponse<GlobalExecutionItem> {
+  counts: ExecutionCounts;
+}

@@ -6,6 +6,8 @@ import {
   ExecutionListParams,
   ExecutionListResponse,
   ExecutionStartResponse,
+  GlobalExecutionListParams,
+  GlobalExecutionListResponse,
 } from './types';
 
 export async function executeWorkflow(
@@ -51,6 +53,17 @@ export async function testStep(
   const response = await apiClient.post<StepTestResponse>(
     `/workflows/${workflowId}/steps/test`,
     body,
+  );
+
+  return response.data;
+}
+
+export async function listAllExecutions(
+  params?: GlobalExecutionListParams,
+): Promise<GlobalExecutionListResponse> {
+  const response = await apiClient.get<GlobalExecutionListResponse>(
+    '/executions',
+    { params },
   );
 
   return response.data;

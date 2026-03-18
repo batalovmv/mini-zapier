@@ -9,6 +9,7 @@ import { EditorLayout } from './layouts/EditorLayout';
 import { ConnectionsPage } from './pages/ConnectionsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ExecutionHistoryPage } from './pages/ExecutionHistoryPage';
+import { GlobalExecutionHistoryPage } from './pages/GlobalExecutionHistoryPage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -50,6 +51,10 @@ const router = createBrowserRouter([
           {
             path: 'connections',
             element: <ConnectionsPage />,
+          },
+          {
+            path: 'executions',
+            element: <GlobalExecutionHistoryPage />,
           },
           {
             path: 'workflows/:id/history',

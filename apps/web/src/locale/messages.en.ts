@@ -83,6 +83,7 @@ export const en = {
     navigation: {
       dashboard: 'Dashboard',
       connections: 'Connections',
+      executions: 'Executions',
       createWorkflow: 'Create Workflow',
     },
     logout: 'Logout',
@@ -251,6 +252,17 @@ export const en = {
     running: 'Running...',
     updating: 'Updating...',
     deleting: 'Deleting...',
+  },
+  globalExecutionHistoryPage: {
+    eyebrow: 'All executions',
+    title: 'Execution History',
+    tableTitle: 'All workflow runs',
+    allWorkflows: 'All workflows',
+    emptyTitle: 'No executions yet',
+    emptyDescription: 'Run a workflow to see its execution history here.',
+    columns: {
+      workflow: 'Workflow',
+    },
   },
   executionHistoryPage: {
     eyebrow: 'Execution history',

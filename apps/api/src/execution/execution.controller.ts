@@ -24,11 +24,13 @@ import { StepTestResponse, WorkflowExecutionDto } from '@mini-zapier/shared';
 import type { AuthenticatedUser } from '../auth/auth.service';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { AvailableFieldsResponseDto } from './dto/available-fields-response.dto';
+import { ListAllExecutionsQueryDto } from './dto/list-all-executions-query.dto';
 import { StepTestBodyDto } from './dto/step-test.dto';
 import { ListExecutionsQueryDto } from './dto/list-executions-query.dto';
 import {
   ExecutionListResponse,
   ExecutionService,
+  GlobalExecutionListResponse,
 } from './execution.service';
 
 @ApiTags('executions')
@@ -120,6 +122,22 @@ export class ExecutionController {
     @Param('id') workflowId: string,
   ): Promise<AvailableFieldsResponseDto> {
     return this.executionService.getAvailableFields(currentUser.id, workflowId);
+  }
+
+  @Get('executions')
+  @ApiOperation({
+    summary: 'List all executions for the current user with optional filters',
+  })
+  @ApiOkResponse({
+    description:
+      'All user executions returned with aggregate counts and workflow names.',
+  })
+  @ApiBadRequestResponse({ description: 'Pagination is invalid.' })
+  listAllExecutions(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Query() query: ListAllExecutionsQueryDto,
+  ): Promise<GlobalExecutionListResponse> {
+    return this.executionService.listAllExecutions(currentUser.id, query);
   }
 
   @Get('executions/:id')

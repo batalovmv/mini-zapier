@@ -33,6 +33,7 @@ import {
   resolveChainPositions,
 } from './available-fields.util';
 import { AvailableFieldsResponseDto } from './dto/available-fields-response.dto';
+import { ListAllExecutionsQueryDto } from './dto/list-all-executions-query.dto';
 import {
   ExecutionListStatusFilter,
   ListExecutionsQueryDto,
@@ -57,6 +58,18 @@ export interface StartExecutionResult {
 
 export interface ExecutionListResponse {
   items: WorkflowExecutionDto[];
+  total: number;
+  page: number;
+  limit: number;
+  counts: ExecutionCounts;
+}
+
+export interface GlobalExecutionItem extends WorkflowExecutionDto {
+  workflowName: string;
+}
+
+export interface GlobalExecutionListResponse {
+  items: GlobalExecutionItem[];
   total: number;
   page: number;
   limit: number;
@@ -319,6 +332,74 @@ export class ExecutionService {
     };
   }
 
+  async listAllExecutions(
+    userId: string,
+    query: ListAllExecutionsQueryDto,
+  ): Promise<GlobalExecutionListResponse> {
+    const page = this.parsePositiveInteger(query.page, 'page', DEFAULT_PAGE);
+    const limit = this.parsePositiveInteger(query.limit, 'limit', DEFAULT_LIMIT);
+
+    const baseWhere: Prisma.WorkflowExecutionWhereInput = {
+      workflow: { is: { userId } },
+      ...(query.workflowId ? { workflowId: query.workflowId } : {}),
+    };
+
+    const statusWhere = this.buildGlobalStatusWhere(baseWhere, query.status);
+    const countBase: Prisma.WorkflowExecutionWhereInput = {
+      workflow: { is: { userId } },
+      ...(query.workflowId ? { workflowId: query.workflowId } : {}),
+    };
+
+    const [
+      total,
+      executions,
+      allCount,
+      successCount,
+      failedCount,
+      inProgressCount,
+    ] = await this.prisma.$transaction([
+      this.prisma.workflowExecution.count({ where: statusWhere }),
+      this.prisma.workflowExecution.findMany({
+        where: statusWhere,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          workflow: { select: { name: true } },
+        },
+      }),
+      this.prisma.workflowExecution.count({ where: countBase }),
+      this.prisma.workflowExecution.count({
+        where: { ...countBase, status: ExecutionStatus.SUCCESS },
+      }),
+      this.prisma.workflowExecution.count({
+        where: { ...countBase, status: ExecutionStatus.FAILED },
+      }),
+      this.prisma.workflowExecution.count({
+        where: {
+          ...countBase,
+          status: { in: [ExecutionStatus.PENDING, ExecutionStatus.RUNNING] },
+        },
+      }),
+    ]);
+
+    return {
+      items: executions.map((execution) => ({
+        ...this.toWorkflowExecutionDto(execution),
+        workflowName: execution.workflow.name,
+      })),
+      total,
+      page,
+      limit,
+      counts: {
+        all: allCount,
+        success: successCount,
+        failed: failedCount,
+        inProgress: inProgressCount,
+      },
+    };
+  }
+
   async getExecution(
     userId: string,
     executionId: string,
@@ -551,6 +632,26 @@ export class ExecutionService {
       workflowId,
       status,
     };
+  }
+
+  private buildGlobalStatusWhere(
+    base: Prisma.WorkflowExecutionWhereInput,
+    status?: ExecutionListStatusFilter,
+  ): Prisma.WorkflowExecutionWhereInput {
+    if (!status) {
+      return base;
+    }
+
+    if (status === ExecutionListStatusFilter.IN_PROGRESS) {
+      return {
+        ...base,
+        status: {
+          in: [ExecutionStatus.PENDING, ExecutionStatus.RUNNING],
+        },
+      };
+    }
+
+    return { ...base, status };
   }
 
 
