@@ -2136,3 +2136,34 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+### TASK-N7: remove standalone workflow start page
+- **Статус**: `done`
+- **Цель**: убрать отдельную страницу выбора стартового шаблона, чтобы создание workflow начиналось сразу в editor и не добавляло пустой промежуточный экран
+- **Scope**:
+  - перевести маршрут `/workflows/new` сразу в `WorkflowEditorPage` внутри `EditorLayout`
+  - удалить standalone template picker, template helper и store/editor wiring через `location.state.templateId`
+  - синхронизировать Playwright smoke с новым create-route
+  - подтвердить локально, что `apps/web` собирается, а smoke suite парсится
+- **Не входит**:
+  - новый onboarding внутри editor
+  - новые starter templates или альтернативный create hub
+  - backend/API changes
+- **Файлы**:
+  - `apps/web/src/App.tsx`
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+  - `apps/web/src/stores/workflow-editor.store.ts`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+  - `apps/web/src/pages/TemplatePickerPage.tsx`
+  - `apps/web/src/lib/workflow-templates.ts`
+  - `apps/web/e2e/ui-smoke.spec.ts`
+- **Acceptance**:
+  - `Create workflow` entry points открывают `/workflows/new`, и этот URL сразу рендерит blank editor
+  - в web-коде больше нет standalone template picker route/page, template helper и template-based prefill через navigation state
+  - Playwright smoke использует новый маршрут `/workflows/new`
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`

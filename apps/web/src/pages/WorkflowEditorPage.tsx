@@ -1,7 +1,7 @@
 import type { WorkflowDto } from '@mini-zapier/shared';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { ConfigPanel } from '../components/editor/ConfigPanel';
 import { FlowCanvas } from '../components/editor/FlowCanvas';
@@ -17,7 +17,6 @@ import {
   updateWorkflow,
   updateWorkflowStatus,
 } from '../lib/api/workflows';
-import { getTemplateById } from '../lib/workflow-templates';
 import {
   hasUnsavedWorkflowChanges,
   useWorkflowEditorStore,
@@ -25,10 +24,6 @@ import {
 
 const ACTIVE_STATUS = 'ACTIVE' as WorkflowDto['status'];
 const PAUSED_STATUS = 'PAUSED' as WorkflowDto['status'];
-
-interface WorkflowEditorLocationState {
-  templateId?: string;
-}
 
 function getStatusClasses(status: WorkflowDto['status']): string {
   switch (status) {
@@ -49,14 +44,8 @@ function getDirtyStateClasses(hasUnsavedChanges: boolean): string {
 
 export function WorkflowEditorPage() {
   const { id = 'new' } = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
   const { messages } = useLocale();
-  const templateId =
-    typeof (location.state as WorkflowEditorLocationState | null)?.templateId ===
-    'string'
-      ? (location.state as WorkflowEditorLocationState).templateId!
-      : null;
 
   const workflowId = useWorkflowEditorStore((state) => state.workflowId);
   const workflowName = useWorkflowEditorStore((state) => state.workflowName);
@@ -65,7 +54,6 @@ export function WorkflowEditorPage() {
   const hasUnsavedChanges = useWorkflowEditorStore(hasUnsavedWorkflowChanges);
   const setWorkflowName = useWorkflowEditorStore((state) => state.setWorkflowName);
   const resetEditor = useWorkflowEditorStore((state) => state.resetEditor);
-  const loadTemplate = useWorkflowEditorStore((state) => state.loadTemplate);
   const loadWorkflow = useWorkflowEditorStore((state) => state.loadWorkflow);
   const validateWorkflow = useWorkflowEditorStore(
     (state) => state.validateWorkflow,
@@ -92,21 +80,6 @@ export function WorkflowEditorPage() {
 
       if (id === 'new') {
         setLoading(false);
-
-        if (templateId) {
-          const template = getTemplateById(templateId);
-
-          if (template) {
-            loadTemplate(
-              messages.templatePickerPage[template.suggestedNameKey],
-              template.nodes,
-              template.edges,
-              messages.workflowEditorPage.untitledWorkflow,
-            );
-            return;
-          }
-        }
-
         resetEditor(messages.workflowEditorPage.untitledWorkflow);
         return;
       }
@@ -138,12 +111,9 @@ export function WorkflowEditorPage() {
     };
   }, [
     id,
-    loadTemplate,
     loadWorkflow,
-    messages.templatePickerPage,
     messages.workflowEditorPage.untitledWorkflow,
     resetEditor,
-    templateId,
   ]);
 
   async function handleSave() {

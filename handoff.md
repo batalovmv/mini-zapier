@@ -3,14 +3,13 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-N6 — `repair live smoke after HTTP advanced nesting`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт
+- **Последнее изменение**: TASK-N7 — `remove standalone workflow start page`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
-  - Template picker (`/workflows/new`): 3 карточки (Webhook→Telegram, Cron→Email, Blank Workflow) — ✅
+  - **TASK-N7 local verification**: `/workflows/new` теперь сразу открывает blank editor внутри `EditorLayout`; standalone template picker, template prefill и связанные locale/store helpers удалены, `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
   - Editor canvas: все 3 trigger types (Webhook, Cron, Email Trigger) + все 5 action types (HTTP Request, Email, Telegram, PostgreSQL Query, Data Transform) — узлы drag-and-drop, config panels — ✅
-  - **TASK-055 save+reopen**: Webhook→Telegram template → save → dashboard → reopen editor — узлы и связи intact ✅; Cron→Email template → save → dashboard → reopen editor — intact ✅
   - **TASK-056 preview UI**: Email config → кнопка «▸ Предпросмотр» → empty state корректный; Telegram config → аналогично ✅
   - **TASK-A local build**: editor dirty-state + route/beforeunload guard собраны локально, `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-B local build**: rejected editor connections теперь показывают явную причину через toast, `pnpm --filter @mini-zapier/web build` ✅
@@ -53,6 +52,16 @@
     - `pnpm --filter @mini-zapier/web exec playwright test --list` ✓
   - **Ограничения TASK-N6**:
     - green live CI для hotfix-коммита ещё не подтверждён в этом handoff; локально закрыты только build + smoke parsing
+- **Что сделано в TASK-N7**:
+  - `apps/web/src/App.tsx` — маршрут `/workflows/new` перенесён в `EditorLayout`, поэтому все существующие CTA создания сценария теперь сразу открывают editor без промежуточной страницы
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`, `apps/web/src/stores/workflow-editor.store.ts` — удалены `location.state.templateId`, `getTemplateById()` и `loadTemplate()`; unsaved create-flow теперь всегда стартует с blank draft через `resetEditor()`
+  - `apps/web/src/pages/TemplatePickerPage.tsx`, `apps/web/src/lib/workflow-templates.ts`, `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — удалены standalone template picker, starter-template helper и мёртвый locale copy
+  - `apps/web/e2e/ui-smoke.spec.ts` — smoke-сценарии переведены на новый create-route `/workflows/new`, чтобы тестовый вход совпадал с продуктовым entry point
+  - **Проверки TASK-N7**:
+    - `pnpm --filter @mini-zapier/web build` ✓
+    - `pnpm --filter @mini-zapier/web exec playwright test --list` ✓
+  - **Ограничения TASK-N7**:
+    - live browser QA/deploy для нового create-flow в этой сессии не запускались; подтверждена только локальная сборка и parsing smoke suite
 - **Что сделано в TASK-N4**:
   - `apps/web/src/components/editor/config-forms/WebhookConfig.tsx` — URL и copy-actions собраны в dominant primary block, при этом сохранены `webhook-url-input`, `Copy URL`, `Copy curl` и честный placeholder для несохранённого workflow; security и dedupe перенесены в quieter secondary help block
   - `apps/web/src/components/editor/config-forms/EmailTriggerConfig.tsx` — inbound URL стал главным surface для настройки триггера, а provider/signature guidance вынесен в отдельный secondary help block без добавления preview/test behavior
@@ -671,7 +680,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-TASK-N6 закрыт локально: следующий практический шаг — запушить hotfix-коммит в `main` и дождаться зелёного GitHub Actions `CI`, чтобы подтвердить, что post-deploy smoke снова проходит после переноса `HTTP Request` headers в local advanced section.
+TASK-N7 закрыт локально: следующий практический шаг — запушить коммит в `main` и после deploy вручную проверить create entry points (`header`, `dashboard`, empty list`) и маршрут `/workflows/new`, чтобы подтвердить, что blank editor открывается напрямую без regressions в navigation.
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke против live Vercel не запускался; для TASK-J локальная проверка ограничена `build` + `playwright test --list`.
@@ -835,3 +844,4 @@ TASK-N6 закрыт локально: следующий практически
 | TASK-N4 | done | см. `git log` (`TASK-N4: align trigger forms with inspector shell`) | Trigger inspectors now share the same shell rhythm: Webhook/Email keep the URL primary, Cron leads with visual scheduling, and security/raw guidance moves into secondary help/advanced surfaces |
 | TASK-N5 | done | см. `git log` (`TASK-N5: finalize inspector status and copy polish`) | Inspector header/status and Step Test gating now resolve honestly across saved state, connection blockers and last test results, while EN/RU shell copy drops the remaining unused progress-model keys |
 | TASK-N6 | done | см. `git log` (`TASK-N6: repair live smoke after HTTP advanced nesting`) | HTTP Request advanced section now exposes a stable `http-advanced-toggle`, and the live smoke opens it before looking for nested headers controls |
+| TASK-N7 | done | см. `git log` (`TASK-N7: remove standalone workflow start page`) | `/workflows/new` now opens the blank editor directly; standalone template picker, template prefill wiring and related locale/store code removed; smoke switched to the new route |

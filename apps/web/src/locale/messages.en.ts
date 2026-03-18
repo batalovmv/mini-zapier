@@ -291,21 +291,6 @@ export const en = {
     statusUpdatedToast: (status: string) => `Workflow is now ${status}.`,
     executionStartedToast: 'Execution started.',
   },
-  templatePickerPage: {
-    title: 'Create Workflow',
-    subtitle: 'Choose a starter template or start from scratch.',
-    templateBadge: 'Starter',
-    blankBadge: 'Blank',
-    blankTitle: 'Blank Workflow',
-    blankDescription: 'Start with an empty canvas.',
-    webhookTelegramTitle: 'Webhook → Telegram',
-    webhookTelegramDescription:
-      'Receive webhook events and send a Telegram message.',
-    webhookTelegramSuggestedName: 'Webhook to Telegram',
-    cronEmailTitle: 'Cron → Email',
-    cronEmailDescription: 'Run on a schedule and send an email report.',
-    cronEmailSuggestedName: 'Cron to Email',
-  },
   configPanel: {
     noFormAvailable: 'No editor form is available for this node type.',
     emptyEyebrow: 'Step setup',

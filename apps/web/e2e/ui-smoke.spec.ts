@@ -150,7 +150,7 @@ async function connectNodesWithTestHelper(
 
 test('blocks adding a second trigger to the canvas', async ({ page }) => {
   await signIn(page);
-  await page.goto('/workflows/new/edit');
+  await page.goto('/workflows/new');
   await expect(page.getByTestId('workflow-name-input')).toBeVisible();
 
   await dropPaletteItem({
@@ -180,7 +180,7 @@ test('blocks adding a second trigger to the canvas', async ({ page }) => {
 
 test('blocks saving a workflow that only contains a trigger', async ({ page }) => {
   await signIn(page);
-  await page.goto('/workflows/new/edit');
+  await page.goto('/workflows/new');
   await expect(page.getByTestId('workflow-name-input')).toBeVisible();
 
   await dropPaletteItem({
@@ -217,7 +217,7 @@ test('blocks saving disconnected node chains before the API request', async ({
   });
 
   await signIn(page);
-  await page.goto('/workflows/new/edit');
+  await page.goto('/workflows/new');
   await expect(page.getByTestId('workflow-name-input')).toBeVisible();
 
   await dropPaletteItem({
@@ -325,7 +325,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
   try {
     await signIn(page);
 
-    await page.goto('/workflows/new/edit');
+    await page.goto('/workflows/new');
     await expect(page.getByTestId('workflow-name-input')).toBeVisible();
 
     await page.getByTestId('workflow-name-input').fill(workflowName);

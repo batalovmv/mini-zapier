@@ -455,12 +455,6 @@ interface WorkflowEditorStore {
   removeNode: (nodeId: string) => void;
   validateWorkflow: () => WorkflowValidationError[];
   resetEditor: (defaultWorkflowName?: string) => void;
-  loadTemplate: (
-    workflowName: string,
-    nodes: WorkflowEditorNode[],
-    edges: WorkflowEditorEdge[],
-    defaultWorkflowName?: string,
-  ) => void;
   loadWorkflow: (workflow: WorkflowDto) => void;
   saveWorkflow: (defaultWorkflowName?: string) => WorkflowMutationInput;
 }
@@ -690,24 +684,6 @@ export const useWorkflowEditorStore = create<WorkflowEditorStore>((set, get) => 
       viewport: null,
       nodes: [],
       edges: [],
-      selectedNodeId: null,
-      savedWorkflowSnapshot: getEmptyDraftSnapshot(defaultWorkflowName),
-      savedStructuralFingerprint: null,
-      stepTestResults: {},
-    });
-  },
-
-  loadTemplate(workflowName, nodes, edges, defaultWorkflowName = DEFAULT_WORKFLOW_NAME) {
-    set({
-      workflowId: null,
-      workflowName,
-      workflowStatus: DEFAULT_WORKFLOW_STATUS,
-      workflowVersion: null,
-      workflowDescription: null,
-      workflowTimezone: null,
-      viewport: null,
-      nodes,
-      edges,
       selectedNodeId: null,
       savedWorkflowSnapshot: getEmptyDraftSnapshot(defaultWorkflowName),
       savedStructuralFingerprint: null,
