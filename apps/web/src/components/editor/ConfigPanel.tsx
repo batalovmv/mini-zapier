@@ -30,12 +30,10 @@ export type ConfigUpdater = (
   updater: (prev: Record<string, unknown>) => Record<string, unknown>,
 ) => void;
 
-const railSectionClass =
-  'rounded-[1.55rem] border border-slate-900/10 bg-white/88 px-4 py-4 shadow-[0_18px_34px_-30px_rgba(15,23,42,0.24)]';
+const railSectionClass = 'editor-inspector-panel px-3.5 py-3.5';
 const railSectionMutedClass =
-  'rounded-[1.55rem] border border-slate-900/10 bg-[linear-gradient(180deg,rgba(250,246,239,0.94)_0%,rgba(255,255,255,0.84)_100%)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]';
-const sectionEyebrowClass =
-  'text-[11px] font-semibold tracking-[0.16em] text-slate-500';
+  'editor-inspector-panel editor-inspector-panel-secondary editor-inspector-panel-muted px-3.5 py-3.5';
+const sectionEyebrowClass = 'editor-inspector-eyebrow';
 
 export function ConfigPanel({ workflowId }: ConfigPanelProps) {
   const { messages } = useLocale();
@@ -219,16 +217,16 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
 
   if (!selectedNode) {
     return (
-      <aside className="app-panel editor-rail flex h-full min-h-0 flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto px-5 py-5">
+      <aside className="app-panel editor-rail editor-inspector flex h-full min-h-0 flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto px-4 py-4">
           <section className={railSectionMutedClass}>
             <p className={sectionEyebrowClass}>
               {messages.configPanel.emptyEyebrow}
             </p>
-            <h2 className="mt-2 text-[1.3rem] font-semibold leading-tight tracking-tight text-slate-900">
+            <h2 className="mt-1.5 text-[1.22rem] font-semibold leading-tight tracking-tight text-slate-900">
               {messages.configPanel.emptyTitle}
             </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+            <p className="mt-1.5 text-sm leading-6 text-slate-600">
               {messages.configPanel.emptyDescription}
             </p>
           </section>
@@ -278,11 +276,11 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
 
   return (
     <>
-      <aside className="app-panel editor-rail flex h-full min-h-0 flex-col overflow-hidden">
-        <div className="border-b border-slate-900/10 px-5 py-5">
+      <aside className="app-panel editor-rail editor-inspector flex h-full min-h-0 flex-col overflow-hidden">
+        <div className="border-b border-slate-900/8 px-4 py-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-[1.42rem] font-semibold leading-tight tracking-tight text-slate-900">
+              <h2 className="text-[1.32rem] font-semibold leading-tight tracking-tight text-slate-900">
                 {selectedNodeLabel}
               </h2>
               <span className={`app-pill ${nodeKindChipClass}`}>
@@ -290,7 +288,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
               </span>
             </div>
             <p
-              className="mt-2 text-sm leading-6 text-slate-600"
+              className="mt-1.5 text-sm leading-6 text-slate-600"
               data-testid="config-panel-status-line"
             >
               {headerStatusLine}
@@ -298,19 +296,21 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
           </div>
         </div>
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+        <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
           {definition?.connectionType ? (
             <section className={railSectionClass}>
-              <h3 className="text-sm font-semibold tracking-tight text-slate-900">
-                {messages.configPanel.connectionEyebrow}
-              </h3>
+              <div className="editor-inspector-copy">
+                <h3 className="text-sm font-semibold tracking-tight text-slate-900">
+                  {messages.configPanel.connectionEyebrow}
+                </h3>
+              </div>
 
-              <div className="mt-3">
+              <div className="mt-3 space-y-3">
                 <select
                   aria-label={messages.configPanel.selectConnection(
                     connectionTypeLabel ?? definition.connectionType,
                   )}
-                  className="w-full rounded-[1.15rem] border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                  className="w-full rounded-xl border border-slate-900/10 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                   data-testid="connection-select"
                   onChange={(event) =>
                     updateNodeMeta(selectedNode.id, {
@@ -334,52 +334,53 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <button
-                  className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white"
-                  data-testid="create-connection-button"
-                  onClick={() => setCreateDialogOpen(true)}
-                  type="button"
-                >
-                  {messages.configPanel.createConnection}
-                </button>
-                <button
-                  className="text-xs font-semibold text-slate-500 transition hover:text-slate-800"
-                  onClick={() => void loadConnections().catch(() => undefined)}
-                  type="button"
-                >
-                  {messages.configPanel.refreshConnections}
-                </button>
-              </div>
-
-              {loading ? (
-                <p className="mt-3 text-xs leading-5 text-slate-500">
-                  {messages.configPanel.loadingConnectionsDescription}
-                </p>
-              ) : null}
-
-              {!loading && availableConnections.length === 0 ? (
-                <p className="mt-3 text-xs leading-5 text-slate-500">
-                  {messages.configPanel.noConnectionsDescription(
-                    connectionTypeLabel ?? definition.connectionType,
-                  )}
-                </p>
-              ) : null}
-
-              {connectionsError ? (
-                <div className="mt-4 rounded-[1.15rem] border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm text-rose-700">
-                  {connectionsError}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    className="editor-inspector-toggle"
+                    data-testid="create-connection-button"
+                    onClick={() => setCreateDialogOpen(true)}
+                    type="button"
+                  >
+                    {messages.configPanel.createConnection}
+                  </button>
+                  <button
+                    className="editor-inspector-link"
+                    onClick={() => void loadConnections().catch(() => undefined)}
+                    type="button"
+                  >
+                    {messages.configPanel.refreshConnections}
+                  </button>
                 </div>
-              ) : null}
+
+                {loading ? (
+                  <p className="text-xs leading-5 text-slate-500">
+                    {messages.configPanel.loadingConnectionsDescription}
+                  </p>
+                ) : null}
+
+                {!loading && availableConnections.length === 0 ? (
+                  <p className="text-xs leading-5 text-slate-500">
+                    {messages.configPanel.noConnectionsDescription(
+                      connectionTypeLabel ?? definition.connectionType,
+                    )}
+                  </p>
+                ) : null}
+
+                {connectionsError ? (
+                  <div className="rounded-xl border border-rose-200 bg-rose-50/90 px-3 py-2.5 text-sm text-rose-700">
+                    {connectionsError}
+                  </div>
+                ) : null}
+              </div>
             </section>
           ) : null}
 
           <section className={railSectionClass}>
-            <h3 className="text-sm font-semibold tracking-tight text-slate-900">
-              {messages.configPanel.nodeSettingsEyebrow}
-            </h3>
+            <div className="editor-inspector-copy">
+              <h3 className="text-sm font-semibold tracking-tight text-slate-900">
+                {messages.configPanel.nodeSettingsEyebrow}
+              </h3>
+            </div>
 
             <div key={selectedNode.id} className="mt-3">
               {renderConfigForm({
@@ -393,7 +394,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
             </div>
 
             {!definition?.connectionType && connectionsError ? (
-              <div className="mt-4 rounded-[1.15rem] border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm text-rose-700">
+              <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50/90 px-3 py-2.5 text-sm text-rose-700">
                 {connectionsError}
               </div>
             ) : null}
@@ -412,10 +413,10 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
           ) : null}
         </div>
 
-        <div className="border-t border-slate-900/8 px-5 py-4">
+        <div className="border-t border-slate-900/8 px-4 py-3.5">
           <div className="flex justify-end">
             <button
-              className="text-xs font-semibold text-slate-500 transition hover:text-rose-700"
+              className="editor-inspector-link text-rose-700 hover:text-rose-800"
               data-testid="delete-node-button"
               onClick={() => setDeleteDialogOpen(true)}
               type="button"

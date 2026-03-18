@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-P4 — `plan action inspector density follow-up`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт + TASK-O5 закрыт + TASK-O6 закрыт + TASK-P1 закрыт + TASK-P2 закрыт + TASK-P3 закрыт + TASK-P4 закрыт; основной dashboard redesign track закрыт, editor workspace hierarchy command bar follow-up закрыт, финальный dashboard polish-pass закрыт, запланирован новый editor inspector follow-up `TASK-P5`–`TASK-P6` для flatten/density/overflow narrow rail
+- **Последнее изменение**: TASK-P5 — `flatten action inspector hierarchy and reclaim rail width`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт + TASK-O5 закрыт + TASK-O6 закрыт + TASK-P1 закрыт + TASK-P2 закрыт + TASK-P3 закрыт + TASK-P4 закрыт + TASK-P5 закрыт; основной dashboard redesign track закрыт, editor workspace hierarchy command bar follow-up закрыт, финальный dashboard polish-pass закрыт, editor inspector structural flatten/density pass завершён, следующий follow-up `TASK-P6` закрывает overflow/responsive QA и smoke stabilization narrow rail
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -20,6 +20,7 @@
   - **TASK-P2 local verification**: проведён manual QA route по пустому workflow, `trigger -> action`, `HTTP Request`, `DB Query`, `Data Transform`, `Email` и `Telegram` на desktop ширинах около `1280`, `1440` и `>=1600`; подтверждён только один residual defect: chip inspector у `TemplatedField` рендерился относительно неправильного ancestor и уезжал к верху inspector rail вместо позиции рядом с выбранным chip. Корневой контейнер `TemplatedField` переведён в `relative`, после чего overlay снова якорится рядом с chip; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
 - **TASK-P3 local verification**: верх editor-а пересобран из высокой hero-like card в компактный command bar: `Back` стал quieter text-action, workflow name поднят в доминирующий anchor, `status` / `dirty` / `version` сжаты в secondary meta chips, а `Save` остался primary при secondary `Activate/Pause` и `Run`; вертикальный gap между header и workspace уменьшен без изменения handlers, store logic или editor behavior. Локально подтверждены `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
 - **TASK-P4 planning**: narrow action inspector rail получил отдельный follow-up track; structural flatten/chrome cleanup и overflow/test stabilization разведены по отдельным задачам `TASK-P5` и `TASK-P6`, чтобы убрать nested-card hierarchy без смешивания redesign и residual QA
+- **TASK-P5 local verification**: правый action inspector перестроен в более плоский и плотный tool-panel; `ConfigPanel`, `Step Test`, `HTTP Request`, `Email`, `Telegram`, `DB Query` и `Data Transform` убрали лишние nested surfaces, repeated rows переведены в compact row groups, rail-specific CSS/copy ужаты только для action path без изменения trigger forms, backend/store/API logic или semantics конфигов; локально подтверждены `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
 - **TASK-O6 local verification**: workflow rows больше не дублируют `PAUSED`/`DRAFT` через `status` + `attention reason`; row-level attention сохранён только для `Failed last run` и `Active without runs`, правая колонка `recent activity` получила compact empty + featured single-item state для `0-1` событий, а dashboard surfaces/chips/padding/shadows ужаты без изменения filters/sort/actions; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
   - Editor canvas: все 3 trigger types (Webhook, Cron, Email Trigger) + все 5 action types (HTTP Request, Email, Telegram, PostgreSQL Query, Data Transform) — узлы drag-and-drop, config panels — ✅
   - **TASK-056 preview UI**: Email config → кнопка «▸ Предпросмотр» → empty state корректный; Telegram config → аналогично ✅
@@ -777,17 +778,17 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-Следующий рабочий срез: `TASK-P5 — flatten action inspector hierarchy and reclaim rail width`.
+Следующий рабочий срез: `TASK-P6 — inspector overflow, responsive QA and smoke stabilization`.
 
 Перед исполнением:
-- не трогать trigger forms и backend/API
-- держать scope только внутри action inspector shell, action config forms, rail-specific CSS и связанного RU/EN copy
-- не смешивать structural flatten с residual overflow QA из `TASK-P6`
+- не открывать новый redesign track: structural flatten из `TASK-P5` уже закрыт
+- держать scope только внутри residual narrow-rail defects: long-text overflow, placeholder clipping, responsive regressions и smoke/test hooks после обновлённого inspector DOM
+- trigger forms, backend/API/store logic не трогать без compile-fix необходимости
 
-После `TASK-P5` отдельным follow-up идёт `TASK-P6`:
+В `TASK-P6`:
 - long-text overflow / placeholder clipping
 - manual desktop QA `1280` / `1440` / `>=1600`
-- smoke/test hook stabilization, если DOM inspector-а изменится
+- smoke/test hook stabilization, если DOM inspector-а после `TASK-P5` требует более устойчивых selectors
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke против live Vercel не запускался; для TASK-J локальная проверка ограничена `build` + `playwright test --list`.
@@ -964,3 +965,4 @@
 | TASK-P2 | done | см. `git log` (`TASK-P2: fix editor page residual layout defects`) | Manual editor QA after workspace rebalance confirmed one residual templated-chip overlay defect; fixed `ChipInspector` anchoring in `TemplatedField` without expanding redesign scope |
 | TASK-P3 | done | см. `git log` (`TASK-P3: compact workflow editor command bar`) | Rebuilt the editor header into a compact command bar with a quieter back action, dominant workflow name, secondary meta chips, and tighter top spacing while keeping button behavior unchanged |
 | TASK-P4 | done | см. `git log` (`TASK-P4: plan action inspector density follow-up`) | Defined the next editor inspector track: `TASK-P5` handles structural flatten and width reclaim, while `TASK-P6` closes overflow/responsive/smoke stabilization |
+| TASK-P5 | done | см. `git log` (`TASK-P5: flatten action inspector hierarchy`) | Flattened the action inspector into a denser tool-panel: lighter shell, compact secondary Preview/Advanced/Step Test sections, row-group repeated controls, tighter rail CSS/copy, and passing web build + Playwright test list |

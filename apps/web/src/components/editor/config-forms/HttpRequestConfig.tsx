@@ -79,6 +79,16 @@ interface HttpRequestConfigProps {
   onChange: ConfigUpdater;
 }
 
+const secondarySectionClass =
+  'editor-inspector-panel editor-inspector-panel-secondary px-3 py-3';
+const rowGroupClass = 'editor-inspector-row-group';
+const rowClass =
+  'editor-inspector-row sm:grid sm:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)_auto] sm:items-start';
+const fieldInputClass =
+  'w-full rounded-xl border border-slate-900/10 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-amber-500';
+const removeButtonClass =
+  'flex h-7 w-7 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 sm:justify-self-end';
+
 export function HttpRequestConfig({
   config,
   onChange,
@@ -257,22 +267,18 @@ export function HttpRequestConfig({
   const showContentTypeHint = hasBody && !hasContentType(config);
 
   return (
-    <div className="space-y-5">
-      <div className="space-y-5 rounded-[1.25rem] border border-slate-900/10 bg-white px-4 py-4">
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">
-            {t.mainEyebrow}
-          </p>
-          <p className="mt-1 text-xs leading-5 text-slate-500">
-            {t.mainDescription}
-          </p>
+    <div className="min-w-0 space-y-4">
+      <div className="space-y-4">
+        <div className="editor-inspector-copy">
+          <p className="editor-inspector-eyebrow">{t.mainEyebrow}</p>
+          <p className="editor-inspector-note">{t.mainDescription}</p>
         </div>
 
         <label className="block">
           <span className="muted-label">{t.method}</span>
           <select
             aria-label={t.methodAriaLabel}
-            className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+            className="mt-2 w-full rounded-xl border border-slate-900/10 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-amber-500"
             onChange={(event) => {
               const value = event.target.value;
               onChange((prev) => ({ ...prev, method: value }));
@@ -346,7 +352,7 @@ export function HttpRequestConfig({
           </div>
 
           {showContentTypeHint ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-xs leading-5 text-amber-700">
+            <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-2.5 text-xs leading-5 text-amber-700">
               {t.contentTypeHint}
             </div>
           ) : null}
@@ -354,15 +360,15 @@ export function HttpRequestConfig({
           {hasBody ? (
             bodyMode === 'fields' ? (
               <div className="space-y-3">
-                {bodyKv.map(([key, value], index) => (
-                  <div
-                    key={`b-${index}`}
-                    className="space-y-2 rounded-2xl border border-slate-900/10 bg-slate-50/60 p-3"
-                  >
-                    <div className="flex items-center gap-2">
+                <div className={rowGroupClass}>
+                  {bodyKv.map(([key, value], index) => (
+                    <div
+                      key={`b-${index}`}
+                      className={rowClass}
+                    >
                       <input
                         aria-label={t.bodyKeyAriaLabel(index + 1)}
-                        className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                        className={fieldInputClass}
                         onChange={(event) =>
                           updateBodyKey(index, event.target.value)
                         }
@@ -370,9 +376,20 @@ export function HttpRequestConfig({
                         type="text"
                         value={key}
                       />
+
+                      <div className="min-w-0">
+                        <TemplatedField
+                          ariaLabel={t.bodyValueAriaLabel(index + 1)}
+                          label=""
+                          onValueChange={(v) => updateBodyValue(index, v)}
+                          placeholder={t.bodyValuePlaceholder}
+                          value={value}
+                        />
+                      </div>
+
                       <button
                         aria-label={t.removeBodyRowAriaLabel(index + 1)}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                        className={removeButtonClass}
                         onClick={() => removeBodyField(index)}
                         title={t.remove}
                         type="button"
@@ -380,23 +397,15 @@ export function HttpRequestConfig({
                         &times;
                       </button>
                     </div>
-
-                    <TemplatedField
-                      ariaLabel={t.bodyValueAriaLabel(index + 1)}
-                      label=""
-                      onValueChange={(v) => updateBodyValue(index, v)}
-                      placeholder={t.bodyValuePlaceholder}
-                      value={value}
-                    />
-                  </div>
-                ))}
+                  ))}
+                </div>
 
                 <button
-                  className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+                  className="editor-inspector-link"
                   onClick={addBodyField}
                   type="button"
                 >
-                  {t.addBodyField}
+                  + {t.addBodyField}
                 </button>
               </div>
             ) : (
@@ -424,18 +433,14 @@ export function HttpRequestConfig({
         </div>
       </div>
 
-      <div className="rounded-[1.15rem] border border-slate-900/10 bg-slate-50/70 px-4 py-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">
-              {t.advancedEyebrow}
-            </p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
-              {t.advancedDescription}
-            </p>
+      <section className={secondarySectionClass}>
+        <div className="editor-inspector-panel-head">
+          <div className="editor-inspector-copy">
+            <p className="editor-inspector-eyebrow">{t.advancedEyebrow}</p>
+            <p className="editor-inspector-note">{t.advancedDescription}</p>
           </div>
           <button
-            className="shrink-0 rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-200 hover:text-amber-700"
+            className="editor-inspector-toggle"
             data-testid="http-advanced-toggle"
             onClick={() => setAdvancedOpen((value) => !value)}
             type="button"
@@ -445,19 +450,19 @@ export function HttpRequestConfig({
         </div>
 
         {advancedOpen ? (
-          <div className="mt-4 space-y-4 border-t border-slate-900/10 pt-4">
-            <div className="rounded-2xl border border-slate-900/10 bg-white px-3 py-3">
+          <div className="mt-3 space-y-3 border-t border-slate-900/8 pt-3">
+            <div className="space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <span className="muted-label">{t.headers}</span>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                  <p className="editor-inspector-eyebrow">{t.headers}</p>
+                  <p className="editor-inspector-note">
                     {storedHeaderCount > 0
                       ? t.headersCount(storedHeaderCount)
                       : t.headersHint}
                   </p>
                 </div>
                 <button
-                  className="shrink-0 rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-200 hover:text-amber-700"
+                  className="editor-inspector-toggle"
                   data-testid="http-headers-toggle"
                   onClick={() => setHeadersOpen((value) => !value)}
                   type="button"
@@ -467,31 +472,16 @@ export function HttpRequestConfig({
               </div>
 
               {headersOpen ? (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-medium text-slate-500">
-                      {t.headers}
-                    </span>
-                    <button
-                      className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
-                      data-testid="http-add-header-button"
-                      onClick={addHeader}
-                      type="button"
-                    >
-                      {t.addHeader}
-                    </button>
-                  </div>
-
-                  <div className="mt-3 space-y-3">
+                <div className="space-y-3">
+                  <div className={rowGroupClass}>
                     {headerEntries.map(([key, value], index) => (
                       <div
                         key={`h-${key}-${index}`}
-                        className="space-y-2 rounded-2xl border border-slate-900/10 bg-slate-50/60 p-3"
+                        className={rowClass}
                       >
-                        <div className="flex items-center gap-2">
                           <input
                             aria-label={t.headerKeyAriaLabel(index + 1)}
-                            className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                            className={fieldInputClass}
                             onChange={(event) =>
                               updateHeaderKey(index, event.target.value)
                             }
@@ -499,40 +489,51 @@ export function HttpRequestConfig({
                             type="text"
                             value={key}
                           />
+
+                          {key.trim().length > 0 ? (
+                            <div className="min-w-0">
+                              <TemplatedField
+                                ariaLabel={t.headerValueAriaLabel(index + 1)}
+                                label=""
+                                onValueChange={(v) => updateHeaderValue(index, v)}
+                                placeholder={t.headerValuePlaceholder}
+                                value={value}
+                              />
+                            </div>
+                          ) : (
+                            <input
+                              aria-label={t.headerValueAriaLabel(index + 1)}
+                              className={fieldInputClass}
+                              onChange={(event) =>
+                                updateHeaderValue(index, event.target.value)
+                              }
+                              placeholder={t.headerValuePlaceholder}
+                              type="text"
+                              value={value}
+                            />
+                          )}
+
                           <button
                             aria-label={t.removeHeaderRowAriaLabel(index + 1)}
-                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                            className={removeButtonClass}
                             onClick={() => removeHeader(index)}
                             title={t.remove}
                             type="button"
                           >
                             &times;
                           </button>
-                        </div>
-
-                        {key.trim().length > 0 ? (
-                          <TemplatedField
-                            ariaLabel={t.headerValueAriaLabel(index + 1)}
-                            label=""
-                            onValueChange={(v) => updateHeaderValue(index, v)}
-                            placeholder={t.headerValuePlaceholder}
-                            value={value}
-                          />
-                        ) : (
-                          <input
-                            aria-label={t.headerValueAriaLabel(index + 1)}
-                            className="w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-                            onChange={(event) =>
-                              updateHeaderValue(index, event.target.value)
-                            }
-                            placeholder={t.headerValuePlaceholder}
-                            type="text"
-                            value={value}
-                          />
-                        )}
                       </div>
                     ))}
                   </div>
+
+                  <button
+                    className="editor-inspector-link"
+                    data-testid="http-add-header-button"
+                    onClick={addHeader}
+                    type="button"
+                  >
+                    + {t.addHeader}
+                  </button>
                 </div>
               ) : null}
             </div>
@@ -548,7 +549,7 @@ export function HttpRequestConfig({
             />
           </div>
         ) : null}
-      </div>
+      </section>
     </div>
   );
 }

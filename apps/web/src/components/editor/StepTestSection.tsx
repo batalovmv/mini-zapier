@@ -17,7 +17,7 @@ import { useLocale } from '../../locale/LocaleProvider';
 import { useWorkflowEditorStore } from '../../stores/workflow-editor.store';
 
 const railSectionClass =
-  'rounded-[1.55rem] border border-slate-900/10 bg-[linear-gradient(180deg,rgba(247,248,250,0.92)_0%,rgba(255,255,255,0.88)_100%)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]';
+  'editor-inspector-panel editor-inspector-panel-secondary px-3.5 py-3';
 
 interface StepTestSectionProps {
   workflowId: string | null;
@@ -204,17 +204,17 @@ export function StepTestSection({
 
   return (
     <section className={railSectionClass}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
+      <div className="editor-inspector-panel-head">
+        <div className="editor-inspector-copy">
           <h3 className="text-sm font-semibold tracking-tight text-slate-900">
             {t.sectionEyebrow}
           </h3>
-          <p className="mt-1.5 text-[13px] leading-5 text-slate-600">
+          <p className="editor-inspector-note">
             {summaryText}
           </p>
         </div>
         <button
-          className="rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-violet-200 hover:text-violet-700"
+          className="editor-inspector-toggle"
           aria-expanded={open}
           data-testid="step-test-toggle"
           onClick={() => setOpen((value) => !value)}
@@ -225,21 +225,21 @@ export function StepTestSection({
       </div>
 
       {!open ? null : (
-        <>
-          <div className="mt-4 rounded-[1.15rem] border border-slate-900/8 bg-slate-50/80 px-4 py-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-3 space-y-3 border-t border-slate-900/8 pt-3">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2.5">
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">
+                <p className="editor-inspector-eyebrow">
                   {t.inputDataLabel}
                 </p>
                 {previousStepOutput !== undefined ? (
-                  <p className="mt-1 text-[11px] leading-5 text-slate-500">
+                  <p className="editor-inspector-note">
                     {t.inputDataFromPrevious}
                   </p>
                 ) : null}
               </div>
               <button
-                className="text-xs font-medium text-slate-500 transition hover:text-slate-700"
+                className="editor-inspector-link"
                 onClick={() => setInputExpanded((v) => !v)}
                 type="button"
               >
@@ -248,9 +248,9 @@ export function StepTestSection({
             </div>
 
             {inputExpanded ? (
-              <div className="mt-3">
+              <div className="space-y-2">
                 <textarea
-                  className="w-full rounded-xl border border-slate-900/10 bg-white px-3 py-2 font-mono text-xs text-slate-800 outline-none transition focus:border-amber-500"
+                  className="min-h-[7rem] w-full rounded-xl border border-slate-900/10 bg-white px-3 py-2.5 font-mono text-xs text-slate-800 outline-none transition focus:border-amber-500"
                   onChange={(e) => {
                     setInputText(e.target.value);
                     setJsonError(null);
@@ -261,15 +261,15 @@ export function StepTestSection({
                 />
 
                 {jsonError ? (
-                  <p className="mt-2 text-xs text-rose-600">{jsonError}</p>
+                  <p className="text-xs text-rose-600">{jsonError}</p>
                 ) : null}
               </div>
             ) : null}
           </div>
 
-          <div className="mt-4">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
-              className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-slate-900/10 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
               disabled={disabled || running}
               onClick={() => void handleTest()}
               title={buttonTitle}
@@ -280,13 +280,13 @@ export function StepTestSection({
           </div>
 
           {unsupportedMessage ? (
-            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-2 text-xs leading-5 text-amber-700 break-words whitespace-pre-wrap">
+            <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-2 text-xs leading-5 text-amber-700 break-words whitespace-pre-wrap">
               {unsupportedMessage}
             </div>
           ) : null}
 
           {existingResult ? (
-            <div className="mt-4 border-t border-slate-900/8 pt-4">
+            <div className="space-y-3 border-t border-slate-900/8 pt-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
@@ -305,20 +305,20 @@ export function StepTestSection({
               </div>
 
               {existingResult.errorMessage ? (
-                <div className="mt-2 rounded-xl border border-rose-200 bg-rose-50/90 px-3 py-2 text-xs leading-5 text-rose-700 break-words whitespace-pre-wrap">
+                <div className="rounded-xl border border-rose-200 bg-rose-50/90 px-3 py-2 text-xs leading-5 text-rose-700 break-words whitespace-pre-wrap">
                   {existingResult.errorMessage}
                 </div>
               ) : null}
 
               {existingResult.status === 'SUCCESS' &&
               existingResult.outputData !== undefined ? (
-                <div className="mt-3">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2.5">
+                    <p className="editor-inspector-eyebrow">
                       {t.outputDataLabel}
                     </p>
                     <button
-                      className="text-xs font-medium text-slate-500 transition hover:text-slate-700"
+                      className="editor-inspector-link"
                       onClick={() => setOutputExpanded((v) => !v)}
                       type="button"
                     >
@@ -327,7 +327,7 @@ export function StepTestSection({
                   </div>
 
                   {outputExpanded ? (
-                    <pre className="mt-2 max-h-48 overflow-auto rounded-xl border border-slate-900/10 bg-slate-50 px-3 py-2 font-mono text-[11px] text-slate-700 whitespace-pre-wrap break-words">
+                    <pre className="max-h-48 overflow-auto rounded-xl border border-slate-900/10 bg-white px-3 py-2 font-mono text-[11px] text-slate-700 whitespace-pre-wrap break-words">
                       {JSON.stringify(existingResult.outputData, null, 2)}
                     </pre>
                   ) : null}
@@ -337,13 +337,13 @@ export function StepTestSection({
               {existingResult.status === 'SUCCESS' &&
               existingResult.outputDataSchema &&
               existingResult.outputDataSchema.length > 0 ? (
-                <p className="mt-2 text-xs text-emerald-600">
+                <p className="text-xs text-emerald-600">
                   {t.fieldsUpdated}
                 </p>
               ) : null}
             </div>
           ) : null}
-        </>
+        </div>
       )}
     </section>
   );

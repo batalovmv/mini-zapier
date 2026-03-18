@@ -2509,7 +2509,7 @@
   - docs-only task; build/test не требуются
 
 ### TASK-P5: flatten action inspector hierarchy and reclaim rail width
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: пересобрать правый action inspector в более плоский и плотный tool-panel, чтобы основные поля занимали почти всю ширину rail, а interface перестал ощущаться как stack of cards inside cards
 - **Scope**:
   - упростить shell selected action inspector в `ConfigPanel` без изменения product flow `connection -> main fields -> step test -> delete`

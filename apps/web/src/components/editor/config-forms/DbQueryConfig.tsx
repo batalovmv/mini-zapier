@@ -754,6 +754,14 @@ export function DbQueryConfig({
         ? 'bg-amber-100 text-amber-800 shadow-sm'
         : 'bg-white text-slate-600 hover:bg-amber-50'
     }`;
+  const secondarySectionClass =
+    'editor-inspector-panel editor-inspector-panel-secondary px-3 py-3';
+  const fieldClass =
+    'w-full rounded-xl border border-slate-900/10 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-amber-500';
+  const compactFieldClass =
+    'w-full rounded-xl border border-slate-900/10 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-amber-500';
+  const rowActionClass =
+    'flex h-7 w-7 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 sm:justify-self-end';
 
   // Fields visible per operation
   const showColumns = builder.operation === 'select';
@@ -767,9 +775,9 @@ export function DbQueryConfig({
     builder.operation === 'insert' || builder.operation === 'update';
 
   return (
-    <div className="min-w-0 space-y-5">
+    <div className="min-w-0 space-y-4">
       {metadataUnavailable ? (
-        <div className="space-y-2 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm leading-6 text-amber-800 break-words">
+        <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-3 text-sm leading-6 text-amber-800 break-words">
           <p className="text-[11px] font-semibold tracking-[0.16em] text-amber-700">
             {t.rawPathEyebrow}
           </p>
@@ -777,7 +785,7 @@ export function DbQueryConfig({
           <p>{metadataUnavailable}</p>
         </div>
       ) : mode === 'raw' ? (
-        <div className="space-y-2 rounded-2xl border border-slate-900/10 bg-slate-50/70 px-4 py-3">
+        <div className="editor-inspector-panel editor-inspector-panel-secondary px-3 py-3">
           <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">
             {t.rawPathEyebrow}
           </p>
@@ -830,7 +838,7 @@ export function DbQueryConfig({
               <p className="mt-2 text-xs text-slate-400">{t.loadingTables}</p>
             ) : (
               <select
-                className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                className={`mt-2 ${fieldClass}`}
                 onChange={(e) =>
                   updateBuilder({
                     table: e.target.value,
@@ -861,34 +869,33 @@ export function DbQueryConfig({
           </label>
 
           {metaError && (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm leading-6 text-rose-700 break-words whitespace-pre-wrap">
+            <div className="rounded-xl border border-rose-200 bg-rose-50/90 px-3 py-2.5 text-sm leading-6 text-rose-700 break-words whitespace-pre-wrap">
               {t.introspectionError}: {metaError}
             </div>
           )}
 
-              {/* Columns (SELECT only) */}
-              {showColumns && builder.table && (
-                <div>
-                  <span className="muted-label">{t.columns}</span>
-                  {columnsLoading ? (
-                    <p className="mt-2 text-xs text-slate-400">
-                      {t.loadingColumns}
-                    </p>
-                  ) : (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <label className="inline-flex items-center gap-1.5 text-sm">
-                        <input
-                          checked={builder.columns.length === 0}
-                          onChange={() => updateBuilder({ columns: [] })}
-                          type="radio"
-                          name="col-mode"
-                        />
-                        {t.allColumns}
-                      </label>
+          {showColumns && builder.table ? (
+            <div className="space-y-2">
+              <span className="muted-label">{t.columns}</span>
+              {columnsLoading ? (
+                <p className="text-xs text-slate-400">{t.loadingColumns}</p>
+              ) : (
+                <div className="editor-inspector-row-group">
+                  <div className="editor-inspector-row">
+                    <label className="inline-flex items-center gap-1.5 text-sm">
+                      <input
+                        checked={builder.columns.length === 0}
+                        onChange={() => updateBuilder({ columns: [] })}
+                        type="radio"
+                        name="col-mode"
+                      />
+                      {t.allColumns}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
                       {columns.map((col) => (
                         <label
                           key={col.name}
-                          className="inline-flex items-center gap-1.5 text-sm"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-slate-900/10 bg-white px-2.5 py-1 text-sm text-slate-700"
                         >
                           <input
                             checked={
@@ -923,258 +930,267 @@ export function DbQueryConfig({
                         </label>
                       ))}
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
+            </div>
+          ) : null}
 
-              {/* Set Values (INSERT / UPDATE) */}
-              {showSetValues && builder.table && columns.length > 0 && (
-                <div>
-                  <span className="muted-label">{t.setValues}</span>
-                  <div className="mt-2 space-y-2">
-                    {builder.setValues.map((row, index) => (
-                      <div key={index} className="flex flex-wrap items-start gap-2">
-                        <select
-                          className="min-w-[10rem] flex-1 rounded-xl border border-slate-900/10 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500"
-                          onChange={(e) => {
+          {showSetValues && builder.table && columns.length > 0 ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <span className="muted-label">{t.setValues}</span>
+                <button
+                  className="editor-inspector-link"
+                  onClick={() =>
+                    updateBuilder({
+                      setValues: [
+                        ...builder.setValues,
+                        { column: '', value: '' },
+                      ],
+                    })
+                  }
+                  type="button"
+                >
+                  + {t.addSetValue}
+                </button>
+              </div>
+              {builder.setValues.length > 0 ? (
+                <div className="editor-inspector-row-group">
+                  {builder.setValues.map((row, index) => (
+                    <div
+                      key={index}
+                      className="editor-inspector-row sm:grid sm:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)_auto] sm:items-start"
+                    >
+                      <select
+                        className={fieldClass}
+                        onChange={(e) => {
+                          const next = [...builder.setValues];
+                          next[index] = { ...row, column: e.target.value };
+                          updateBuilder({ setValues: next });
+                        }}
+                        value={row.column}
+                      >
+                        <option value="">{t.setValueColumn}</option>
+                        {columns.map((col) => (
+                          <option key={col.name} value={col.name}>
+                            {col.name}
+                          </option>
+                        ))}
+                      </select>
+
+                      <div className="min-w-0">
+                        <TemplatedField
+                          label=""
+                          placeholder={t.setValuePlaceholder}
+                          value={row.value}
+                          onValueChange={(val) => {
                             const next = [...builder.setValues];
-                            next[index] = { ...row, column: e.target.value };
+                            next[index] = { ...row, value: val };
                             updateBuilder({ setValues: next });
                           }}
-                          value={row.column}
-                        >
-                          <option value="">{t.setValueColumn}</option>
-                          {columns.map((col) => (
-                            <option key={col.name} value={col.name}>
-                              {col.name}
-                            </option>
-                          ))}
-                        </select>
+                        />
+                      </div>
 
-                        <div className="min-w-0 flex-1">
+                      <button
+                        aria-label={t.removeSetValueAriaLabel}
+                        className={rowActionClass}
+                        onClick={() => {
+                          const next = builder.setValues.filter(
+                            (_, i) => i !== index,
+                          );
+                          updateBuilder({ setValues: next });
+                        }}
+                        type="button"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {showFilters && builder.table && columns.length > 0 ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <span className="muted-label">{t.filters}</span>
+                <button
+                  className="editor-inspector-link"
+                  onClick={() =>
+                    updateBuilder({
+                      filters: [
+                        ...builder.filters,
+                        { column: '', operator: '=', value: '' },
+                      ],
+                    })
+                  }
+                  type="button"
+                >
+                  + {t.addFilter}
+                </button>
+              </div>
+              {builder.filters.length > 0 ? (
+                <div className="editor-inspector-row-group">
+                  {builder.filters.map((filter, index) => (
+                    <div
+                      key={index}
+                      className="editor-inspector-row sm:grid sm:grid-cols-[minmax(0,0.78fr)_minmax(5.25rem,0.38fr)_minmax(0,0.98fr)_auto] sm:items-start"
+                    >
+                      <select
+                        className={fieldClass}
+                        onChange={(e) => {
+                          const next = [...builder.filters];
+                          next[index] = { ...filter, column: e.target.value };
+                          updateBuilder({ filters: next });
+                        }}
+                        value={filter.column}
+                      >
+                        <option value="">{t.columns}</option>
+                        {columns.map((col) => (
+                          <option key={col.name} value={col.name}>
+                            {col.name}
+                          </option>
+                        ))}
+                      </select>
+
+                      <select
+                        className={compactFieldClass}
+                        onChange={(e) => {
+                          const next = [...builder.filters];
+                          next[index] = {
+                            ...filter,
+                            operator: e.target.value,
+                          };
+                          updateBuilder({ filters: next });
+                        }}
+                        value={filter.operator}
+                      >
+                        {OPERATORS.map((op) => (
+                          <option key={op} value={op}>
+                            {op}
+                          </option>
+                        ))}
+                      </select>
+
+                      {!UNARY_OPERATORS.has(filter.operator) ? (
+                        <div className="min-w-0">
                           <TemplatedField
                             label=""
-                            placeholder={t.setValuePlaceholder}
-                            value={row.value}
+                            placeholder={t.filterValuePlaceholder}
+                            value={filter.value}
                             onValueChange={(val) => {
-                              const next = [...builder.setValues];
-                              next[index] = { ...row, value: val };
-                              updateBuilder({ setValues: next });
+                              const next = [...builder.filters];
+                              next[index] = { ...filter, value: val };
+                              updateBuilder({ filters: next });
                             }}
                           />
                         </div>
+                      ) : (
+                        <div className="hidden sm:block" />
+                      )}
 
-                        <button
-                          aria-label={t.removeSetValueAriaLabel}
-                          className="shrink-0 rounded-full p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                          onClick={() => {
-                            const next = builder.setValues.filter(
-                              (_, i) => i !== index,
-                            );
-                            updateBuilder({ setValues: next });
-                          }}
-                          type="button"
-                        >
-                          &times;
-                        </button>
-                      </div>
-                    ))}
-
-                    <button
-                      className="text-xs font-semibold text-amber-600 transition hover:text-amber-700"
-                      onClick={() =>
-                        updateBuilder({
-                          setValues: [
-                            ...builder.setValues,
-                            { column: '', value: '' },
-                          ],
-                        })
-                      }
-                      type="button"
-                    >
-                      + {t.addSetValue}
-                    </button>
-                  </div>
+                      <button
+                        aria-label={t.removeFilterAriaLabel}
+                        className={rowActionClass}
+                        onClick={() => {
+                          const next = builder.filters.filter(
+                            (_, i) => i !== index,
+                          );
+                          updateBuilder({ filters: next });
+                        }}
+                        type="button"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              )}
+              ) : null}
+            </div>
+          ) : null}
 
-              {/* Filters (SELECT, UPDATE, DELETE) */}
-              {showFilters && builder.table && columns.length > 0 && (
-                <div>
-                  <span className="muted-label">{t.filters}</span>
-                  <div className="mt-2 space-y-2">
-                    {builder.filters.map((filter, index) => (
-                      <div key={index} className="flex flex-wrap items-start gap-2">
-                        <select
-                          className="min-w-[10rem] flex-1 rounded-xl border border-slate-900/10 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500"
-                          onChange={(e) => {
-                            const next = [...builder.filters];
-                            next[index] = { ...filter, column: e.target.value };
-                            updateBuilder({ filters: next });
-                          }}
-                          value={filter.column}
-                        >
-                          <option value="">{t.columns}</option>
-                          {columns.map((col) => (
-                            <option key={col.name} value={col.name}>
-                              {col.name}
-                            </option>
-                          ))}
-                        </select>
+          {showOrderBy && builder.table && columns.length > 0 ? (
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+              <label className="block">
+                <span className="muted-label">{t.orderBy}</span>
+                <select
+                  className={`mt-2 ${fieldClass}`}
+                  onChange={(e) =>
+                    updateBuilder({
+                      orderBy: {
+                        ...builder.orderBy,
+                        column: e.target.value,
+                      },
+                    })
+                  }
+                  value={builder.orderBy.column}
+                >
+                  <option value="">—</option>
+                  {columns.map((col) => (
+                    <option key={col.name} value={col.name}>
+                      {col.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-                        <select
-                          className="w-24 rounded-xl border border-slate-900/10 bg-white px-2 py-2 text-sm outline-none focus:border-amber-500"
-                          onChange={(e) => {
-                            const next = [...builder.filters];
-                            next[index] = {
-                              ...filter,
-                              operator: e.target.value,
-                            };
-                            updateBuilder({ filters: next });
-                          }}
-                          value={filter.operator}
-                        >
-                          {OPERATORS.map((op) => (
-                            <option key={op} value={op}>
-                              {op}
-                            </option>
-                          ))}
-                        </select>
+              <select
+                className={compactFieldClass}
+                onChange={(e) =>
+                  updateBuilder({
+                    orderBy: {
+                      ...builder.orderBy,
+                      direction: e.target.value as 'ASC' | 'DESC',
+                    },
+                  })
+                }
+                value={builder.orderBy.direction}
+              >
+                <option value="ASC">{t.orderAsc}</option>
+                <option value="DESC">{t.orderDesc}</option>
+              </select>
+            </div>
+          ) : null}
 
-                        {!UNARY_OPERATORS.has(filter.operator) && (
-                          <div className="min-w-0 flex-1">
-                            <TemplatedField
-                              label=""
-                              placeholder={t.filterValuePlaceholder}
-                              value={filter.value}
-                              onValueChange={(val) => {
-                                const next = [...builder.filters];
-                                next[index] = { ...filter, value: val };
-                                updateBuilder({ filters: next });
-                              }}
-                            />
-                          </div>
-                        )}
+          {showLimit && builder.table ? (
+            <label className="block">
+              <span className="muted-label">{t.limit}</span>
+              <input
+                className="mt-2 w-24 rounded-xl border border-slate-900/10 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-amber-500"
+                min={1}
+                onChange={(e) =>
+                  updateBuilder({
+                    limit: Math.max(1, Number(e.target.value) || 100),
+                  })
+                }
+                type="number"
+                value={builder.limit}
+              />
+            </label>
+          ) : null}
 
-                        <button
-                          aria-label={t.removeFilterAriaLabel}
-                          className="shrink-0 rounded-full p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                          onClick={() => {
-                            const next = builder.filters.filter(
-                              (_, i) => i !== index,
-                            );
-                            updateBuilder({ filters: next });
-                          }}
-                          type="button"
-                        >
-                          &times;
-                        </button>
-                      </div>
-                    ))}
-
-                    <button
-                      className="text-xs font-semibold text-amber-600 transition hover:text-amber-700"
-                      onClick={() =>
-                        updateBuilder({
-                          filters: [
-                            ...builder.filters,
-                            { column: '', operator: '=', value: '' },
-                          ],
-                        })
-                      }
-                      type="button"
-                    >
-                      + {t.addFilter}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Order by (SELECT only) */}
-              {showOrderBy && builder.table && columns.length > 0 && (
-                <div className="flex flex-wrap items-end gap-3">
-                  <label className="flex-1">
-                    <span className="muted-label">{t.orderBy}</span>
-                    <select
-                      className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500"
-                      onChange={(e) =>
-                        updateBuilder({
-                          orderBy: {
-                            ...builder.orderBy,
-                            column: e.target.value,
-                          },
-                        })
-                      }
-                      value={builder.orderBy.column}
-                    >
-                      <option value="">—</option>
-                      {columns.map((col) => (
-                        <option key={col.name} value={col.name}>
-                          {col.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <select
-                    className="rounded-2xl border border-slate-900/10 bg-white px-3 py-3 text-sm outline-none focus:border-amber-500"
-                    onChange={(e) =>
-                      updateBuilder({
-                        orderBy: {
-                          ...builder.orderBy,
-                          direction: e.target.value as 'ASC' | 'DESC',
-                        },
-                      })
-                    }
-                    value={builder.orderBy.direction}
-                  >
-                    <option value="ASC">{t.orderAsc}</option>
-                    <option value="DESC">{t.orderDesc}</option>
-                  </select>
-                </div>
-              )}
-
-              {/* Limit (SELECT only) */}
-              {showLimit && builder.table && (
-                <label className="block">
-                  <span className="muted-label">{t.limit}</span>
-                  <input
-                    className="mt-2 w-24 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-500"
-                    min={1}
-                    onChange={(e) =>
-                      updateBuilder({
-                        limit: Math.max(1, Number(e.target.value) || 100),
-                      })
-                    }
-                    type="number"
-                    value={builder.limit}
-                  />
-                </label>
-              )}
-
-              {/* Mutation warning */}
-          {mutationWarning && (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-700">
+          {mutationWarning ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-2.5 text-sm text-amber-700">
               {mutationWarning}
             </div>
-          )}
+          ) : null}
         </div>
       )}
 
-      <div className="rounded-[1.15rem] border border-slate-900/10 bg-slate-50/70 px-4 py-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">
-              {t.advancedEyebrow}
-            </p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
+      <section className={secondarySectionClass}>
+        <div className="editor-inspector-panel-head">
+          <div className="editor-inspector-copy">
+            <p className="editor-inspector-eyebrow">{t.advancedEyebrow}</p>
+            <p className="editor-inspector-note">
               {mode === 'raw' || metadataUnavailable
                 ? t.advancedDescriptionRaw
                 : t.advancedDescription}
             </p>
           </div>
           <button
-            className="shrink-0 rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-200 hover:text-amber-700"
+            className="editor-inspector-toggle"
             onClick={() => setAdvancedOpen((prev) => !prev)}
             type="button"
           >
@@ -1183,14 +1199,14 @@ export function DbQueryConfig({
         </div>
 
         {advancedOpen && (
-          <div className="mt-4 space-y-4 border-t border-slate-900/10 pt-4">
+          <div className="mt-3 space-y-3 border-t border-slate-900/8 pt-3">
             {mode !== 'raw' && metadataUnavailable === null && (
-              <div className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3">
+              <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-2.5">
                 <p className="min-w-0 flex-1 text-xs leading-5 text-amber-800">
                   {t.rawEditingHint}
                 </p>
                 <button
-                  className="shrink-0 rounded-full border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800 transition hover:bg-amber-100"
+                  className="editor-inspector-toggle"
                   onClick={switchToRawEditing}
                   type="button"
                 >
@@ -1202,7 +1218,7 @@ export function DbQueryConfig({
             <label className="block">
               <span className="muted-label">{t.query}</span>
               <textarea
-                className="mt-2 min-h-40 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                className="mt-2 min-h-40 w-full rounded-xl border border-slate-900/10 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
                 onChange={(e) => handleQueryChange(e.target.value)}
                 placeholder={t.queryPlaceholder}
                 value={rawQuery}
@@ -1212,7 +1228,7 @@ export function DbQueryConfig({
             <label className="block">
               <span className="muted-label">{t.params}</span>
               <textarea
-                className="mt-2 min-h-32 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                className="mt-2 min-h-32 w-full rounded-xl border border-slate-900/10 bg-white px-3.5 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-amber-500"
                 onChange={(e) => handleParamsChange(e.target.value)}
                 placeholder={t.paramsPlaceholder}
                 value={paramsText}
@@ -1237,107 +1253,114 @@ export function DbQueryConfig({
             />
           </div>
         )}
-      </div>
+      </section>
 
-      {/* ---- SQL PREVIEW ---- */}
       {sqlPreview && (
-        <div>
-          <span className="muted-label">{t.sqlPreview}</span>
-          <pre className="mt-2 overflow-x-auto rounded-2xl border border-slate-900/10 bg-slate-50 px-4 py-3 font-mono text-xs leading-5 text-slate-700 whitespace-pre-wrap break-words">
-            {sqlPreview}
-          </pre>
-        </div>
+        <section className={secondarySectionClass}>
+          <div className="editor-inspector-copy">
+            <p className="editor-inspector-eyebrow">{t.sqlPreview}</p>
+          </div>
+          <div className="mt-3 border-t border-slate-900/8 pt-3">
+            <pre className="overflow-x-auto rounded-xl border border-slate-900/10 bg-white px-3 py-2.5 font-mono text-xs leading-5 text-slate-700 whitespace-pre-wrap break-words">
+              {sqlPreview}
+            </pre>
+          </div>
+        </section>
       )}
 
-      {/* ---- TEST BUTTON ---- */}
       {connectionId && (
-        <div>
-          <button
-            className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700 shadow-sm transition hover:bg-amber-100 disabled:opacity-50"
-            disabled={testDisabled}
-            onClick={() => void handleTest()}
-            type="button"
-          >
-            {testRunning ? t.testRunning : t.testButton}
-          </button>
-
-          {testError && (
-            <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm leading-6 text-rose-700 break-words whitespace-pre-wrap">
-              {t.testError}: {testError}
+        <section className={secondarySectionClass}>
+          <div className="editor-inspector-panel-head">
+            <div className="editor-inspector-copy">
+              <p className="editor-inspector-eyebrow">{t.testButton}</p>
             </div>
-          )}
+            <button
+              className="editor-inspector-toggle disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={testDisabled}
+              onClick={() => void handleTest()}
+              type="button"
+            >
+              {testRunning ? t.testRunning : t.testButton}
+            </button>
+          </div>
 
-          {testUnavailable && (
-            <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm leading-6 text-amber-800 break-words whitespace-pre-wrap">
-              {testUnavailable}
-            </div>
-          )}
+          <div className="mt-3 space-y-3 border-t border-slate-900/8 pt-3">
+            {testError ? (
+              <div className="rounded-xl border border-rose-200 bg-rose-50/90 px-3 py-2.5 text-sm leading-6 text-rose-700 break-words whitespace-pre-wrap">
+                {t.testError}: {testError}
+              </div>
+            ) : null}
 
-          {/* Mutation result: rowCount only */}
-          {isMutationResult && testRowCount !== null && !testRows && (
-            <div className="mt-3 rounded-2xl border border-slate-900/10 bg-white px-4 py-3">
-              <p className="text-xs font-semibold text-slate-600">
-                {t.testMutationResult(testRowCount)}
-              </p>
-            </div>
-          )}
+            {testUnavailable ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-2.5 text-sm leading-6 text-amber-800 break-words whitespace-pre-wrap">
+                {testUnavailable}
+              </div>
+            ) : null}
 
-          {/* Read result: table */}
-          {testRows !== null && (
-            <div className="mt-3">
-              <p className="text-xs font-semibold text-slate-600">
-                {t.testResult} &mdash; {t.testRowCount(testRowCount ?? 0)}
-              </p>
-              <div className="mt-2 max-h-64 overflow-auto rounded-2xl border border-slate-900/10 bg-white">
-                {testRows.length === 0 ? (
-                  <p className="px-4 py-3 text-sm text-slate-400">
-                    {t.testRowCount(0)}
-                  </p>
-                ) : (
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-slate-100 bg-slate-50">
-                        {Object.keys(
-                          testRows[0] as Record<string, unknown>,
-                        ).map((key) => (
-                          <th
-                            key={key}
-                            className="px-3 py-2 text-left font-semibold text-slate-600"
-                          >
-                            {key}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {testRows.map((row, i) => (
-                        <tr
-                          key={i}
-                          className="border-b border-slate-50 last:border-0"
-                        >
-                          {Object.values(
-                            row as Record<string, unknown>,
-                          ).map((val, j) => (
-                            <td
-                              key={j}
-                              className="px-3 py-2 text-slate-700 break-words"
+            {isMutationResult && testRowCount !== null && !testRows ? (
+              <div className="rounded-xl border border-slate-900/10 bg-white px-3 py-2.5">
+                <p className="text-xs font-semibold text-slate-600">
+                  {t.testMutationResult(testRowCount)}
+                </p>
+              </div>
+            ) : null}
+
+            {testRows !== null ? (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-slate-600">
+                  {t.testResult} &mdash; {t.testRowCount(testRowCount ?? 0)}
+                </p>
+                <div className="max-h-64 overflow-auto rounded-xl border border-slate-900/10 bg-white">
+                  {testRows.length === 0 ? (
+                    <p className="px-3 py-2.5 text-sm text-slate-400">
+                      {t.testRowCount(0)}
+                    </p>
+                  ) : (
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-100 bg-slate-50">
+                          {Object.keys(
+                            testRows[0] as Record<string, unknown>,
+                          ).map((key) => (
+                            <th
+                              key={key}
+                              className="px-3 py-2 text-left font-semibold text-slate-600"
                             >
-                              {val === null
-                                ? 'NULL'
-                                : typeof val === 'object'
-                                  ? JSON.stringify(val)
-                                  : String(val)}
-                            </td>
+                              {key}
+                            </th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                      </thead>
+                      <tbody>
+                        {testRows.map((row, i) => (
+                          <tr
+                            key={i}
+                            className="border-b border-slate-50 last:border-0"
+                          >
+                            {Object.values(
+                              row as Record<string, unknown>,
+                            ).map((val, j) => (
+                              <td
+                                key={j}
+                                className="px-3 py-2 text-slate-700 break-words"
+                              >
+                                {val === null
+                                  ? 'NULL'
+                                  : typeof val === 'object'
+                                    ? JSON.stringify(val)
+                                    : String(val)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            ) : null}
+          </div>
+        </section>
       )}
     </div>
   );

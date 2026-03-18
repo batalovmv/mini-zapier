@@ -420,7 +420,7 @@ export const ru = {
     emptyEyebrow: 'Настройка шага',
     emptyTitle: 'Выберите шаг на схеме',
     emptyDescription:
-      'Выберите шаг на canvas, чтобы справа открыть его подключение, основные поля и проверку.',
+      'Выберите шаг, чтобы справа открыть подключение, поля и тест.',
     connectionEyebrow: 'Подключение',
     headerConnectionRequired: (connectionType: string) =>
       `Сначала выберите подключение ${connectionType}.`,
@@ -432,12 +432,12 @@ export const ru = {
     headerMainFields: 'Основные поля ниже.',
     selectConnection: (connectionType: string) =>
       `Выберите подключение ${connectionType}`,
-    createConnection: 'Создать новое',
-    refreshConnections: 'Обновить список',
+    createConnection: 'Новое',
+    refreshConnections: 'Обновить',
     noConnectionsDescription: (connectionType: string) =>
       `Подключений ${connectionType} пока нет. Создайте новое, чтобы выбрать его здесь.`,
     nodeSettingsEyebrow: 'Основное',
-    loadingConnectionsDescription: 'Загружаем сохранённые подключения.',
+    loadingConnectionsDescription: 'Загружаем подключения.',
     deleteNode: 'Удалить шаг',
     deleteNodeDialogTitle: 'Удалить выбранный шаг?',
     deleteNodeDialogDescription: (label: string) =>
@@ -447,7 +447,7 @@ export const ru = {
     nodeDeletedToast: (label: string) => `Шаг "${label}" удалён.`,
   },
   stepTest: {
-    sectionEyebrow: 'Тест шага с входными данными',
+    sectionEyebrow: 'Тест шага',
     sectionDescription: 'Запустите шаг на примере JSON.',
     testButton: 'Запустить тест',
     testRunning: 'Выполняется...',
@@ -457,9 +457,9 @@ export const ru = {
     connectionRequiredSummary:
       'Сначала выберите подключение, чтобы открыть тест.',
     testButtonUnsupported: 'Проверка пока недоступна в этой версии сервиса.',
-    inputDataLabel: 'Входные данные (JSON)',
+    inputDataLabel: 'Входной JSON',
     inputDataPlaceholder: '{}',
-    inputDataFromPrevious: 'Мы подставили результат предыдущего шага.',
+    inputDataFromPrevious: 'Подставили результат предыдущего шага.',
     invalidJson: 'Невалидный JSON.',
     successStatus: 'Успешно',
     failedStatus: 'Ошибка',
@@ -467,13 +467,13 @@ export const ru = {
     lastResultFailed: 'Последний тест не прошёл.',
     duration: (ms: number) => `${ms}мс`,
     outputDataLabel: 'Результат',
-    fieldsUpdated: 'Доступные поля обновлены для следующих шагов.',
+    fieldsUpdated: 'Поля для следующих шагов обновлены.',
     expandInput: 'Показать входные данные',
     collapseInput: 'Скрыть входные данные',
     expandOutput: 'Показать результат',
     collapseOutput: 'Скрыть результат',
-    openSection: 'Показать тест',
-    closeSection: 'Скрыть тест',
+    openSection: 'Открыть',
+    closeSection: 'Закрыть',
     unsupported:
       'Проверка пока недоступна в этой версии сервиса. Обновите backend или выполните сценарий обычным запуском.',
   },
@@ -772,16 +772,16 @@ export const ru = {
         `Удалить строку маппинга ${index}`,
       remove: 'Удалить',
       templateModeHint:
-        'Соберите весь результат одним шаблоном.',
+        'Соберите результат одним шаблоном.',
       mappingModeHint:
-        'Соберите объект по одному полю за раз.',
+        'Соберите объект по полям.',
       advancedEyebrow: 'Дополнительно',
       advancedDescription:
-        'Ручной JSON остаётся здесь, когда визуальной настройки недостаточно.',
-      showAdvanced: 'Открыть дополнительно',
-      hideAdvanced: 'Скрыть дополнительно',
-      showJson: 'Открыть JSON шага',
-      hideJson: 'Скрыть JSON шага',
+        'Правьте JSON шага только если нужно.',
+      showAdvanced: 'Открыть',
+      hideAdvanced: 'Скрыть',
+      showJson: 'JSON шага',
+      hideJson: 'Скрыть JSON',
     },
     dbQuery: {
       modeLabel: 'Режим',
@@ -790,15 +790,15 @@ export const ru = {
       params: 'Параметры запроса',
       paramsPlaceholder: '["{{input.id}}"]',
       help:
-        'Укажите JSON-массив параметров. Шаблоны вида {{input...}} подставятся при выполнении.',
+        'Укажите JSON-массив. {{input...}} подставится при выполнении.',
       jsonArrayError: 'Параметры должны быть JSON-массивом.',
       validJsonError: 'Параметры должны быть валидным JSON.',
       modeVisual: 'Конструктор',
       modeVisualHint:
-        'Выберите таблицу и нужные поля, а SQL соберём автоматически.',
+        'Выберите таблицу и поля, а SQL соберём автоматически.',
       modeRawSql: 'SQL',
       modeRawSqlHint:
-        'Используйте для сложных запросов или когда удобнее работать напрямую с SQL.',
+        'Используйте raw SQL для сложных запросов.',
       operationLabel: 'Что сделать',
       selectTable: 'Таблица',
       selectTablePlaceholder: 'Выберите таблицу',
@@ -832,27 +832,27 @@ export const ru = {
       testError: 'Проверка не прошла',
       selectConnectionHint:
         'Выберите PostgreSQL-подключение, чтобы открыть конструктор.',
-      showJson: 'Открыть JSON',
-      hideJson: 'Скрыть JSON шага',
+      showJson: 'JSON',
+      hideJson: 'Скрыть JSON',
       advancedEyebrow: 'Дополнительно',
       advancedDescription:
-        'Нужен ручной контроль? Raw SQL, параметры и полный JSON шага находятся здесь.',
+        'Raw SQL, параметры и JSON шага.',
       advancedDescriptionRaw:
-        'Этот шаг сейчас выполняется из raw SQL. Продолжайте редактировать его здесь.',
-      showAdvanced: 'Открыть дополнительно',
-      hideAdvanced: 'Скрыть дополнительно',
+        'Этот шаг уже работает через raw SQL.',
+      showAdvanced: 'Открыть',
+      hideAdvanced: 'Скрыть',
       introspectionError: 'Не удалось загрузить список таблиц и колонок.',
       metadataUnavailable:
-        'В этой версии сервиса визуальная работа с PostgreSQL пока недоступна. Можно написать SQL самостоятельно.',
+        'В этой версии сервиса визуальная работа с PostgreSQL недоступна. Используйте raw SQL.',
       testUnavailable:
-        'В этой версии сервиса проверка SQL из редактора пока недоступна. Можно выполнить сценарий обычным запуском.',
+        'В этой версии сервиса проверка SQL недоступна. Выполните сценарий обычным запуском.',
       switchToRawSql: 'Перейти на raw SQL',
       rawEditingHint:
-        'Если начнёте править поля ниже, этот шаг перейдёт с визуального конструктора на ручной SQL.',
+        'Правка ниже переключит шаг на raw SQL.',
       rawPathEyebrow: 'Ручной SQL',
-      rawPathTitle: 'Этот шаг сейчас работает через raw SQL.',
+      rawPathTitle: 'Шаг работает через raw SQL.',
       rawPathDescription:
-        'Ниже можно продолжать редактировать SQL и параметры. Визуальная сборка остаётся необязательной.',
+        'Ниже можно править SQL и параметры.',
       opSelect: 'Прочитать',
       opInsert: 'Добавить',
       opUpdate: 'Изменить',
@@ -863,7 +863,7 @@ export const ru = {
       setValueColumn: 'Поле',
       setValuePlaceholder: 'Значение',
       testMutationResult: (count: number) =>
-        `${count} строк(а) будет затронуто, затем откатим изменения`,
+        `${count} строк(а), затем откат`,
       deleteNoFilterWarning: 'DELETE без фильтра затронет все строки.',
       updateNoFilterWarning: 'UPDATE без фильтра затронет все строки.',
     },
@@ -878,14 +878,14 @@ export const ru = {
       bodyPlaceholder: 'Здравствуйте, {{input.customerName}}',
       previewEyebrow: 'Предпросмотр',
       previewDescription:
-        'Проверьте письмо на данных из последнего теста или запуска.',
+        'Проверьте письмо на данных теста или запуска.',
       advancedEyebrow: 'Дополнительно',
       advancedDescription:
-        'Ручной JSON остаётся здесь, если нужно править весь шаг целиком.',
-      showAdvanced: 'Открыть дополнительно',
-      hideAdvanced: 'Скрыть дополнительно',
-      showJson: 'Открыть JSON шага',
-      hideJson: 'Скрыть JSON шага',
+        'Правьте весь JSON шага только если нужно.',
+      showAdvanced: 'Открыть',
+      hideAdvanced: 'Скрыть',
+      showJson: 'JSON шага',
+      hideJson: 'Скрыть JSON',
     },
     emailTrigger: {
       mainEyebrow: 'Адрес приёма',
@@ -902,7 +902,7 @@ export const ru = {
     },
     httpRequest: {
       mainEyebrow: 'Запрос',
-      mainDescription: 'Выберите метод, адрес и данные запроса.',
+      mainDescription: 'Выберите метод, URL и body.',
       url: 'URL',
       urlAriaLabel: 'URL HTTP Request',
       urlPlaceholder: 'https://example.com/orders/{{input.id}}',
@@ -928,24 +928,24 @@ export const ru = {
       addBodyField: 'Добавить поле',
       editBodyAsJson: 'JSON',
       editBodyAsFields: 'Поля',
-      bodyFieldsHint: 'Соберите данные запроса по полям.',
-      bodyJsonHint: 'Введите данные запроса как raw JSON.',
+      bodyFieldsHint: 'Соберите body по полям.',
+      bodyJsonHint: 'Введите raw JSON.',
       bodyOptionalHint:
-        'Оставьте пустым, если этот метод не должен отправлять body.',
+        'Оставьте пустым, если метод не отправляет body.',
       contentTypeHint:
-        'Если Content-Type не задан, добавим application/json автоматически',
+        'Если Content-Type не задан, используем application/json',
       advancedEyebrow: 'Дополнительно',
       advancedDescription:
-        'Свои заголовки и ручной JSON шага находятся здесь.',
-      showAdvanced: 'Открыть дополнительно',
-      hideAdvanced: 'Скрыть дополнительно',
-      showJson: 'Открыть JSON шага',
-      hideJson: 'Скрыть JSON шага',
+        'Свои заголовки и JSON шага.',
+      showAdvanced: 'Открыть',
+      hideAdvanced: 'Скрыть',
+      showJson: 'JSON шага',
+      hideJson: 'Скрыть JSON',
       showAdvancedHeaders: 'Открыть',
       hideAdvancedHeaders: 'Скрыть',
       headersCount: (count: number) => `${count} заголовк(а) настроено`,
       headersHint:
-        'Обычно не нужны. Открывайте только если сервис требует свои заголовки.',
+        'Открывайте только если API требует свои заголовки.',
       remove: 'Удалить',
     },
     telegram: {
@@ -955,7 +955,7 @@ export const ru = {
       chatIdPlaceholder: '-1001234567890',
       chatIdHelper: 'Как узнать свой Chat ID',
       chatIdHelperHint:
-        'Сначала нужен chat ID? Его можно получить через @userinfobot.',
+        'Нужен chat ID? Возьмите его у @userinfobot.',
       showChatIdHelp: 'Показать шаги',
       hideChatIdHelp: 'Скрыть шаги',
       chatIdHelperSteps:
@@ -964,14 +964,14 @@ export const ru = {
       messagePlaceholder: 'Заказ {{input.id}} готов.',
       previewEyebrow: 'Предпросмотр',
       previewDescription:
-        'Проверьте сообщение на данных из последнего теста или запуска.',
+        'Проверьте сообщение на данных теста или запуска.',
       advancedEyebrow: 'Дополнительно',
       advancedDescription:
-        'Ручной JSON остаётся здесь, если нужен полный config шага.',
-      showAdvanced: 'Открыть дополнительно',
-      hideAdvanced: 'Скрыть дополнительно',
-      showJson: 'Открыть JSON шага',
-      hideJson: 'Скрыть JSON шага',
+        'Правьте весь JSON шага только если нужно.',
+      showAdvanced: 'Открыть',
+      hideAdvanced: 'Скрыть',
+      showJson: 'JSON шага',
+      hideJson: 'Скрыть JSON',
     },
     rawJson: {
       mustBeObject: 'Должен быть JSON-объектом',
