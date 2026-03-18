@@ -2167,3 +2167,28 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+### TASK-N8: stabilize live smoke by removing third-party echo dependency
+- **Статус**: `done`
+- **Цель**: вернуть зелёный live E2E smoke после того, как deploy перестал проходить не из-за UI-селекторов, а из-за runtime failure в шаге `HTTP Request`, завязанном на внешний `postman-echo`
+- **Scope**:
+  - убрать обязательную зависимость smoke-сценария webhook → HTTP Request → Data Transform от внешнего echo endpoint
+  - перевести default path `HTTP Request` на внутренний публичный `/api/auth/register`, который возвращает стабильный JSON contract `{"ok": true}`
+  - сохранить `MINI_ZAPIER_E2E_ECHO_URL` как optional override для ручных/live отладок
+  - подтвердить локально, что `apps/web` по-прежнему собирается, а smoke suite парсится
+- **Не входит**:
+  - изменения backend API
+  - новые smoke-сценарии
+  - redesign `HTTP Request` action или worker runtime
+  - deploy/VPS changes
+- **Файлы**:
+  - `apps/web/e2e/ui-smoke.spec.ts`
+- **Acceptance**:
+  - default live smoke больше не зависит от `https://postman-echo.com/post`
+  - webhook → HTTP Request → Data Transform остаётся end-to-end сценарием, но использует стабильный internal JSON response contract
+  - optional `MINI_ZAPIER_E2E_ECHO_URL` override продолжает работать для ручной отладки
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`

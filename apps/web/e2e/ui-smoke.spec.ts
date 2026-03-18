@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
-const DEFAULT_ECHO_URL =
-  process.env.MINI_ZAPIER_E2E_ECHO_URL || 'https://postman-echo.com/post';
+const OVERRIDE_HTTP_REQUEST_URL =
+  process.env.MINI_ZAPIER_E2E_ECHO_URL?.trim() || null;
 const LOCALE_STORAGE_KEY = 'mini-zapier:locale';
 const DEFAULT_E2E_EMAIL = 'admin@example.com';
 const LEGACY_E2E_RUN_SUFFIX =
@@ -319,6 +319,14 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     name: `Alice ${runSuffix}`,
     eventId: `event-${runSuffix}`,
   };
+  const httpRequestUrl =
+    OVERRIDE_HTTP_REQUEST_URL ?? `${baseURL}/api/auth/register`;
+  const expectedHttpOutput = OVERRIDE_HTTP_REQUEST_URL
+    ? webhookPayload.name
+    : '"ok": true';
+  const expectedTransformOutput = OVERRIDE_HTTP_REQUEST_URL
+    ? `Processed ${webhookPayload.name} / ${webhookPayload.eventId}`
+    : 'Processed true / 201';
   let workflowId: string | null = null;
   let connectionId: string | null = null;
 
@@ -413,22 +421,39 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     connectionId = await page.getByTestId('connection-select').inputValue();
 
     await httpNode.click();
-    await page.getByLabel('HTTP request URL').fill(DEFAULT_ECHO_URL);
+    await page.getByLabel('HTTP request URL').fill(httpRequestUrl);
     await page.getByTestId('http-advanced-toggle').click();
     await page.getByTestId('http-headers-toggle').click();
     await page.getByTestId('http-add-header-button').click();
     await page.getByLabel('Header key 1').fill('Content-Type');
     await page.getByLabel('Header value 1').fill('application/json');
-    await page.getByLabel('Body field key 1').fill('name');
-    await page.getByLabel('Body field value 1').fill('{{input.name}}');
+
+    if (OVERRIDE_HTTP_REQUEST_URL) {
+      await page.getByLabel('Body field key 1').fill('name');
+      await page.getByLabel('Body field value 1').fill('{{input.name}}');
+    } else {
+      await page.getByLabel('Body field key 1').fill('email');
+      await page
+        .getByLabel('Body field value 1')
+        .fill('smoke-{{input.eventId}}@example.com');
+    }
+
     await page.getByRole('button', { name: 'Add field' }).click();
-    await page.getByLabel('Body field key 2').fill('eventId');
-    await page.getByLabel('Body field value 2').fill('{{input.eventId}}');
+
+    if (OVERRIDE_HTTP_REQUEST_URL) {
+      await page.getByLabel('Body field key 2').fill('eventId');
+      await page.getByLabel('Body field value 2').fill('{{input.eventId}}');
+    } else {
+      await page.getByLabel('Body field key 2').fill('password');
+      await page.getByLabel('Body field value 2').fill('SmokePass123!');
+    }
 
     await transformNode.click();
-    await page
-      .getByLabel('Data transform template')
-      .fill('Processed {{input.data.json.name}} / {{input.data.json.eventId}}');
+    await page.getByLabel('Data transform template').fill(
+      OVERRIDE_HTTP_REQUEST_URL
+        ? 'Processed {{input.data.json.name}} / {{input.data.json.eventId}}'
+        : 'Processed {{input.data.ok}} / {{input.status}}',
+    );
 
     await page.getByTestId('save-workflow-button').click();
     await expect
@@ -485,7 +510,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     await httpRequestCard.getByText('Output data').click();
     await expect(
       httpRequestCard.locator('pre').last(),
-    ).toContainText(webhookPayload.name);
+    ).toContainText(expectedHttpOutput);
 
     const transformCard = page.locator(
       '[data-testid="step-log-item"][data-step-label="Data transform"]',
@@ -494,7 +519,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     await transformCard.getByText('Output data').click();
     await expect(
       transformCard.locator('pre').last(),
-    ).toContainText(`Processed ${webhookPayload.name} / ${webhookPayload.eventId}`);
+    ).toContainText(expectedTransformOutput);
 
     expect(
       consoleErrors,
