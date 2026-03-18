@@ -3,6 +3,7 @@ import type {
   ConnectionCatalogSort,
   ConnectionCatalogUsageFilter,
   ConnectionDto,
+  ConnectionTestResultDto,
   ConnectionType,
 } from '@mini-zapier/shared';
 
@@ -64,4 +65,14 @@ export async function updateConnection(
 
 export async function deleteConnection(connectionId: string): Promise<void> {
   await apiClient.delete(`/connections/${connectionId}`);
+}
+
+export async function testConnection(
+  connectionId: string,
+): Promise<ConnectionTestResultDto> {
+  const response = await apiClient.post<ConnectionTestResultDto>(
+    `/connections/${connectionId}/test`,
+  );
+
+  return response.data;
 }

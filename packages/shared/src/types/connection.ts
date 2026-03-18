@@ -44,3 +44,9 @@ export interface ConnectionCatalogResponseDto {
   page: number;
   limit: number;
 }
+
+export interface ConnectionTestResultDto {
+  success: boolean;
+  message?: string;
+  durationMs: number;
+}

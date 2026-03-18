@@ -21,7 +21,10 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import type { ConnectionCatalogResponseDto } from '@mini-zapier/shared';
+import type {
+  ConnectionCatalogResponseDto,
+  ConnectionTestResultDto,
+} from '@mini-zapier/shared';
 import { ConnectionDto } from '@mini-zapier/shared';
 
 import type { AuthenticatedUser } from '../auth/auth.service';
@@ -31,6 +34,7 @@ import { CreateConnectionDto } from './dto/create-connection.dto';
 import { ListConnectionCatalogQueryDto } from './dto/list-connection-catalog-query.dto';
 import { TestQueryDto } from './dto/test-query.dto';
 import { UpdateConnectionDto } from './dto/update-connection.dto';
+import { ConnectionTestService } from './connection-test.service';
 import { ConnectionService } from './connection.service';
 import { IntrospectionService } from './introspection.service';
 
@@ -39,6 +43,7 @@ import { IntrospectionService } from './introspection.service';
 export class ConnectionController {
   constructor(
     private readonly connectionService: ConnectionService,
+    private readonly connectionTestService: ConnectionTestService,
     private readonly introspectionService: IntrospectionService,
   ) {}
 
@@ -118,6 +123,18 @@ export class ConnectionController {
     @Param('id') id: string,
   ): Promise<void> {
     return this.connectionService.remove(currentUser.id, id);
+  }
+
+  @Post(':id/test')
+  @ApiOperation({ summary: 'Test connection credentials' })
+  @ApiParam({ name: 'id', description: 'Connection id' })
+  @ApiOkResponse({ description: 'Connection test result returned.' })
+  @ApiNotFoundResponse({ description: 'Connection not found.' })
+  testConnection(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id') id: string,
+  ): Promise<ConnectionTestResultDto> {
+    return this.connectionTestService.test(currentUser.id, id);
   }
 
   @Get(':id/introspect/tables')

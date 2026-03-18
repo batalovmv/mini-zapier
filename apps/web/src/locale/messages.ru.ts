@@ -610,6 +610,12 @@ export const ru = {
     deleteDialogPendingLabel: 'Удаление подключения...',
     deleteDialogPendingDescription: (name: string) =>
       `Удаляем подключение "${name}". Если оно ещё используется в сценарии, API вернёт ошибку и ничего не удалит.`,
+    testButton: 'Проверить',
+    testButtonTesting: 'Проверка...',
+    testButtonSaveFirst: 'Сначала сохраните подключение, чтобы проверить его.',
+    testSuccess: 'Проверка подключения пройдена.',
+    testFailure: 'Проверка подключения не удалась.',
+    testWebhookInfo: 'Webhook-секреты не требуют проверки подключения.',
   },
   connectionCreateDialog: {
     cancel: 'Отмена',

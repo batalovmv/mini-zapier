@@ -571,6 +571,12 @@ export const en = {
     deleteDialogPendingLabel: 'Deleting connection...',
     deleteDialogPendingDescription: (name: string) =>
       `Deleting connection "${name}". If a workflow still uses it, the API will return an error and keep it intact.`,
+    testButton: 'Test',
+    testButtonTesting: 'Testing...',
+    testButtonSaveFirst: 'Save the connection first to test it.',
+    testSuccess: 'Connection test passed.',
+    testFailure: 'Connection test failed.',
+    testWebhookInfo: 'Webhook secrets do not require connection testing.',
   },
   connectionCreateDialog: {
     cancel: 'Cancel',

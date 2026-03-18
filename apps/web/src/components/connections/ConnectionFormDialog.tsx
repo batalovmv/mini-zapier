@@ -1,6 +1,7 @@
-import type { ConnectionDto } from '@mini-zapier/shared';
+import type { ConnectionDto, ConnectionTestResultDto } from '@mini-zapier/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { testConnection } from '../../lib/api/connections';
 import { useLocale } from '../../locale/LocaleProvider';
 import { ModalShell } from '../ui/ModalShell';
 
@@ -96,7 +97,11 @@ export function ConnectionFormDialog({
     createDefaultEntries(resolvedInitialType, editingConnection),
   );
   const [formError, setFormError] = useState<string | null>(null);
+  const [testPending, setTestPending] = useState(false);
+  const [testResult, setTestResult] = useState<ConnectionTestResultDto | null>(null);
   const typeSelectionLocked = mode === 'create' && fixedType !== undefined;
+  const isWebhook = type === 'WEBHOOK';
+  const canTest = mode === 'edit' && editingConnection !== null && !isWebhook;
   const handleClose = pending ? () => undefined : onClose;
 
   useEffect(() => {
@@ -105,6 +110,7 @@ export function ConnectionFormDialog({
     setName(editingConnection?.name ?? '');
     setEntries(createDefaultEntries(nextType, editingConnection));
     setFormError(null);
+    setTestResult(null);
   }, [editingConnection, fixedType, initialType]);
 
   useEffect(() => {
@@ -145,6 +151,22 @@ export function ConnectionFormDialog({
     setEntries((currentEntries) =>
       currentEntries.filter((_, entryIndex) => entryIndex !== index),
     );
+  }
+
+  async function handleTest(): Promise<void> {
+    if (!editingConnection) return;
+
+    setTestPending(true);
+    setTestResult(null);
+
+    try {
+      const result = await testConnection(editingConnection.id);
+      setTestResult(result);
+    } catch {
+      setTestResult({ success: false, message: 'Request failed.', durationMs: 0 });
+    } finally {
+      setTestPending(false);
+    }
   }
 
   function handleSubmit(): void {
@@ -218,6 +240,26 @@ export function ConnectionFormDialog({
     <ModalShell
       actions={
         <>
+          {canTest ? (
+            <button
+              className="rounded-full border border-slate-900/10 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
+              data-testid="connection-test-button"
+              disabled={pending || testPending}
+              onClick={handleTest}
+              type="button"
+            >
+              {testPending
+                ? messages.connectionsPage.testButtonTesting
+                : messages.connectionsPage.testButton}
+            </button>
+          ) : mode === 'create' ? (
+            <span
+              className="px-2 py-2.5 text-xs text-slate-400"
+              title={messages.connectionsPage.testButtonSaveFirst}
+            >
+              {messages.connectionsPage.testButtonSaveFirst}
+            </span>
+          ) : null}
           <button
             className="rounded-full border border-slate-900/10 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
             data-testid={testIds?.cancelButton}
@@ -399,6 +441,35 @@ export function ConnectionFormDialog({
         {formError ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {formError}
+          </div>
+        ) : null}
+
+        {mode === 'edit' && isWebhook ? (
+          <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+            {messages.connectionsPage.testWebhookInfo}
+          </div>
+        ) : null}
+
+        {testResult ? (
+          <div
+            className={`rounded-2xl border px-4 py-3 text-sm ${
+              testResult.success
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                : 'border-rose-200 bg-rose-50 text-rose-700'
+            }`}
+            data-testid="connection-test-result"
+          >
+            <p className="font-semibold">
+              {testResult.success
+                ? messages.connectionsPage.testSuccess
+                : messages.connectionsPage.testFailure}
+            </p>
+            {testResult.message ? (
+              <p className="mt-1">{testResult.message}</p>
+            ) : null}
+            {testResult.durationMs > 0 ? (
+              <p className="mt-1 text-xs opacity-70">{testResult.durationMs}ms</p>
+            ) : null}
           </div>
         ) : null}
       </div>
