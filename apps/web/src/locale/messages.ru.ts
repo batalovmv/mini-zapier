@@ -117,9 +117,50 @@ export const ru = {
         label: 'Активны без запусков',
         description: 'Сценарии уже включены, но ещё не выполнялись.',
       },
-      drafts: {
+      draft: {
         label: 'Черновики',
         description: 'Сохранены, но ещё не активированы.',
+      },
+    },
+    recentActivity: {
+      eyebrow: 'Последняя активность',
+      title: 'Последние запуски и ошибки',
+      loading: 'Загружаем последнюю активность...',
+      loadingTitle: 'Загрузка последней активности...',
+      loadingDescription:
+        'Получаем последние запуски из уже загруженной dashboard summary.',
+      refreshing: 'Обновляем последнюю активность...',
+      summary: (count: number, failures: number) =>
+        failures > 0
+          ? `${formatCount('ru-RU', failures)} ${pluralizeRu(
+              failures,
+              'ошибка',
+              'ошибки',
+              'ошибок',
+            )} в ${formatCount('ru-RU', count)} ${pluralizeRu(
+              count,
+              'последнем запуске',
+              'последних запусках',
+              'последних запусках',
+            )}`
+          : `${formatCount('ru-RU', count)} ${pluralizeRu(
+              count,
+              'последний запуск',
+              'последних запуска',
+              'последних запусков',
+            )}`,
+      emptySummary: 'Последних запусков пока нет',
+      emptyTitle: 'Последней активности пока нет',
+      emptyDescription:
+        'Запуски и ошибки появятся здесь после следующего выполнения.',
+      emptyDescriptionNoWorkflows:
+        'Создайте и запустите сценарий, чтобы заполнить блок последней активности.',
+      openHistory: 'Открыть историю',
+      statusDescriptions: {
+        PENDING: 'Запуск в очереди и ждёт worker.',
+        RUNNING: 'Сценарий сейчас выполняется.',
+        SUCCESS: 'Запуск завершился успешно.',
+        FAILED: 'Откройте историю сценария, чтобы посмотреть последнюю ошибку.',
       },
     },
     createWorkflow: 'Создать сценарий',
@@ -169,6 +210,8 @@ export const ru = {
     eyebrow: 'Список сценариев',
     title: 'Операционный список сценариев',
     refreshing: 'Обновляем список сценариев...',
+    filteredCount: (shown: number, total: number) =>
+      `Показано ${formatCount('ru-RU', shown)} из ${formatCount('ru-RU', total)}`,
     loadedCount: (count: number) =>
       `${formatCount('ru-RU', count)} ${pluralizeRu(
         count,
@@ -181,6 +224,35 @@ export const ru = {
     emptyTitle: 'Сценариев пока нет',
     emptyDescription:
       'Создайте первый сценарий, чтобы принимать триггеры и запускать действия.',
+    noResultsTitle: 'По этим фильтрам сценарии не найдены',
+    noResultsDescription:
+      'Сбросьте текущий поиск или фильтры, чтобы снова увидеть весь список сценариев.',
+    controls: {
+      searchLabel: 'Поиск',
+      searchPlaceholder: 'Искать по названию или описанию',
+      statusLabel: 'Статус',
+      attentionLabel: 'Внимание',
+      sortLabel: 'Сортировка',
+      clear: 'Сбросить фильтры',
+      statusOptions: {
+        ALL: 'Все статусы',
+        ACTIVE: 'Активные',
+        PAUSED: 'На паузе',
+        DRAFT: 'Черновики',
+      },
+      attentionOptions: {
+        ALL: 'Все причины внимания',
+        failed: 'Ошибка в последнем запуске',
+        paused: 'На паузе',
+        draft: 'Черновик',
+        activeWithoutRuns: 'Активен без запусков',
+      },
+      sortOptions: {
+        attention: 'Требуют внимания',
+        updated: 'Обновлены недавно',
+        name: 'По названию',
+      },
+    },
     createWorkflow: 'Создать сценарий',
   },
   workflowCard: {

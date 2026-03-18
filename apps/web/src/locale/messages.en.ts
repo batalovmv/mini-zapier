@@ -116,9 +116,34 @@ export const en = {
         label: 'Active, no runs',
         description: 'Already active, but no execution has been recorded yet.',
       },
-      drafts: {
+      draft: {
         label: 'Drafts',
         description: 'Saved definitions that still need activation.',
+      },
+    },
+    recentActivity: {
+      eyebrow: 'Recent activity',
+      title: 'Recent runs and failures',
+      loading: 'Loading recent activity...',
+      loadingTitle: 'Loading recent activity...',
+      loadingDescription: 'Pulling the latest runs from the dashboard summary.',
+      refreshing: 'Refreshing recent activity...',
+      summary: (count: number, failures: number) =>
+        failures > 0
+          ? `${formatCount('en-US', failures)} ${pluralizeEn(failures, 'failure')} in ${formatCount('en-US', count)} recent ${pluralizeEn(count, 'run')}`
+          : `${formatCount('en-US', count)} recent ${pluralizeEn(count, 'run')}`,
+      emptySummary: 'No recent runs yet',
+      emptyTitle: 'No recent activity yet',
+      emptyDescription:
+        'Recent runs and failures will appear here after the next execution.',
+      emptyDescriptionNoWorkflows:
+        'Create and run a workflow to populate the recent activity block.',
+      openHistory: 'Open history',
+      statusDescriptions: {
+        PENDING: 'Queued and waiting for the worker.',
+        RUNNING: 'Currently running.',
+        SUCCESS: 'Finished successfully.',
+        FAILED: 'Open the workflow history to inspect the latest error.',
       },
     },
     createWorkflow: 'Create Workflow',
@@ -166,6 +191,8 @@ export const en = {
     eyebrow: 'Workflow list',
     title: 'Operational workflow list',
     refreshing: 'Refreshing workflow list...',
+    filteredCount: (shown: number, total: number) =>
+      `Showing ${formatCount('en-US', shown)} of ${formatCount('en-US', total)}`,
     loadedCount: (count: number) =>
       `${formatCount('en-US', count)} ${pluralizeEn(count, 'workflow')} loaded`,
     loadingTitle: 'Loading workflows...',
@@ -173,6 +200,35 @@ export const en = {
     emptyTitle: 'No workflows',
     emptyDescription:
       'Create the first workflow definition to start receiving triggers and running actions.',
+    noResultsTitle: 'No workflows match these controls',
+    noResultsDescription:
+      'Clear the current search or filters to see the rest of the workflow list again.',
+    controls: {
+      searchLabel: 'Search',
+      searchPlaceholder: 'Search name or description',
+      statusLabel: 'Status',
+      attentionLabel: 'Attention',
+      sortLabel: 'Sort',
+      clear: 'Clear filters',
+      statusOptions: {
+        ALL: 'All statuses',
+        ACTIVE: 'Active',
+        PAUSED: 'Paused',
+        DRAFT: 'Draft',
+      },
+      attentionOptions: {
+        ALL: 'All attention states',
+        failed: 'Failed last run',
+        paused: 'Paused',
+        draft: 'Draft',
+        activeWithoutRuns: 'Active without runs',
+      },
+      sortOptions: {
+        attention: 'Needs attention',
+        updated: 'Recently updated',
+        name: 'Name',
+      },
+    },
     createWorkflow: 'Create Workflow',
   },
   workflowCard: {

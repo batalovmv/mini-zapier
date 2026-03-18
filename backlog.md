@@ -2304,7 +2304,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-O4: add dashboard controls and recent activity
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: дать пользователю быстрый triage на главной странице через search/filter/sort и recent activity block
 - **Scope**:
   - добавить поиск по названию и описанию сценария

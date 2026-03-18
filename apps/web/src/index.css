@@ -175,6 +175,92 @@ select {
       0 18px 38px -34px rgba(15, 23, 42, 0.28);
   }
 
+  .dashboard-controls-grid {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  @media (min-width: 768px) {
+    .dashboard-controls-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .dashboard-controls-grid {
+      grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 0.82fr));
+    }
+  }
+
+  .dashboard-control-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .dashboard-control-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em];
+    color: #738194;
+  }
+
+  .dashboard-control-input {
+    min-height: 2.9rem;
+    width: 100%;
+    border-radius: 1.1rem;
+    border: 1px solid rgba(51, 65, 85, 0.12);
+    background: rgba(255, 255, 255, 0.9);
+    color: #152033;
+    padding: 0.82rem 0.95rem;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 14px 28px -30px rgba(15, 23, 42, 0.25);
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease,
+      background-color 160ms ease;
+  }
+
+  .dashboard-control-input:focus {
+    outline: none;
+    border-color: rgba(201, 109, 31, 0.48);
+    box-shadow:
+      0 0 0 4px rgba(201, 109, 31, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+
+  .dashboard-control-input:disabled {
+    cursor: not-allowed;
+    background: rgba(248, 250, 252, 0.76);
+    color: #94a3b8;
+  }
+
+  .dashboard-controls-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .dashboard-filter-reset {
+    @apply inline-flex items-center justify-center rounded-full px-3.5 py-2 text-[13px] font-semibold transition;
+    border: 1px solid rgba(51, 65, 85, 0.14);
+    background: rgba(255, 255, 255, 0.9);
+    color: #334155;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  }
+
+  .dashboard-filter-reset:hover {
+    border-color: rgba(201, 109, 31, 0.26);
+    background: rgba(255, 248, 240, 0.94);
+    color: #8d4514;
+  }
+
+  .dashboard-filter-reset:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+
   .workflow-list-row {
     @apply relative overflow-hidden px-4 py-4 sm:px-5 sm:py-5;
     isolation: isolate;
@@ -361,6 +447,42 @@ select {
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.7),
       0 16px 32px -32px rgba(15, 23, 42, 0.24);
+  }
+
+  .dashboard-activity-list {
+    @apply overflow-hidden rounded-[1.5rem] border;
+    border-color: rgba(51, 65, 85, 0.1);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(248, 243, 235, 0.82) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.72),
+      0 16px 34px -34px rgba(15, 23, 42, 0.24);
+  }
+
+  .dashboard-activity-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.95rem;
+    padding: 1rem 1.05rem;
+    transition:
+      background-color 160ms ease,
+      transform 160ms ease;
+  }
+
+  .dashboard-activity-row + .dashboard-activity-row {
+    border-top: 1px solid rgba(51, 65, 85, 0.08);
+  }
+
+  .dashboard-activity-row:hover {
+    background: rgba(255, 251, 245, 0.94);
+    transform: translateY(-1px);
+  }
+
+  .dashboard-activity-row[data-status='FAILED'] {
+    background:
+      linear-gradient(90deg, rgba(255, 241, 242, 0.92) 0%, rgba(255, 255, 255, 0) 32%),
+      transparent;
   }
 
   .status-pill {

@@ -4,22 +4,97 @@ import { Link } from 'react-router-dom';
 
 import { StatsOverview } from '../components/dashboard/StatsOverview';
 import { WorkflowCardAction } from '../components/dashboard/WorkflowCard';
-import { WorkflowList } from '../components/dashboard/WorkflowList';
+import {
+  WorkflowList,
+  WorkflowListAttentionFilter,
+  WorkflowListSort,
+  WorkflowListStatusFilter,
+} from '../components/dashboard/WorkflowList';
 import { ConfirmationDialog } from '../components/ui/ConfirmationDialog';
+import { EmptyState } from '../components/ui/EmptyState';
+import { LoadingState } from '../components/ui/LoadingState';
 import { useLocale } from '../locale/LocaleProvider';
 import { getApiErrorMessage } from '../lib/api/client';
 import { executeWorkflow } from '../lib/api/executions';
-import { DashboardWorkflowSummary } from '../lib/api/types';
+import {
+  DashboardRecentExecutionSummary,
+  DashboardWorkflowSummary,
+} from '../lib/api/types';
 import { updateWorkflowStatus } from '../lib/api/workflows';
 import { useDashboardStore } from '../stores/dashboard.store';
 
 const ACTIVE_STATUS = 'ACTIVE' as DashboardWorkflowSummary['status'];
 const DRAFT_STATUS = 'DRAFT' as DashboardWorkflowSummary['status'];
 const PAUSED_STATUS = 'PAUSED' as DashboardWorkflowSummary['status'];
+const DEFAULT_WORKFLOW_SORT: WorkflowListSort = 'attention';
+
+type AttentionReasonKey = Exclude<WorkflowListAttentionFilter, 'ALL'>;
+type RecentExecutionStatus = DashboardRecentExecutionSummary['status'];
+
+const recentExecutionStatusClassNames = {
+  PENDING: 'border-slate-200 bg-slate-100 text-slate-700',
+  RUNNING: 'border-sky-200 bg-sky-50 text-sky-700',
+  SUCCESS: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  FAILED: 'border-rose-200 bg-rose-50 text-rose-700',
+} as Record<RecentExecutionStatus, string>;
+
+const attentionPriority = {
+  failed: 0,
+  paused: 1,
+  draft: 2,
+  activeWithoutRuns: 3,
+} as const satisfies Record<AttentionReasonKey, number>;
+
+function getExecutionDisplayTime(execution: {
+  completedAt?: string | null;
+  startedAt?: string | null;
+  createdAt: string;
+}): string {
+  return execution.completedAt ?? execution.startedAt ?? execution.createdAt;
+}
+
+function getAttentionReasonKey(
+  workflow: DashboardWorkflowSummary,
+): AttentionReasonKey | null {
+  if (workflow.lastExecution?.status === 'FAILED') {
+    return 'failed';
+  }
+
+  if (workflow.status === PAUSED_STATUS) {
+    return 'paused';
+  }
+
+  if (workflow.status === DRAFT_STATUS) {
+    return 'draft';
+  }
+
+  if (workflow.status === ACTIVE_STATUS && workflow.lastExecution === null) {
+    return 'activeWithoutRuns';
+  }
+
+  return null;
+}
+
+function getUpdatedTimestamp(value: string): number {
+  const timestamp = Date.parse(value);
+
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function truncateText(value: string, maxLength = 96): string {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 3).trimEnd()}...`;
+}
 
 export function DashboardPage() {
-  const { messages, formatNumber } = useLocale();
+  const { messages, formatDateTime, formatNumber, localeTag } = useLocale();
   const workflows = useDashboardStore((state) => state.workflows);
+  const recentExecutions = useDashboardStore((state) => state.recentExecutions);
   const stats = useDashboardStore((state) => state.stats);
   const loading = useDashboardStore((state) => state.loading);
   const fetchDashboardSummary = useDashboardStore(
@@ -34,6 +109,12 @@ export function DashboardPage() {
   } | null>(null);
   const [workflowPendingDelete, setWorkflowPendingDelete] =
     useState<DashboardWorkflowSummary | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] =
+    useState<WorkflowListStatusFilter>('ALL');
+  const [attentionFilter, setAttentionFilter] =
+    useState<WorkflowListAttentionFilter>('ALL');
+  const [sortBy, setSortBy] = useState<WorkflowListSort>(DEFAULT_WORKFLOW_SORT);
 
   async function refreshDashboardDataAfterAction(): Promise<void> {
     try {
@@ -132,10 +213,30 @@ export function DashboardPage() {
     }
   }
 
+  function resetWorkflowFilters() {
+    setSearchQuery('');
+    setStatusFilter('ALL');
+    setAttentionFilter('ALL');
+  }
+
+  function getRecentExecutionSummary(
+    execution: DashboardRecentExecutionSummary,
+  ): string {
+    if (execution.status === 'FAILED' && execution.errorMessage?.trim()) {
+      return truncateText(execution.errorMessage);
+    }
+
+    return messages.dashboardPage.recentActivity.statusDescriptions[
+      execution.status
+    ];
+  }
+
   const statsLoading = stats === null && loading;
   const workflowsLoading = workflows.length === 0 && loading;
   const refreshing = loading && !(statsLoading || workflowsLoading);
   const hasDashboardData = stats !== null;
+  const controlsDisabled = workflowsLoading;
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
 
   const failedWorkflowCount = workflows.filter(
     (workflow) => workflow.lastExecution?.status === 'FAILED',
@@ -151,11 +252,78 @@ export function DashboardPage() {
     (workflow) => workflow.status === DRAFT_STATUS,
   ).length;
   const workflowsNeedingAttention = workflows.filter(
-    (workflow) =>
-      workflow.lastExecution?.status === 'FAILED' ||
-      workflow.status === PAUSED_STATUS ||
-      (workflow.status === ACTIVE_STATUS && workflow.lastExecution === null) ||
-      workflow.status === DRAFT_STATUS,
+    (workflow) => getAttentionReasonKey(workflow) !== null,
+  ).length;
+  const filteredWorkflows = workflows
+    .filter((workflow) => {
+      if (statusFilter !== 'ALL' && workflow.status !== statusFilter) {
+        return false;
+      }
+
+      const attentionReason = getAttentionReasonKey(workflow);
+
+      if (attentionFilter !== 'ALL' && attentionReason !== attentionFilter) {
+        return false;
+      }
+
+      if (normalizedSearchQuery.length === 0) {
+        return true;
+      }
+
+      const searchableText = `${workflow.name} ${workflow.description ?? ''}`
+        .trim()
+        .toLowerCase();
+
+      return searchableText.includes(normalizedSearchQuery);
+    })
+    .sort((left, right) => {
+      if (sortBy === 'name') {
+        return left.name.localeCompare(right.name, localeTag, {
+          sensitivity: 'base',
+        });
+      }
+
+      if (sortBy === 'updated') {
+        const updatedDiff =
+          getUpdatedTimestamp(right.updatedAt) -
+          getUpdatedTimestamp(left.updatedAt);
+
+        return updatedDiff !== 0
+          ? updatedDiff
+          : left.name.localeCompare(right.name, localeTag, {
+              sensitivity: 'base',
+            });
+      }
+
+      const leftAttentionReason = getAttentionReasonKey(left);
+      const rightAttentionReason = getAttentionReasonKey(right);
+      const attentionDiff =
+        (leftAttentionReason === null
+          ? Number.POSITIVE_INFINITY
+          : attentionPriority[leftAttentionReason]) -
+        (rightAttentionReason === null
+          ? Number.POSITIVE_INFINITY
+          : attentionPriority[rightAttentionReason]);
+
+      if (attentionDiff !== 0) {
+        return attentionDiff;
+      }
+
+      const updatedDiff =
+        getUpdatedTimestamp(right.updatedAt) -
+        getUpdatedTimestamp(left.updatedAt);
+
+      return updatedDiff !== 0
+        ? updatedDiff
+        : left.name.localeCompare(right.name, localeTag, {
+            sensitivity: 'base',
+          });
+    });
+  const recentActivityLoading =
+    loading && recentExecutions.length === 0 && dashboardError === null;
+  const recentActivityItems = recentExecutions.slice(0, 6);
+  const recentFailuresCount = recentExecutions.filter(
+    (execution) => execution.status === 'FAILED',
   ).length;
 
   const attentionItems = [
@@ -188,10 +356,10 @@ export function DashboardPage() {
       badgeClass: 'border border-sky-200 bg-sky-100 text-sky-700',
     },
     {
-      key: 'drafts',
+      key: 'draft',
       count: draftWorkflowCount,
-      label: messages.dashboardPage.attentionItems.drafts.label,
-      description: messages.dashboardPage.attentionItems.drafts.description,
+      label: messages.dashboardPage.attentionItems.draft.label,
+      description: messages.dashboardPage.attentionItems.draft.description,
       activeClass: 'border-slate-200/90 bg-slate-100/90',
       dotClass: 'bg-slate-500',
       badgeClass: 'border border-slate-200 bg-white text-slate-700',
@@ -217,6 +385,18 @@ export function DashboardPage() {
       : dashboardError
         ? messages.dashboardPage.summaryUnavailable
         : messages.dashboardPage.allClearSummary;
+
+  const recentActivityLabel =
+    recentActivityLoading && recentExecutions.length === 0
+      ? messages.dashboardPage.recentActivity.loading
+      : refreshing
+        ? messages.dashboardPage.recentActivity.refreshing
+        : recentExecutions.length > 0
+          ? messages.dashboardPage.recentActivity.summary(
+              recentExecutions.length,
+              recentFailuresCount,
+            )
+          : messages.dashboardPage.recentActivity.emptySummary;
 
   return (
     <div className="space-y-5 xl:space-y-6">
@@ -325,15 +505,102 @@ export function DashboardPage() {
         stats={stats}
       />
 
-      <WorkflowList
-        loading={workflowsLoading}
-        onDelete={handleDelete}
-        onRun={handleRun}
-        onToggleStatus={handleToggleStatus}
-        pendingAction={pendingAction}
-        refreshing={refreshing}
-        workflows={workflows}
-      />
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(19rem,0.95fr)] xl:items-start xl:gap-6">
+        <WorkflowList
+          attentionFilter={attentionFilter}
+          controlsDisabled={controlsDisabled}
+          loading={workflowsLoading}
+          onAttentionFilterChange={setAttentionFilter}
+          onDelete={handleDelete}
+          onResetFilters={resetWorkflowFilters}
+          onRun={handleRun}
+          onSearchQueryChange={setSearchQuery}
+          onSortChange={setSortBy}
+          onStatusFilterChange={setStatusFilter}
+          onToggleStatus={handleToggleStatus}
+          pendingAction={pendingAction}
+          refreshing={refreshing}
+          searchQuery={searchQuery}
+          sortBy={sortBy}
+          statusFilter={statusFilter}
+          totalCount={workflows.length}
+          workflows={filteredWorkflows}
+        />
+
+        <section className="app-panel overflow-hidden p-5 sm:p-6">
+          <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-4">
+            <div>
+              <p className="muted-label">
+                {messages.dashboardPage.recentActivity.eyebrow}
+              </p>
+              <h2 className="mt-2 text-[1.45rem] font-semibold tracking-tight text-slate-900 sm:text-[1.6rem]">
+                {messages.dashboardPage.recentActivity.title}
+              </h2>
+            </div>
+
+            <p className="app-chip w-fit">{recentActivityLabel}</p>
+          </div>
+
+          <div className="mt-4">
+            {recentActivityLoading ? (
+              <LoadingState
+                compact
+                description={
+                  messages.dashboardPage.recentActivity.loadingDescription
+                }
+                title={messages.dashboardPage.recentActivity.loadingTitle}
+              />
+            ) : recentActivityItems.length === 0 ? (
+              <EmptyState
+                description={
+                  workflows.length > 0
+                    ? messages.dashboardPage.recentActivity.emptyDescription
+                    : messages.dashboardPage.recentActivity
+                        .emptyDescriptionNoWorkflows
+                }
+                title={messages.dashboardPage.recentActivity.emptyTitle}
+              />
+            ) : (
+              <div className="dashboard-activity-list">
+                {recentActivityItems.map((execution) => (
+                  <Link
+                    key={execution.id}
+                    className="dashboard-activity-row"
+                    data-status={execution.status}
+                    to={`/workflows/${execution.workflowId}/history`}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${recentExecutionStatusClassNames[execution.status]}`}
+                        >
+                          {messages.common.executionStatusLabels[execution.status]}
+                        </span>
+                        <p className="truncate text-sm font-semibold text-slate-950">
+                          {execution.workflowName}
+                        </p>
+                      </div>
+
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        {getRecentExecutionSummary(execution)}
+                      </p>
+                    </div>
+
+                    <div className="ml-3 flex shrink-0 flex-col items-end gap-1 text-right">
+                      <span className="text-xs font-medium text-slate-500">
+                        {formatDateTime(getExecutionDisplayTime(execution))}
+                      </span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+                        {messages.dashboardPage.recentActivity.openHistory}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
 
       {workflowPendingDelete ? (
         <ConfirmationDialog
