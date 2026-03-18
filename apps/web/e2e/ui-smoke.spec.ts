@@ -456,13 +456,13 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     );
 
     await page.getByTestId('save-workflow-button').click();
-    await expect
-      .poll(() => page.url().match(/\/workflows\/([^/]+)\/edit$/)?.[1] ?? null)
-      .not.toBe('new');
+    await page.waitForURL(/\/workflows\/[^/]+\/edit$/, {
+      timeout: 20_000,
+    });
 
     workflowId = page.url().match(/\/workflows\/([^/]+)\/edit$/)?.[1] ?? null;
 
-    if (!workflowId) {
+    if (!workflowId || workflowId === 'new') {
       throw new Error('Workflow id was not present in the editor URL after save.');
     }
 
