@@ -62,7 +62,7 @@ select {
 
 @layer components {
   .app-panel {
-    @apply rounded-[2rem] border backdrop-blur-xl;
+    @apply rounded-[1rem] border backdrop-blur-xl;
     position: relative;
     isolation: isolate;
     border-color: var(--color-border);
@@ -94,7 +94,7 @@ select {
   }
 
   .app-subpanel {
-    @apply rounded-[1.6rem] border;
+    @apply rounded-[0.85rem] border;
     border-color: rgba(51, 65, 85, 0.12);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(250, 245, 237, 0.86) 100%);
@@ -104,7 +104,7 @@ select {
   }
 
   .app-subpanel-muted {
-    @apply rounded-[1.6rem] border;
+    @apply rounded-[0.85rem] border;
     border-color: rgba(51, 65, 85, 0.11);
     background:
       linear-gradient(180deg, rgba(250, 246, 239, 0.96) 0%, rgba(246, 240, 230, 0.82) 100%);
@@ -137,7 +137,7 @@ select {
   }
 
   .editor-inspector.app-panel {
-    border-radius: 1.7rem;
+    border-radius: 1rem;
     border-color: rgba(51, 65, 85, 0.1);
     box-shadow:
       0 18px 42px -40px rgba(15, 23, 42, 0.3),
@@ -151,12 +151,11 @@ select {
   }
 
   .editor-inspector .muted-label {
-    font-size: 9px;
-    letter-spacing: 0.16em;
+    font-size: 10px;
   }
 
   .editor-inspector-panel {
-    @apply rounded-[1.2rem] border;
+    @apply rounded-[0.75rem] border;
     border-color: rgba(51, 65, 85, 0.1);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 246, 239, 0.82) 100%);
@@ -244,7 +243,7 @@ select {
   }
 
   .editor-inspector-row-group {
-    @apply overflow-hidden rounded-[1rem] border;
+    @apply overflow-hidden rounded-[0.65rem] border;
     border-color: rgba(51, 65, 85, 0.08);
     background: rgba(248, 250, 252, 0.72);
   }
@@ -478,7 +477,7 @@ select {
   }
 
   .editor-command-bar {
-    @apply rounded-[1.55rem] border;
+    @apply rounded-[1rem] border;
     border-color: rgba(51, 65, 85, 0.11);
     background:
       radial-gradient(circle at top right, rgba(201, 109, 31, 0.1), transparent 28%),
@@ -629,7 +628,7 @@ select {
   }
 
   .dashboard-panel.app-panel {
-    border-radius: 1.65rem;
+    border-radius: 1rem;
     border-color: rgba(51, 65, 85, 0.11);
     box-shadow:
       0 22px 46px -40px rgba(15, 23, 42, 0.32),
@@ -657,7 +656,7 @@ select {
   }
 
   .workflow-list-shell {
-    @apply overflow-hidden rounded-[1.35rem] border;
+    @apply overflow-hidden rounded-[0.85rem] border;
     border-color: rgba(51, 65, 85, 0.1);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 243, 235, 0.8) 100%);
@@ -665,7 +664,7 @@ select {
   }
 
   .connections-list-shell {
-    @apply overflow-hidden rounded-[1.2rem] border;
+    @apply overflow-hidden rounded-[0.75rem] border;
     border-color: rgba(51, 65, 85, 0.1);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(249, 244, 236, 0.84) 100%);
@@ -779,7 +778,7 @@ select {
   }
 
   .connections-state-card {
-    @apply rounded-[1.2rem] border px-4 py-4;
+    @apply rounded-[0.75rem] border px-4 py-4;
     border-color: rgba(51, 65, 85, 0.1);
     background: rgba(255, 255, 255, 0.78);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
@@ -1121,7 +1120,7 @@ select {
   }
 
   .dashboard-attention-card {
-    @apply rounded-[1.35rem] border p-3.5;
+    @apply rounded-[0.85rem] border p-3.5;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
     transition:
       border-color 160ms ease,
@@ -1136,7 +1135,7 @@ select {
   }
 
   .dashboard-stat-card {
-    @apply rounded-[1.2rem] border p-3.5;
+    @apply rounded-[0.75rem] border p-3.5;
     border-color: rgba(51, 65, 85, 0.1);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(247, 242, 234, 0.76) 100%);
@@ -1144,7 +1143,7 @@ select {
   }
 
   .dashboard-activity-list {
-    @apply overflow-hidden rounded-[1.3rem] border;
+    @apply overflow-hidden rounded-[0.85rem] border;
     border-color: rgba(51, 65, 85, 0.1);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 243, 235, 0.84) 100%);
@@ -1152,7 +1151,7 @@ select {
   }
 
   .dashboard-activity-featured {
-    @apply block rounded-[1.3rem] border p-4;
+    @apply block rounded-[0.85rem] border p-4;
     border-color: rgba(51, 65, 85, 0.1);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 243, 235, 0.86) 100%);
@@ -1200,7 +1199,7 @@ select {
   }
 
   .dashboard-empty-compact {
-    @apply rounded-[1.25rem] border border-dashed px-4 py-4;
+    @apply rounded-[0.75rem] border border-dashed px-4 py-4;
     border-color: rgba(148, 163, 184, 0.34);
     background: rgba(255, 255, 255, 0.68);
   }
@@ -1211,7 +1210,7 @@ select {
   }
 
   .muted-label {
-    @apply text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500;
+    @apply text-[11px] font-semibold text-slate-500;
     color: #657283;
   }
 
