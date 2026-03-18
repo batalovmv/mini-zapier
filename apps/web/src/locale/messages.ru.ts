@@ -1130,6 +1130,16 @@ export const ru = {
     apiRequestFailed: 'API-запрос завершился ошибкой.',
     missingApiRoute:
       'Текущий API deployment не поддерживает этот маршрут.',
+    backendErrors: {
+      'Invalid credentials': 'Неверные учётные данные',
+      'User already exists': 'Пользователь уже существует',
+      'Workflow not found': 'Сценарий не найден',
+      'Connection not found': 'Подключение не найдено',
+      'Connection is used by workflows':
+        'Подключение используется сценариями',
+      Unauthorized: 'Не авторизован',
+      'Not found': 'Не найдено',
+    } as Record<string, string>,
   },
   workflowValidation: {
     MISSING_NODE_REFERENCE:

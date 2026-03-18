@@ -1071,6 +1071,15 @@ export const en = {
     apiRequestFailed: 'API request failed.',
     missingApiRoute:
       'The current API deployment does not support this route.',
+    backendErrors: {
+      'Invalid credentials': 'Invalid credentials',
+      'User already exists': 'User already exists',
+      'Workflow not found': 'Workflow not found',
+      'Connection not found': 'Connection not found',
+      'Connection is used by workflows': 'Connection is used by workflows',
+      Unauthorized: 'Unauthorized',
+      'Not found': 'Not found',
+    } as Record<string, string>,
   },
   workflowValidation: {
     MISSING_NODE_REFERENCE:

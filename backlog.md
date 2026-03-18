@@ -2716,3 +2716,29 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+### TASK-R1: localize known backend error messages on frontend
+- **Статус**: `done`
+- **Цель**: при RU locale показывать известные backend error messages на русском
+- **Scope**:
+  - маппинг известных backend error strings на locale messages в `getApiErrorMessage`
+  - секция `backendErrors` в `messages.en.ts` и `messages.ru.ts`
+  - неизвестные строки — fallback as-is
+- **Не входит**:
+  - изменения backend
+  - новые зависимости
+  - изменение логики auth/API/store
+- **Файлы**:
+  - `apps/web/src/lib/api/client.ts`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - RU locale: неправильный пароль → ошибка на русском
+  - RU locale: регистрация существующего email → ошибка на русском
+  - EN locale: поведение не меняется
+  - неизвестная backend ошибка → as-is
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` — те же 4 smoke-теста
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`

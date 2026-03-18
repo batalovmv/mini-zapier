@@ -9,6 +9,7 @@ interface ApiErrorMessageOptions {
   unexpectedFrontendError: string;
   apiRequestFailed: string;
   missingApiRoute: string;
+  backendErrors?: Record<string, string>;
 }
 
 const missingApiRoutePattern = /^Cannot (GET|POST|PUT|PATCH|DELETE) \//i;
@@ -94,7 +95,10 @@ export function getApiErrorMessage(
     : null;
 
   if (normalizedPayloadMessage) {
-    return normalizedPayloadMessage;
+    return (
+      options?.backendErrors?.[normalizedPayloadMessage] ??
+      normalizedPayloadMessage
+    );
   }
 
   const normalizedErrorMessage = error.message
