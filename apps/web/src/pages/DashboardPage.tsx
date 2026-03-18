@@ -14,10 +14,11 @@ import { updateWorkflowStatus } from '../lib/api/workflows';
 import { useDashboardStore } from '../stores/dashboard.store';
 
 const ACTIVE_STATUS = 'ACTIVE' as DashboardWorkflowSummary['status'];
+const DRAFT_STATUS = 'DRAFT' as DashboardWorkflowSummary['status'];
 const PAUSED_STATUS = 'PAUSED' as DashboardWorkflowSummary['status'];
 
 export function DashboardPage() {
-  const { messages } = useLocale();
+  const { messages, formatNumber } = useLocale();
   const workflows = useDashboardStore((state) => state.workflows);
   const stats = useDashboardStore((state) => state.stats);
   const loading = useDashboardStore((state) => state.loading);
@@ -134,24 +135,111 @@ export function DashboardPage() {
   const statsLoading = stats === null && loading;
   const workflowsLoading = workflows.length === 0 && loading;
   const refreshing = loading && !(statsLoading || workflowsLoading);
+  const hasDashboardData = stats !== null;
+
+  const failedWorkflowCount = workflows.filter(
+    (workflow) => workflow.lastExecution?.status === 'FAILED',
+  ).length;
+  const pausedWorkflowCount = workflows.filter(
+    (workflow) => workflow.status === PAUSED_STATUS,
+  ).length;
+  const activeWithoutRunsCount = workflows.filter(
+    (workflow) =>
+      workflow.status === ACTIVE_STATUS && workflow.lastExecution === null,
+  ).length;
+  const draftWorkflowCount = workflows.filter(
+    (workflow) => workflow.status === DRAFT_STATUS,
+  ).length;
+  const workflowsNeedingAttention = workflows.filter(
+    (workflow) =>
+      workflow.lastExecution?.status === 'FAILED' ||
+      workflow.status === PAUSED_STATUS ||
+      (workflow.status === ACTIVE_STATUS && workflow.lastExecution === null) ||
+      workflow.status === DRAFT_STATUS,
+  ).length;
+
+  const attentionItems = [
+    {
+      key: 'failed',
+      count: failedWorkflowCount,
+      label: messages.dashboardPage.attentionItems.failed.label,
+      description: messages.dashboardPage.attentionItems.failed.description,
+      activeClass: 'border-rose-200/80 bg-rose-50/90',
+      dotClass: 'bg-rose-500',
+      badgeClass: 'border border-rose-200 bg-rose-100 text-rose-700',
+    },
+    {
+      key: 'paused',
+      count: pausedWorkflowCount,
+      label: messages.dashboardPage.attentionItems.paused.label,
+      description: messages.dashboardPage.attentionItems.paused.description,
+      activeClass: 'border-amber-200/80 bg-amber-50/90',
+      dotClass: 'bg-amber-500',
+      badgeClass: 'border border-amber-200 bg-amber-100 text-amber-700',
+    },
+    {
+      key: 'activeWithoutRuns',
+      count: activeWithoutRunsCount,
+      label: messages.dashboardPage.attentionItems.activeWithoutRuns.label,
+      description:
+        messages.dashboardPage.attentionItems.activeWithoutRuns.description,
+      activeClass: 'border-sky-200/80 bg-sky-50/90',
+      dotClass: 'bg-sky-500',
+      badgeClass: 'border border-sky-200 bg-sky-100 text-sky-700',
+    },
+    {
+      key: 'drafts',
+      count: draftWorkflowCount,
+      label: messages.dashboardPage.attentionItems.drafts.label,
+      description: messages.dashboardPage.attentionItems.drafts.description,
+      activeClass: 'border-slate-200/90 bg-slate-100/90',
+      dotClass: 'bg-slate-500',
+      badgeClass: 'border border-slate-200 bg-white text-slate-700',
+    },
+  ];
+
+  const workflowSummaryLabel = hasDashboardData
+    ? messages.dashboardPage.workflowCount(stats.totalWorkflows)
+    : loading
+      ? messages.dashboardPage.loadingSummary
+      : dashboardError
+        ? messages.dashboardPage.summaryUnavailable
+        : messages.dashboardPage.workflowCount(0);
+
+  const attentionSummaryLabel = hasDashboardData
+    ? refreshing
+      ? messages.dashboardPage.attentionRefreshing
+      : workflowsNeedingAttention > 0
+        ? messages.dashboardPage.needsAttentionSummary(workflowsNeedingAttention)
+        : messages.dashboardPage.allClearSummary
+    : loading
+      ? messages.dashboardPage.attentionLoading
+      : dashboardError
+        ? messages.dashboardPage.summaryUnavailable
+        : messages.dashboardPage.allClearSummary;
 
   return (
-    <div className="space-y-7 xl:space-y-8">
-      <section className="app-panel app-panel-strong overflow-hidden">
-        <div className="border-b border-slate-900/10 px-6 py-6 sm:px-7 sm:py-7">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-4xl">
+    <div className="space-y-5 xl:space-y-6">
+      <section className="dashboard-operational-panel app-panel overflow-hidden">
+        <div className="px-6 py-5 sm:px-7 sm:py-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-3xl">
               <p className="muted-label">{messages.dashboardPage.eyebrow}</p>
-              <h1 className="mt-2 max-w-4xl text-3xl font-semibold tracking-tight text-slate-900 sm:text-[2.45rem] sm:leading-[1.06]">
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[2.15rem] sm:leading-[1.08]">
                 {messages.dashboardPage.title}
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px]">
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
                 {messages.dashboardPage.description}
               </p>
+
+              <div className="mt-4 flex flex-wrap gap-2.5">
+                <span className="app-chip">{workflowSummaryLabel}</span>
+                <span className="app-chip">{attentionSummaryLabel}</span>
+              </div>
             </div>
 
             <Link
-              className="inline-flex self-start rounded-full bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_20px_32px_-20px_rgba(141,69,20,0.62)] transition hover:bg-amber-700 lg:self-end"
+              className="inline-flex self-start rounded-full bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_34px_-22px_rgba(141,69,20,0.62)] transition hover:bg-amber-700"
               data-testid="create-workflow-link"
               to="/workflows/new"
             >
@@ -167,6 +255,68 @@ export function DashboardPage() {
             </div>
           </div>
         ) : null}
+      </section>
+
+      <section className="app-panel app-panel-strong overflow-hidden p-5 sm:p-6">
+        <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="muted-label">
+              {messages.dashboardPage.attentionEyebrow}
+            </p>
+            <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-900 sm:text-[1.65rem]">
+              {messages.dashboardPage.attentionTitle}
+            </h2>
+          </div>
+
+          <p className="app-chip w-fit">{attentionSummaryLabel}</p>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {attentionItems.map((item) => {
+            const isActive = hasDashboardData && item.count > 0;
+
+            return (
+              <article
+                key={item.key}
+                className={`dashboard-attention-card ${
+                  isActive ? item.activeClass : 'border-slate-200/80 bg-white/80'
+                }`}
+                data-active={isActive}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${
+                          isActive ? item.dotClass : 'bg-slate-300'
+                        }`}
+                      />
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-600">
+                        {item.label}
+                      </p>
+                    </div>
+
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      {item.description}
+                    </p>
+                  </div>
+
+                  <div
+                    className={`inline-flex min-w-[3rem] justify-center rounded-full px-3 py-1.5 text-lg font-semibold tracking-tight ${
+                      isActive
+                        ? item.badgeClass
+                        : 'border border-slate-200 bg-white text-slate-500'
+                    }`}
+                  >
+                    {hasDashboardData
+                      ? formatNumber(item.count)
+                      : messages.common.emptyValue}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </section>
 
       <StatsOverview

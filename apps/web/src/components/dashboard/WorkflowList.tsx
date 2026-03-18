@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom';
-
 import { useLocale } from '../../locale/LocaleProvider';
 import { DashboardWorkflowSummary } from '../../lib/api/types';
 import { EmptyState } from '../ui/EmptyState';
@@ -56,14 +54,6 @@ export function WorkflowList({
           />
         ) : workflows.length === 0 ? (
           <EmptyState
-            action={
-              <Link
-                className="inline-flex rounded-full bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700"
-                to="/workflows/new"
-              >
-                {messages.workflowList.createWorkflow}
-              </Link>
-            }
             description={messages.workflowList.emptyDescription}
             title={messages.workflowList.emptyTitle}
           />

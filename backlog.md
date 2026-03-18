@@ -2248,7 +2248,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-O2: redesign dashboard top-level IA
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: убрать hero-подход и превратить верх главной страницы в compact operational header с явным attention layer
 - **Scope**:
   - заменить большой hero на компактный верхний блок страницы

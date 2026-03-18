@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-O1 — `dashboard summary data contract`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт; dashboard redesign track продолжается с `TASK-O2`–`TASK-O5`
+- **Последнее изменение**: TASK-O2 — `redesign dashboard top-level IA`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт; dashboard redesign track продолжается с `TASK-O3`–`TASK-O5`
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -12,6 +12,7 @@
   - **TASK-N8 local verification**: live smoke больше не зависит от внешнего `postman-echo` по умолчанию; webhook → HTTP Request → Data Transform теперь использует стабильный public `POST /api/auth/register` с контрактом `{"ok": true}`, а `MINI_ZAPIER_E2E_ECHO_URL` сохранён как optional override; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
   - **TASK-O0 planning**: проведён архитектурный UX-аудит главной страницы; dashboard redesign разложен на отдельные задачи `TASK-O1`–`TASK-O5`, а следующий рабочий срез начинается с data contract и устранения N+1 загрузки
   - **TASK-O1 local build**: добавлен `GET /api/stats/dashboard` с компактным контрактом `{stats, workflows, recentExecutions}`; каждый workflow summary теперь сразу содержит `lastExecution`, а dashboard store/page больше не делают per-workflow `GET /workflows/:id/executions?limit=1`; `pnpm --filter @mini-zapier/api build` и `pnpm --filter @mini-zapier/web build` ✅
+  - **TASK-O2 local build**: большой hero на dashboard заменён компактным operational header; под ним появился attention strip по существующим `workflows[]/lastExecution` состояниям (`failed`, `paused`, `active without runs`, `drafts`), stats стали компактнее и вторичнее, а duplicate CTA из empty state убран без redesign списка; `pnpm --filter @mini-zapier/web build` ✅
   - Editor canvas: все 3 trigger types (Webhook, Cron, Email Trigger) + все 5 action types (HTTP Request, Email, Telegram, PostgreSQL Query, Data Transform) — узлы drag-and-drop, config panels — ✅
   - **TASK-056 preview UI**: Email config → кнопка «▸ Предпросмотр» → empty state корректный; Telegram config → аналогично ✅
   - **TASK-A local build**: editor dirty-state + route/beforeunload guard собраны локально, `pnpm --filter @mini-zapier/web build` ✅
@@ -73,6 +74,14 @@
     - `pnpm --filter @mini-zapier/web exec playwright test --list` ✓
   - **Ограничения TASK-N8**:
     - локальный live Playwright run против Vercel по-прежнему не запускался: на этой машине нет `MINI_ZAPIER_E2E_PASSWORD`, поэтому окончательное подтверждение фикса требует push и GitHub Actions `E2E Smoke`
+- **Что сделано в TASK-O2**:
+  - `apps/web/src/pages/DashboardPage.tsx`, `apps/web/src/index.css` — верх dashboard перестроен из hero в компактный operational header с одним CTA `Создать сценарий`; ниже добавлен attention strip, собранный из существующих workflow summary данных без новых API и без изменения продуктовой логики
+  - `apps/web/src/components/dashboard/StatsOverview.tsx`, `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — stats-витрина ужата в более quiet secondary layer, EN/RU copy переведён на короткий operational tone для header/attention/stats
+  - `apps/web/src/components/dashboard/WorkflowList.tsx` — из empty state убран duplicate CTA `Создать сценарий`, при этом структура списка, его действия и отдельный redesign workflow list оставлены для `TASK-O3`
+  - **Проверки TASK-O2**:
+    - `pnpm --filter @mini-zapier/web build` ✓
+  - **Ограничения TASK-O2**:
+    - workflow list, search/filter/sort и recent activity по-прежнему не менялись; они остаются scope следующих срезов `TASK-O3` и `TASK-O4`
 - **Что сделано в TASK-O1**:
   - `apps/api/src/stats/stats.controller.ts` — добавлен dedicated endpoint `GET /api/stats/dashboard`, который отдаёт компактный payload для operational dashboard: summary stats, workflow summaries с `nodeCount` и встроенным `lastExecution`, а также `recentExecutions`; существующий `GET /api/stats` сохранён без breaking changes
   - `apps/web/src/lib/api/types.ts`, `apps/web/src/lib/api/stats.ts`, `apps/web/src/stores/dashboard.store.ts` — введён новый dashboard summary contract и единый `fetchDashboardSummary()`; store теперь наполняется одним ответом API вместо раздельных загрузок `stats + workflows + N запросов executions`
@@ -707,7 +716,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-`TASK-O1` закрыл data-contract слой для dashboard: единый endpoint уже отдаёт stats, workflow summaries и recent executions, а фронт больше не делает N+1 загрузку последних запусков. Следующий рабочий шаг — выполнить `TASK-O2`: переработать top-level IA главной страницы, убрать hero-подход и собрать компактный operational header с attention layer без изменения остального scope.
+`TASK-O2` закрыл top-level IA для dashboard: hero убран, сверху теперь компактный operational header с одним CTA, а attention strip уже показывает `failed`, `paused`, `active without runs` и `drafts` из текущего summary contract. Следующий рабочий шаг — выполнить `TASK-O3`: переработать workflow list ниже в более плотный operational list, не добавляя поиск, фильтры, сортировку и recent activity раньше своих отдельных срезов.
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke против live Vercel не запускался; для TASK-J локальная проверка ограничена `build` + `playwright test --list`.
@@ -875,3 +884,4 @@
 | TASK-N8 | done | см. `git log` (`TASK-N8: stabilize live smoke by removing third-party echo dependency`) | Default live smoke no longer depends on `postman-echo`; webhook -> HTTP Request -> Data Transform now uses internal `/api/auth/register` with stable JSON output, while `MINI_ZAPIER_E2E_ECHO_URL` remains an optional override |
 | TASK-O0 | done | см. `git log` (`TASK-O0: plan dashboard redesign slices`) | Dashboard UX audit decomposed into sequential backlog slices `TASK-O1`–`TASK-O5`; next implementation starts with data contract and N+1 removal |
 | TASK-O1 | done | см. `git log` (`TASK-O1: dashboard summary data contract`) | Added `GET /api/stats/dashboard`, embedded `lastExecution` into workflow summaries, and switched dashboard frontend to a single summary payload without per-workflow execution fetches |
+| TASK-O2 | done | см. `git log` (`TASK-O2: redesign dashboard top-level IA`) | Replaced the dashboard hero with a compact operational header, added an attention strip from existing summary data, made stats secondary, and removed the duplicate create CTA from the empty state |

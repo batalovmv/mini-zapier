@@ -87,10 +87,39 @@ export const en = {
     logout: 'Logout',
   },
   dashboardPage: {
-    eyebrow: 'Workflow operations',
-    title: 'Operate workflows, monitor execution health and launch manual runs.',
+    eyebrow: 'Operations board',
+    title: 'Workflow dashboard',
     description:
-      'Monitor workflow health, launch manual runs and manage your automations.',
+      'Review attention states first, then move into the workflow list below.',
+    workflowCount: (count: number) =>
+      `Workflows in workspace: ${formatCount('en-US', count)}`,
+    loadingSummary: 'Loading workflow summary...',
+    summaryUnavailable: 'Dashboard summary unavailable.',
+    needsAttentionSummary: (count: number) =>
+      `Needs review: ${formatCount('en-US', count)}`,
+    allClearSummary: 'No urgent states',
+    attentionLoading: 'Loading attention states...',
+    attentionRefreshing: 'Refreshing attention states...',
+    attentionEyebrow: 'Attention layer',
+    attentionTitle: 'Check these states first',
+    attentionItems: {
+      failed: {
+        label: 'Failed last run',
+        description: 'Latest execution ended with an error.',
+      },
+      paused: {
+        label: 'Paused',
+        description: 'Stopped workflows that are not receiving new runs.',
+      },
+      activeWithoutRuns: {
+        label: 'Active, no runs',
+        description: 'Already active, but no execution has been recorded yet.',
+      },
+      drafts: {
+        label: 'Drafts',
+        description: 'Saved definitions that still need activation.',
+      },
+    },
     createWorkflow: 'Create Workflow',
     deleteDialogTitle: 'Delete workflow?',
     deleteDialogConfirm: 'Delete workflow',
@@ -107,29 +136,28 @@ export const en = {
     deletedToast: (name: string) => `Workflow "${name}" deleted.`,
   },
   statsOverview: {
-    eyebrow: 'Stats overview',
-    title: 'Platform health at a glance',
+    eyebrow: 'Baseline metrics',
+    title: 'System stats',
     loading: 'Loading...',
-    refreshing: 'Refreshing latest workflow and execution data...',
+    refreshing: 'Refreshing counters...',
     pausedWorkflows: (count: number | null) =>
-      `Paused workflows: ${count === null ? '—' : formatCount('en-US', count)}`,
+      `Paused: ${count === null ? '—' : formatCount('en-US', count)}`,
     cards: {
       totalWorkflows: {
         label: 'Total Workflows',
-        description: 'All workflow definitions currently stored in the system.',
+        description: 'Definitions currently stored in the workspace.',
       },
       activeWorkflows: {
         label: 'Active Workflows',
-        description: 'Workflows ready to receive webhook, cron or email triggers.',
+        description: 'Ready to receive webhook, cron or email triggers.',
       },
       totalExecutions: {
         label: 'Total Executions',
-        description: 'Manual and trigger-driven runs recorded by the backend.',
+        description: 'Recorded manual and trigger-driven runs.',
       },
       successRate: {
         label: 'Success Rate',
-        description:
-          'Calculated from successful versus failed completed executions.',
+        description: 'Completed runs that finished without failure.',
       },
     },
   },

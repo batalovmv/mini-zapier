@@ -88,11 +88,39 @@ export const ru = {
     logout: 'Выйти',
   },
   dashboardPage: {
-    eyebrow: 'Операции со сценариями',
-    title:
-      'Управляйте сценариями, следите за состоянием запусков и запускайте их вручную.',
+    eyebrow: 'Операционная панель',
+    title: 'Панель сценариев',
     description:
-      'Следите за состоянием сценариев, запускайте их вручную и управляйте автоматизациями.',
+      'Сначала проверьте зоны внимания, затем переходите к списку сценариев ниже.',
+    workflowCount: (count: number) =>
+      `Сценариев в workspace: ${formatCount('ru-RU', count)}`,
+    loadingSummary: 'Загружаем сводку сценариев...',
+    summaryUnavailable: 'Сводка панели недоступна.',
+    needsAttentionSummary: (count: number) =>
+      `Требуют внимания: ${formatCount('ru-RU', count)}`,
+    allClearSummary: 'Срочных состояний нет',
+    attentionLoading: 'Загружаем зоны внимания...',
+    attentionRefreshing: 'Обновляем зоны внимания...',
+    attentionEyebrow: 'Зоны внимания',
+    attentionTitle: 'Сначала проверьте эти состояния',
+    attentionItems: {
+      failed: {
+        label: 'Ошибка в последнем запуске',
+        description: 'Последнее выполнение завершилось с ошибкой.',
+      },
+      paused: {
+        label: 'На паузе',
+        description: 'Сценарии остановлены и не принимают новые запуски.',
+      },
+      activeWithoutRuns: {
+        label: 'Активны без запусков',
+        description: 'Сценарии уже включены, но ещё не выполнялись.',
+      },
+      drafts: {
+        label: 'Черновики',
+        description: 'Сохранены, но ещё не активированы.',
+      },
+    },
     createWorkflow: 'Создать сценарий',
     deleteDialogTitle: 'Удалить сценарий?',
     deleteDialogConfirm: 'Удалить сценарий',
@@ -109,23 +137,22 @@ export const ru = {
     deletedToast: (name: string) => `Сценарий "${name}" удалён.`,
   },
   statsOverview: {
-    eyebrow: 'Обзор статистики',
-    title: 'Состояние платформы с первого взгляда',
+    eyebrow: 'Базовые метрики',
+    title: 'Системные метрики',
     loading: 'Загрузка...',
-    refreshing: 'Обновляем данные по сценариям и запускам...',
+    refreshing: 'Обновляем счётчики...',
     pausedWorkflows: (count: number | null) =>
-      `Сценарии на паузе: ${
+      `На паузе: ${
         count === null ? '—' : formatCount('ru-RU', count)
       }`,
     cards: {
       totalWorkflows: {
         label: 'Всего сценариев',
-        description: 'Все сценарии, которые сейчас сохранены в системе.',
+        description: 'Все сценарии, сохранённые в текущем workspace.',
       },
       activeWorkflows: {
         label: 'Активные сценарии',
-        description:
-          'Сценарии, готовые принимать webhook, cron или email триггеры.',
+        description: 'Готовы принимать webhook, cron или email триггеры.',
       },
       totalExecutions: {
         label: 'Всего запусков',
@@ -133,8 +160,7 @@ export const ru = {
       },
       successRate: {
         label: 'Успешность',
-        description:
-          'Рассчитывается по завершённым успешным и неуспешным запускам.',
+        description: 'Доля завершённых запусков без ошибки.',
       },
     },
   },
