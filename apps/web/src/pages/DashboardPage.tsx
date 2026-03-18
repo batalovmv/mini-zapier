@@ -399,8 +399,11 @@ export function DashboardPage() {
           : messages.dashboardPage.recentActivity.emptySummary;
 
   return (
-    <div className="space-y-5 xl:space-y-6">
-      <section className="dashboard-operational-panel app-panel overflow-hidden">
+    <div className="space-y-4 sm:space-y-5 xl:space-y-6" data-testid="dashboard-page">
+      <section
+        className="dashboard-operational-panel app-panel overflow-hidden"
+        data-testid="dashboard-operational-header"
+      >
         <div className="px-6 py-5 sm:px-7 sm:py-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl">
@@ -413,13 +416,17 @@ export function DashboardPage() {
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2.5">
-                <span className="app-chip">{workflowSummaryLabel}</span>
-                <span className="app-chip">{attentionSummaryLabel}</span>
+                <span className="app-chip max-w-full whitespace-normal">
+                  {workflowSummaryLabel}
+                </span>
+                <span className="app-chip max-w-full whitespace-normal">
+                  {attentionSummaryLabel}
+                </span>
               </div>
             </div>
 
             <Link
-              className="inline-flex self-start rounded-full bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_34px_-22px_rgba(141,69,20,0.62)] transition hover:bg-amber-700"
+              className="inline-flex w-full justify-center self-stretch rounded-full bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_34px_-22px_rgba(141,69,20,0.62)] transition hover:bg-amber-700 sm:w-auto sm:self-start"
               data-testid="create-workflow-link"
               to="/workflows/new"
             >
@@ -430,14 +437,20 @@ export function DashboardPage() {
 
         {dashboardError ? (
           <div className="px-6 pb-6 pt-0 sm:px-7 sm:pb-7">
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+            <div
+              className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
+              data-testid="dashboard-error"
+            >
               {dashboardError}
             </div>
           </div>
         ) : null}
       </section>
 
-      <section className="app-panel app-panel-strong overflow-hidden p-5 sm:p-6">
+      <section
+        className="app-panel app-panel-strong overflow-hidden p-5 sm:p-6"
+        data-testid="dashboard-attention-strip"
+      >
         <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="muted-label">
@@ -448,7 +461,9 @@ export function DashboardPage() {
             </h2>
           </div>
 
-          <p className="app-chip w-fit">{attentionSummaryLabel}</p>
+          <p className="app-chip w-fit max-w-full whitespace-normal">
+            {attentionSummaryLabel}
+          </p>
         </div>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -462,6 +477,7 @@ export function DashboardPage() {
                   isActive ? item.activeClass : 'border-slate-200/80 bg-white/80'
                 }`}
                 data-active={isActive}
+                data-testid={`dashboard-attention-${item.key}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -527,7 +543,10 @@ export function DashboardPage() {
           workflows={filteredWorkflows}
         />
 
-        <section className="app-panel overflow-hidden p-5 sm:p-6">
+        <section
+          className="app-panel overflow-hidden p-5 sm:p-6"
+          data-testid="dashboard-recent-activity"
+        >
           <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-4">
             <div>
               <p className="muted-label">
@@ -538,45 +557,52 @@ export function DashboardPage() {
               </h2>
             </div>
 
-            <p className="app-chip w-fit">{recentActivityLabel}</p>
+            <p className="app-chip w-fit max-w-full whitespace-normal">
+              {recentActivityLabel}
+            </p>
           </div>
 
           <div className="mt-4">
             {recentActivityLoading ? (
-              <LoadingState
-                compact
-                description={
-                  messages.dashboardPage.recentActivity.loadingDescription
-                }
-                title={messages.dashboardPage.recentActivity.loadingTitle}
-              />
+              <div data-testid="dashboard-recent-loading">
+                <LoadingState
+                  compact
+                  description={
+                    messages.dashboardPage.recentActivity.loadingDescription
+                  }
+                  title={messages.dashboardPage.recentActivity.loadingTitle}
+                />
+              </div>
             ) : recentActivityItems.length === 0 ? (
-              <EmptyState
-                description={
-                  workflows.length > 0
-                    ? messages.dashboardPage.recentActivity.emptyDescription
-                    : messages.dashboardPage.recentActivity
-                        .emptyDescriptionNoWorkflows
-                }
-                title={messages.dashboardPage.recentActivity.emptyTitle}
-              />
+              <div data-testid="dashboard-recent-empty">
+                <EmptyState
+                  description={
+                    workflows.length > 0
+                      ? messages.dashboardPage.recentActivity.emptyDescription
+                      : messages.dashboardPage.recentActivity
+                          .emptyDescriptionNoWorkflows
+                  }
+                  title={messages.dashboardPage.recentActivity.emptyTitle}
+                />
+              </div>
             ) : (
-              <div className="dashboard-activity-list">
+              <div className="dashboard-activity-list" data-testid="dashboard-recent-list">
                 {recentActivityItems.map((execution) => (
                   <Link
                     key={execution.id}
                     className="dashboard-activity-row"
                     data-status={execution.status}
+                    data-testid={`dashboard-recent-execution-${execution.id}`}
                     to={`/workflows/${execution.workflowId}/history`}
                   >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span
                           className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${recentExecutionStatusClassNames[execution.status]}`}
                         >
                           {messages.common.executionStatusLabels[execution.status]}
                         </span>
-                        <p className="truncate text-sm font-semibold text-slate-950">
+                        <p className="text-sm font-semibold text-slate-950 sm:truncate">
                           {execution.workflowName}
                         </p>
                       </div>
@@ -586,7 +612,7 @@ export function DashboardPage() {
                       </p>
                     </div>
 
-                    <div className="ml-3 flex shrink-0 flex-col items-end gap-1 text-right">
+                    <div className="dashboard-activity-meta ml-3 flex shrink-0 flex-col items-end gap-1 text-right">
                       <span className="text-xs font-medium text-slate-500">
                         {formatDateTime(getExecutionDisplayTime(execution))}
                       </span>

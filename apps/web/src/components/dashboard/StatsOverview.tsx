@@ -9,6 +9,7 @@ interface StatsOverviewProps {
 }
 
 interface StatCardDefinition {
+  key: 'totalWorkflows' | 'activeWorkflows' | 'totalExecutions' | 'successRate';
   label: string;
   value: string | null;
   description: string;
@@ -33,6 +34,7 @@ export function StatsOverview({
 
   const cards: StatCardDefinition[] = [
     {
+      key: 'totalWorkflows',
       label: messages.statsOverview.cards.totalWorkflows.label,
       value: loading ? null : formatValue(stats?.totalWorkflows ?? null),
       description: messages.statsOverview.cards.totalWorkflows.description,
@@ -40,6 +42,7 @@ export function StatsOverview({
       accent: 'bg-amber-500/80',
     },
     {
+      key: 'activeWorkflows',
       label: messages.statsOverview.cards.activeWorkflows.label,
       value: loading ? null : formatValue(stats?.activeWorkflows ?? null),
       description: messages.statsOverview.cards.activeWorkflows.description,
@@ -47,6 +50,7 @@ export function StatsOverview({
       accent: 'bg-emerald-500/80',
     },
     {
+      key: 'totalExecutions',
       label: messages.statsOverview.cards.totalExecutions.label,
       value: loading ? null : formatValue(stats?.totalExecutions ?? null),
       description: messages.statsOverview.cards.totalExecutions.description,
@@ -54,6 +58,7 @@ export function StatsOverview({
       accent: 'bg-sky-500/80',
     },
     {
+      key: 'successRate',
       label: messages.statsOverview.cards.successRate.label,
       value: loading ? null : formatValue(stats?.successRate ?? null, '%'),
       description: messages.statsOverview.cards.successRate.description,
@@ -63,7 +68,10 @@ export function StatsOverview({
   ];
 
   return (
-    <section className="app-panel overflow-hidden p-5 sm:p-6">
+    <section
+      className="app-panel overflow-hidden p-5 sm:p-6"
+      data-testid="dashboard-stats"
+    >
       <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="muted-label">{messages.statsOverview.eyebrow}</p>
@@ -72,7 +80,7 @@ export function StatsOverview({
           </h2>
         </div>
 
-        <p className="app-chip w-fit">
+        <p className="app-chip w-fit max-w-full whitespace-normal">
           {refreshing && !loading
             ? messages.statsOverview.refreshing
             : messages.statsOverview.pausedWorkflows(stats?.pausedWorkflows ?? null)}
@@ -81,7 +89,11 @@ export function StatsOverview({
 
       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
-          <article key={card.label} className="dashboard-stat-card">
+          <article
+            key={card.key}
+            className="dashboard-stat-card"
+            data-testid={`dashboard-stat-${card.key}`}
+          >
             <span className={`block h-1.5 w-10 rounded-full ${card.accent}`} />
             <p className="mt-3 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
               {card.label}

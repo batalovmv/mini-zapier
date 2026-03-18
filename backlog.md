@@ -2331,7 +2331,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-O5: dashboard copy polish, responsive pass and smoke stabilization
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: завершить redesign главной страницы через copy polish, responsive pass и stabilization тестов после изменения структуры dashboard
 - **Scope**:
   - выровнять RU/EN copy под короткий operational tone

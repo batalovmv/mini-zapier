@@ -115,6 +115,7 @@ export function WorkflowCard({
     <article
       className="workflow-list-row lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-5"
       data-attention-reason={attentionReason?.key ?? 'none'}
+      data-testid={`dashboard-workflow-row-${workflow.id}`}
       data-workflow-status={workflow.status}
     >
       <div className="min-w-0">
@@ -129,7 +130,10 @@ export function WorkflowCard({
         <div className="mt-3">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <h3 className="text-[1.05rem] font-semibold leading-tight text-slate-950 sm:text-[1.12rem]">
+              <h3
+                className="break-words text-[1.05rem] font-semibold leading-tight text-slate-950 sm:text-[1.12rem]"
+                data-testid={`dashboard-workflow-name-${workflow.id}`}
+              >
                 {workflow.name}
               </h3>
               <p className="workflow-summary-clamp mt-1.5 max-w-3xl text-sm leading-6 text-slate-600">
@@ -141,7 +145,7 @@ export function WorkflowCard({
 
         <div className="mt-4 flex flex-col gap-3">
           <div className="flex flex-wrap items-start gap-x-5 gap-y-2">
-            <div className="flex min-w-[15rem] flex-col gap-1">
+            <div className="flex min-w-0 sm:min-w-[15rem] flex-col gap-1">
               <div className="flex items-center gap-2">
                 <span className="workflow-inline-label">
                   {messages.workflowCard.lastExecutionEyebrow}
@@ -185,7 +189,7 @@ export function WorkflowCard({
             </div>
 
             {attentionReason ? (
-              <div className="flex min-w-[14rem] flex-col gap-1">
+              <div className="flex min-w-0 sm:min-w-[14rem] flex-col gap-1">
                 <span className="workflow-inline-label">
                   {messages.workflowCard.attentionEyebrow}
                 </span>
@@ -215,7 +219,10 @@ export function WorkflowCard({
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2 lg:mt-0 lg:max-w-[24rem] lg:justify-end">
+      <div
+        className="workflow-action-stack mt-4 lg:mt-0"
+        data-testid={`dashboard-workflow-actions-${workflow.id}`}
+      >
         <Link
           className={[
             'workflow-action-primary',

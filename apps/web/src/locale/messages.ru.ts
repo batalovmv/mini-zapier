@@ -89,47 +89,45 @@ export const ru = {
     logout: 'Выйти',
   },
   dashboardPage: {
-    eyebrow: 'Операционная панель',
-    title: 'Панель сценариев',
-    description:
-      'Сначала проверьте зоны внимания, затем переходите к списку сценариев ниже.',
+    eyebrow: 'Оперативная панель',
+    title: 'Контролируйте сценарии',
+    description: 'Сначала проверьте проблемы, затем работайте со списком.',
     workflowCount: (count: number) =>
-      `Сценариев в workspace: ${formatCount('ru-RU', count)}`,
-    loadingSummary: 'Загружаем сводку сценариев...',
-    summaryUnavailable: 'Сводка панели недоступна.',
+      `Сценарии: ${formatCount('ru-RU', count)}`,
+    loadingSummary: 'Загружаем панель...',
+    summaryUnavailable: 'Сводка недоступна',
     needsAttentionSummary: (count: number) =>
-      `Требуют внимания: ${formatCount('ru-RU', count)}`,
-    allClearSummary: 'Срочных состояний нет',
-    attentionLoading: 'Загружаем зоны внимания...',
-    attentionRefreshing: 'Обновляем зоны внимания...',
-    attentionEyebrow: 'Зоны внимания',
-    attentionTitle: 'Сначала проверьте эти состояния',
+      `Внимание: ${formatCount('ru-RU', count)}`,
+    allClearSummary: 'Срочных проблем нет',
+    attentionLoading: 'Загружаем внимание...',
+    attentionRefreshing: 'Обновляем внимание...',
+    attentionEyebrow: 'Внимание',
+    attentionTitle: 'Сначала разберите это',
     attentionItems: {
       failed: {
-        label: 'Ошибка в последнем запуске',
-        description: 'Последнее выполнение завершилось с ошибкой.',
+        label: 'Ошибки запусков',
+        description: 'Последний запуск завершился ошибкой.',
       },
       paused: {
         label: 'На паузе',
-        description: 'Сценарии остановлены и не принимают новые запуски.',
+        description: 'Остановлены и не принимают новые запуски.',
       },
       activeWithoutRuns: {
         label: 'Активны без запусков',
-        description: 'Сценарии уже включены, но ещё не выполнялись.',
+        description: 'Уже включены, но ещё не запускались.',
       },
       draft: {
         label: 'Черновики',
-        description: 'Сохранены, но ещё не активированы.',
+        description: 'Сохранены, но не активированы.',
       },
     },
     recentActivity: {
       eyebrow: 'Последняя активность',
-      title: 'Последние запуски и ошибки',
-      loading: 'Загружаем последнюю активность...',
-      loadingTitle: 'Загрузка последней активности...',
-      loadingDescription:
-        'Получаем последние запуски из уже загруженной dashboard summary.',
-      refreshing: 'Обновляем последнюю активность...',
+      title: 'Последние запуски',
+      loading: 'Загружаем последние запуски...',
+      loadingTitle: 'Загрузка последних запусков...',
+      loadingDescription: 'Получаем последние запуски из сводки панели.',
+      refreshing: 'Обновляем последние запуски...',
       summary: (count: number, failures: number) =>
         failures > 0
           ? `${formatCount('ru-RU', failures)} ${pluralizeRu(
@@ -149,18 +147,17 @@ export const ru = {
               'последних запуска',
               'последних запусков',
             )}`,
-      emptySummary: 'Последних запусков пока нет',
-      emptyTitle: 'Последней активности пока нет',
-      emptyDescription:
-        'Запуски и ошибки появятся здесь после следующего выполнения.',
+      emptySummary: 'Запусков пока нет',
+      emptyTitle: 'Последних запусков пока нет',
+      emptyDescription: 'Запуски и ошибки появятся здесь после следующего выполнения.',
       emptyDescriptionNoWorkflows:
-        'Создайте и запустите сценарий, чтобы заполнить блок последней активности.',
-      openHistory: 'Открыть историю',
+        'Создайте и запустите сценарий, чтобы заполнить этот блок.',
+      openHistory: 'История',
       statusDescriptions: {
-        PENDING: 'Запуск в очереди и ждёт worker.',
-        RUNNING: 'Сценарий сейчас выполняется.',
+        PENDING: 'Запуск ждёт worker.',
+        RUNNING: 'Сценарий выполняется.',
         SUCCESS: 'Запуск завершился успешно.',
-        FAILED: 'Откройте историю сценария, чтобы посмотреть последнюю ошибку.',
+        FAILED: 'Откройте историю и посмотрите последнюю ошибку.',
       },
     },
     createWorkflow: 'Создать сценарий',
@@ -179,10 +176,10 @@ export const ru = {
     deletedToast: (name: string) => `Сценарий "${name}" удалён.`,
   },
   statsOverview: {
-    eyebrow: 'Базовые метрики',
-    title: 'Системные метрики',
+    eyebrow: 'Срез',
+    title: 'Ключевые метрики',
     loading: 'Загрузка...',
-    refreshing: 'Обновляем счётчики...',
+    refreshing: 'Обновляем метрики...',
     pausedWorkflows: (count: number | null) =>
       `На паузе: ${
         count === null ? '—' : formatCount('ru-RU', count)
@@ -190,7 +187,7 @@ export const ru = {
     cards: {
       totalWorkflows: {
         label: 'Всего сценариев',
-        description: 'Все сценарии, сохранённые в текущем workspace.',
+        description: 'Сохранены в текущем workspace.',
       },
       activeWorkflows: {
         label: 'Активные сценарии',
@@ -198,18 +195,18 @@ export const ru = {
       },
       totalExecutions: {
         label: 'Всего запусков',
-        description: 'Ручные и автоматические запуски, записанные сервером.',
+        description: 'Ручные и автоматические запуски.',
       },
       successRate: {
         label: 'Успешность',
-        description: 'Доля завершённых запусков без ошибки.',
+        description: 'Доля запусков без ошибки.',
       },
     },
   },
   workflowList: {
     eyebrow: 'Список сценариев',
-    title: 'Операционный список сценариев',
-    refreshing: 'Обновляем список сценариев...',
+    title: 'Рабочая очередь',
+    refreshing: 'Обновляем сценарии...',
     filteredCount: (shown: number, total: number) =>
       `Показано ${formatCount('ru-RU', shown)} из ${formatCount('ru-RU', total)}`,
     loadedCount: (count: number) =>
@@ -220,16 +217,14 @@ export const ru = {
         'сценариев загружено',
       )}`,
     loadingTitle: 'Загрузка сценариев...',
-    loadingDescription: 'Загружаем сценарии из API.',
+    loadingDescription: 'Загружаем сценарии.',
     emptyTitle: 'Сценариев пока нет',
-    emptyDescription:
-      'Создайте первый сценарий, чтобы принимать триггеры и запускать действия.',
+    emptyDescription: 'Создайте первый сценарий, чтобы начать принимать триггеры.',
     noResultsTitle: 'По этим фильтрам сценарии не найдены',
-    noResultsDescription:
-      'Сбросьте текущий поиск или фильтры, чтобы снова увидеть весь список сценариев.',
+    noResultsDescription: 'Сбросьте текущий поиск или фильтры, чтобы снова увидеть весь список.',
     controls: {
       searchLabel: 'Поиск',
-      searchPlaceholder: 'Искать по названию или описанию',
+      searchPlaceholder: 'Название или описание',
       statusLabel: 'Статус',
       attentionLabel: 'Внимание',
       sortLabel: 'Сортировка',
@@ -262,7 +257,7 @@ export const ru = {
     attentionEyebrow: 'Требует внимания',
     loadingLatestExecution: 'Загружаем последний запуск...',
     syncing: 'Синхронизация',
-    noDescription: 'Описание сценария не задано.',
+    noDescription: 'Описания нет.',
     versionLabel: 'Версия',
     timezoneLabel: 'Часовой пояс',
     nodesLabel: 'Узлы',
@@ -277,12 +272,12 @@ export const ru = {
     updatedMeta: (value: string) => `Обновлён ${value}`,
     workflowVersion: (version: number) => `Версия сценария ${version}`,
     noExecutions: 'Запусков ещё не было.',
-    runManually: 'Запустить вручную',
+    runManually: 'Запустить',
     attentionReasons: {
       failed: 'Последний запуск завершился ошибкой',
-      paused: 'Сценарий сейчас на паузе',
-      draft: 'Сценарий остаётся черновиком',
-      activeWithoutRuns: 'Сценарий активен, но ещё не запускался',
+      paused: 'Сценарий на паузе',
+      draft: 'Сценарий в черновике',
+      activeWithoutRuns: 'Ждёт первый запуск',
     },
     running: 'Запуск...',
     updating: 'Обновление...',

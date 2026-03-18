@@ -242,6 +242,16 @@ select {
     gap: 0.75rem;
   }
 
+  @media (max-width: 639px) {
+    .dashboard-controls-footer {
+      align-items: stretch;
+    }
+
+    .dashboard-controls-footer .dashboard-filter-reset {
+      width: 100%;
+    }
+  }
+
   .dashboard-filter-reset {
     @apply inline-flex items-center justify-center rounded-full px-3.5 py-2 text-[13px] font-semibold transition;
     border: 1px solid rgba(51, 65, 85, 0.14);
@@ -356,12 +366,31 @@ select {
     background: rgba(248, 250, 252, 0.82);
   }
 
+  .workflow-action-stack {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
   .workflow-action-primary,
   .workflow-action-secondary,
   .workflow-action-quiet,
   .workflow-action-muted,
   .workflow-action-danger {
     @apply inline-flex items-center justify-center rounded-full px-3.5 py-2 text-[13px] font-semibold transition;
+    min-width: 0;
+  }
+
+  .workflow-action-stack > .workflow-action-primary {
+    grid-column: 1 / -1;
+  }
+
+  .workflow-action-stack > .workflow-action-primary,
+  .workflow-action-stack > .workflow-action-secondary,
+  .workflow-action-stack > .workflow-action-quiet,
+  .workflow-action-stack > .workflow-action-muted,
+  .workflow-action-stack > .workflow-action-danger {
+    width: 100%;
   }
 
   .workflow-action-primary {
@@ -493,5 +522,43 @@ select {
   .muted-label {
     @apply text-xs font-semibold uppercase tracking-[0.24em] text-slate-500;
     color: #657283;
+  }
+
+  @media (min-width: 640px) {
+    .workflow-action-stack {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: flex-start;
+    }
+
+    .workflow-action-stack > .workflow-action-primary,
+    .workflow-action-stack > .workflow-action-secondary,
+    .workflow-action-stack > .workflow-action-quiet,
+    .workflow-action-stack > .workflow-action-muted,
+    .workflow-action-stack > .workflow-action-danger {
+      width: auto;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .workflow-action-stack {
+      max-width: 24rem;
+      justify-content: flex-end;
+    }
+  }
+
+  @media (max-width: 639px) {
+    .dashboard-activity-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dashboard-activity-meta {
+      margin-left: 0;
+      align-items: flex-start;
+      text-align: left;
+    }
   }
 }

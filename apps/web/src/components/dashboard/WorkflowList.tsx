@@ -70,7 +70,10 @@ export function WorkflowList({
         : messages.workflowList.loadedCount(workflows.length);
 
   return (
-    <section className="app-panel overflow-hidden p-5 sm:p-6">
+    <section
+      className="app-panel overflow-hidden p-5 sm:p-6"
+      data-testid="dashboard-workflow-list"
+    >
       <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="muted-label">{messages.workflowList.eyebrow}</p>
@@ -79,17 +82,18 @@ export function WorkflowList({
           </h2>
         </div>
 
-        <p className="app-chip w-fit">{countLabel}</p>
+        <p className="app-chip w-fit max-w-full whitespace-normal">{countLabel}</p>
       </div>
 
       {loading || totalCount > 0 ? (
-        <div className="dashboard-controls-grid mt-4">
+        <div className="dashboard-controls-grid mt-4" data-testid="dashboard-controls">
           <label className="dashboard-control-field">
             <span className="dashboard-control-label">
               {messages.workflowList.controls.searchLabel}
             </span>
             <input
               className="dashboard-control-input"
+              data-testid="dashboard-search-input"
               disabled={controlsDisabled}
               onChange={(event) => onSearchQueryChange(event.target.value)}
               placeholder={messages.workflowList.controls.searchPlaceholder}
@@ -104,6 +108,7 @@ export function WorkflowList({
             </span>
             <select
               className="dashboard-control-input"
+              data-testid="dashboard-status-filter"
               disabled={controlsDisabled}
               onChange={(event) =>
                 onStatusFilterChange(
@@ -133,6 +138,7 @@ export function WorkflowList({
             </span>
             <select
               className="dashboard-control-input"
+              data-testid="dashboard-attention-filter"
               disabled={controlsDisabled}
               onChange={(event) =>
                 onAttentionFilterChange(
@@ -168,6 +174,7 @@ export function WorkflowList({
             </span>
             <select
               className="dashboard-control-input"
+              data-testid="dashboard-sort-select"
               disabled={controlsDisabled}
               onChange={(event) =>
                 onSortChange(event.target.value as WorkflowListSort)
@@ -195,6 +202,7 @@ export function WorkflowList({
           </p>
           <button
             className="dashboard-filter-reset"
+            data-testid="dashboard-clear-filters"
             disabled={controlsDisabled}
             onClick={onResetFilters}
             type="button"
@@ -206,32 +214,38 @@ export function WorkflowList({
 
       <div className="mt-4">
         {loading ? (
-          <LoadingState
-            compact
-            description={messages.workflowList.loadingDescription}
-            title={messages.workflowList.loadingTitle}
-          />
+          <div data-testid="dashboard-workflow-list-loading">
+            <LoadingState
+              compact
+              description={messages.workflowList.loadingDescription}
+              title={messages.workflowList.loadingTitle}
+            />
+          </div>
         ) : totalCount === 0 ? (
-          <EmptyState
-            description={messages.workflowList.emptyDescription}
-            title={messages.workflowList.emptyTitle}
-          />
+          <div data-testid="dashboard-workflow-list-empty">
+            <EmptyState
+              description={messages.workflowList.emptyDescription}
+              title={messages.workflowList.emptyTitle}
+            />
+          </div>
         ) : workflows.length === 0 ? (
-          <EmptyState
-            action={
-              <button
-                className="dashboard-filter-reset"
-                onClick={onResetFilters}
-                type="button"
-              >
-                {messages.workflowList.controls.clear}
-              </button>
-            }
-            description={messages.workflowList.noResultsDescription}
-            title={messages.workflowList.noResultsTitle}
-          />
+          <div data-testid="dashboard-workflow-list-no-results">
+            <EmptyState
+              action={
+                <button
+                  className="dashboard-filter-reset"
+                  onClick={onResetFilters}
+                  type="button"
+                >
+                  {messages.workflowList.controls.clear}
+                </button>
+              }
+              description={messages.workflowList.noResultsDescription}
+              title={messages.workflowList.noResultsTitle}
+            />
+          </div>
         ) : (
-          <div className="workflow-list-shell">
+          <div className="workflow-list-shell" data-testid="dashboard-workflow-rows">
             {workflows.map((workflow) => (
               <WorkflowCard
                 key={workflow.id}

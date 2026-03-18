@@ -49,6 +49,7 @@ async function waitForDashboard(page: Page): Promise<void> {
   await page.waitForURL((url) => url.pathname !== '/login', {
     timeout: 20_000,
   });
+  await expect(page.getByTestId('dashboard-page')).toBeVisible();
   await expect(page.getByTestId('create-workflow-link')).toBeVisible();
 }
 
@@ -484,9 +485,10 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
 
     expect(webhookResponse.status()).toBe(202);
 
-    await page.getByRole('link', { name: '← Back' }).click();
+    await page.goto('/');
     await waitForDashboard(page);
 
+    await expect(page.getByTestId(`dashboard-workflow-row-${workflowId}`)).toBeVisible();
     await page.getByTestId(`workflow-${workflowId}-history`).click();
     await expect(page).toHaveURL(new RegExp(`/workflows/${workflowId}/history$`));
 

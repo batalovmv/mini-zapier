@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-O4 — `add dashboard controls and recent activity`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт; dashboard redesign track продолжается с `TASK-O5`
+- **Последнее изменение**: TASK-O5 — `polish dashboard redesign`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт + TASK-O5 закрыт; dashboard redesign track закрыт
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -15,6 +15,7 @@
   - **TASK-O2 local build**: большой hero на dashboard заменён компактным operational header; под ним появился attention strip по существующим `workflows[]/lastExecution` состояниям (`failed`, `paused`, `active without runs`, `drafts`), stats стали компактнее и вторичнее, а duplicate CTA из empty state убран без redesign списка; `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-O3 local build**: декоративные workflow cards заменены на более плотный operational list: статус сценария теперь показывается один раз, `name`/summary/`last run`/`attention reason` подняты выше, `version/timezone/nodeCount` стали тихими meta chips, а action hierarchy перестроена в `Открыть/Редактировать` → `Запустить вручную` → quiet `История` / `Активировать-Пауза` / `Удалить`; `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-O4 local build**: dashboard list теперь получает client-side search/filter/sort поверх уже загруженного summary payload, а рядом с ним появился compact recent activity block на базе `recentExecutions`; empty dashboard, filtered no-results и пустая activity секция получили отдельные состояния, `pnpm --filter @mini-zapier/web build` ✅
+  - **TASK-O5 local verification**: dashboard copy сокращён и синхронизирован между RU/EN, header/attention/stats/list/recent activity получили стабильные `data-testid`, mobile/desktop layout tightened without logic changes, а smoke больше не зависит от текстовой ссылки `← Back`; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
   - Editor canvas: все 3 trigger types (Webhook, Cron, Email Trigger) + все 5 action types (HTTP Request, Email, Telegram, PostgreSQL Query, Data Transform) — узлы drag-and-drop, config panels — ✅
   - **TASK-056 preview UI**: Email config → кнопка «▸ Предпросмотр» → empty state корректный; Telegram config → аналогично ✅
   - **TASK-A local build**: editor dirty-state + route/beforeunload guard собраны локально, `pnpm --filter @mini-zapier/web build` ✅
@@ -76,6 +77,15 @@
     - `pnpm --filter @mini-zapier/web exec playwright test --list` ✓
   - **Ограничения TASK-N8**:
     - локальный live Playwright run против Vercel по-прежнему не запускался: на этой машине нет `MINI_ZAPIER_E2E_PASSWORD`, поэтому окончательное подтверждение фикса требует push и GitHub Actions `E2E Smoke`
+- **Что сделано в TASK-O5**:
+  - `apps/web/src/pages/DashboardPage.tsx`, `apps/web/src/components/dashboard/WorkflowList.tsx`, `apps/web/src/components/dashboard/WorkflowCard.tsx`, `apps/web/src/components/dashboard/StatsOverview.tsx`, `apps/web/src/index.css` — dashboard surfaces получили stable `data-testid`, более короткие summary chips и более устойчивый mobile layout для header CTA, controls, workflow action rows и recent activity без изменения продуктовой логики
+  - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — RU/EN copy выровнен под короткий operational tone для header, attention, stats, list, row-level states и recent activity; длинные вторичные формулировки сокращены
+  - `apps/web/e2e/ui-smoke.spec.ts` — `waitForDashboard()` теперь ждёт `data-testid="dashboard-page"`, а возврат к dashboard и переход в history больше не завязаны на хрупкий текстовый selector `← Back`
+  - **Проверки TASK-O5**:
+    - `pnpm --filter @mini-zapier/web build` ✓
+    - `pnpm --filter @mini-zapier/web exec playwright test --list` ✓
+  - **Ограничения TASK-O5**:
+    - live browser QA и реальный Playwright run против deployed app в этой сессии не запускались по scope и отсутствию e2e env; локально подтверждены build + suite parsing
 - **Что сделано в TASK-O4**:
   - `apps/web/src/pages/DashboardPage.tsx` — client-side derivation для dashboard summary расширена search/filter/sort логикой поверх уже загруженных `workflows[]`; рядом со списком добавлен compact recent activity block из `recentExecutions` с короткими строками и переходом в историю конкретного сценария
   - `apps/web/src/components/dashboard/WorkflowList.tsx`, `apps/web/src/index.css` — operational list из `TASK-O3` сохранён, но получил новый controls row (`search`, `status`, `attention`, `sort`), summary/reset layer и отдельные empty/results states без возврата к старому decorative pattern
@@ -734,7 +744,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-`TASK-O4` закрыл triage-layer для dashboard: список сценариев теперь фильтруется и сортируется на клиенте без нового API, а `recentExecutions` уже отрисовываются в compact recent activity block. Следующий рабочий шаг — выполнить `TASK-O5`: добить dashboard copy polish, responsive pass и smoke stabilization после новой структуры главной страницы.
+Dashboard redesign track `TASK-O1`–`TASK-O5` закрыт. В `backlog.md` больше нет задач со статусом `todo`, поэтому следующий рабочий шаг — открыть новый planning slice, зафиксировать его в backlog/handoff и только после этого начинать следующий кодовый срез.
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke против live Vercel не запускался; для TASK-J локальная проверка ограничена `build` + `playwright test --list`.
@@ -905,3 +915,4 @@
 | TASK-O2 | done | см. `git log` (`TASK-O2: redesign dashboard top-level IA`) | Replaced the dashboard hero with a compact operational header, added an attention strip from existing summary data, made stats secondary, and removed the duplicate create CTA from the empty state |
 | TASK-O3 | done | см. `git log` (`TASK-O3: redesign dashboard workflow list`) | Replaced decorative workflow cards with denser operational rows, removed duplicate status emphasis, derived attention reasons from existing summary data, and reordered dashboard actions for faster scanning |
 | TASK-O4 | done | см. `git log` (`TASK-O4: add dashboard controls and recent activity`) | Added client-side dashboard search/filter/sort, preserved the `TASK-O3` operational list pattern, and surfaced compact recent runs/failures from `recentExecutions` with better empty/results states |
+| TASK-O5 | done | см. `git log` (`TASK-O5: polish dashboard redesign`) | Final dashboard polish: synced operational RU/EN copy, tightened mobile/desktop layout, added stable dashboard test ids, and removed brittle smoke navigation selectors |
