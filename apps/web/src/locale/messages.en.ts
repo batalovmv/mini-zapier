@@ -673,10 +673,12 @@ export const en = {
       timezoneNote: (tz: string) => `Timezone: ${tz}`,
     },
     dataTransform: {
-      mode: 'Mode',
+      mainEyebrow: 'Output',
+      mainDescription: 'Choose how this step should build the output.',
+      mode: 'How to shape output',
       modeAriaLabel: 'Data Transform mode',
-      templateMode: 'Template',
-      mappingMode: 'Fields',
+      templateMode: 'One template',
+      mappingMode: 'Field by field',
       template: 'Result template',
       templateAriaLabel: 'Data Transform template',
       templatePlaceholder: '{"name":"{{input.name}}"}',
@@ -690,11 +692,16 @@ export const en = {
         `Remove mapping row ${index}`,
       remove: 'Remove',
       templateModeHint:
-        'Build text or JSON from one template.',
+        'Build the whole output from one template.',
       mappingModeHint:
-        'Build an object field by field.',
-      showJson: 'Open JSON',
-      hideJson: 'Hide JSON',
+        'Build an object one field at a time.',
+      advancedEyebrow: 'Advanced',
+      advancedDescription:
+        'Manual JSON stays here when the visual setup is not enough.',
+      showAdvanced: 'Open advanced',
+      hideAdvanced: 'Hide advanced',
+      showJson: 'Open step JSON',
+      hideJson: 'Hide step JSON',
     },
     dbQuery: {
       modeLabel: 'Mode',
@@ -780,14 +787,24 @@ export const en = {
       updateNoFilterWarning: 'UPDATE without a filter will affect all rows.',
     },
     emailAction: {
+      mainEyebrow: 'Message',
+      mainDescription: 'Set the recipient, subject and message body.',
       to: 'To',
       toPlaceholder: 'ops@example.com',
       subject: 'Subject',
       subjectPlaceholder: 'New order {{input.id}}',
       body: 'Body',
       bodyPlaceholder: 'Hello, {{input.customerName}}',
-      showJson: 'Open JSON',
-      hideJson: 'Hide JSON',
+      previewEyebrow: 'Preview',
+      previewDescription:
+        'Use the latest test or run data to confirm the message.',
+      advancedEyebrow: 'Advanced',
+      advancedDescription:
+        'Manual JSON stays here if you need to edit the whole step.',
+      showAdvanced: 'Open advanced',
+      hideAdvanced: 'Hide advanced',
+      showJson: 'Open step JSON',
+      hideJson: 'Hide step JSON',
     },
     emailTrigger: {
       info:
@@ -797,6 +814,8 @@ export const en = {
         'Save the workflow to get the inbound email address',
     },
     httpRequest: {
+      mainEyebrow: 'Request',
+      mainDescription: 'Choose the method, target URL and request body.',
       url: 'URL',
       urlAriaLabel: 'HTTP Request URL',
       urlPlaceholder: 'https://example.com/orders/{{input.id}}',
@@ -822,10 +841,19 @@ export const en = {
       addBodyField: 'Add field',
       editBodyAsJson: 'JSON',
       editBodyAsFields: 'Fields',
+      bodyFieldsHint: 'Add the request body field by field.',
+      bodyJsonHint: 'Write the request body as raw JSON.',
+      bodyOptionalHint:
+        'Leave this empty unless the API expects a body with this method.',
       contentTypeHint:
         'If Content-Type is not set, application/json will be added automatically',
-      showJson: 'Open JSON',
-      hideJson: 'Hide JSON',
+      advancedEyebrow: 'Advanced',
+      advancedDescription:
+        'Custom headers and manual step JSON live here.',
+      showAdvanced: 'Open advanced',
+      hideAdvanced: 'Hide advanced',
+      showJson: 'Open step JSON',
+      hideJson: 'Hide step JSON',
       showAdvancedHeaders: 'Open',
       hideAdvancedHeaders: 'Hide',
       headersCount: (count: number) => `${count} header(s) configured`,
@@ -834,22 +862,36 @@ export const en = {
       remove: 'Remove',
     },
     telegram: {
+      mainEyebrow: 'Message',
+      mainDescription: 'Set the chat and the message to send.',
       chatId: 'Chat ID',
       chatIdPlaceholder: '-1001234567890',
       chatIdHelper: 'How to get your Chat ID',
+      chatIdHelperHint:
+        'Need the chat ID first? Get it from @userinfobot.',
+      showChatIdHelp: 'Show steps',
+      hideChatIdHelp: 'Hide steps',
       chatIdHelperSteps:
         '1. Open Telegram and find @userinfobot\n2. Send /start to the bot\n3. It will reply with your Chat ID\n4. Paste it above',
       message: 'Message',
       messagePlaceholder: 'Order {{input.id}} is ready.',
-      showJson: 'Open JSON',
-      hideJson: 'Hide JSON',
+      previewEyebrow: 'Preview',
+      previewDescription:
+        'Use the latest test or run data to confirm the message.',
+      advancedEyebrow: 'Advanced',
+      advancedDescription:
+        'Manual JSON stays here if you need the full step config.',
+      showAdvanced: 'Open advanced',
+      hideAdvanced: 'Hide advanced',
+      showJson: 'Open step JSON',
+      hideJson: 'Hide step JSON',
     },
     rawJson: {
       mustBeObject: 'Must be a JSON object',
       invalidJson: 'Invalid JSON',
       expertEyebrow: 'Step JSON',
       expertDescription:
-        'Open this only when the visual form is not enough.',
+        'Edit the whole step config directly.',
     },
     templatedInput: {
       editAsCode: 'Enter manually',

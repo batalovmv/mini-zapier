@@ -706,10 +706,12 @@ export const ru = {
       timezoneNote: (tz: string) => `Часовой пояс: ${tz}`,
     },
     dataTransform: {
-      mode: 'Режим',
+      mainEyebrow: 'Результат',
+      mainDescription: 'Выберите, как этот шаг должен собрать результат.',
+      mode: 'Как собрать результат',
       modeAriaLabel: 'Режим Data Transform',
-      templateMode: 'Шаблон',
-      mappingMode: 'Поля',
+      templateMode: 'Один шаблон',
+      mappingMode: 'По полям',
       template: 'Шаблон результата',
       templateAriaLabel: 'Шаблон Data Transform',
       templatePlaceholder: '{"name":"{{input.name}}"}',
@@ -724,11 +726,16 @@ export const ru = {
         `Удалить строку маппинга ${index}`,
       remove: 'Удалить',
       templateModeHint:
-        'Соберите текст или JSON одним шаблоном.',
+        'Соберите весь результат одним шаблоном.',
       mappingModeHint:
-        'Соберите объект из отдельных полей.',
-      showJson: 'Открыть JSON',
-      hideJson: 'Скрыть JSON',
+        'Соберите объект по одному полю за раз.',
+      advancedEyebrow: 'Дополнительно',
+      advancedDescription:
+        'Ручной JSON остаётся здесь, когда визуальной настройки недостаточно.',
+      showAdvanced: 'Открыть дополнительно',
+      hideAdvanced: 'Скрыть дополнительно',
+      showJson: 'Открыть JSON шага',
+      hideJson: 'Скрыть JSON шага',
     },
     dbQuery: {
       modeLabel: 'Режим',
@@ -815,14 +822,24 @@ export const ru = {
       updateNoFilterWarning: 'UPDATE без фильтра затронет все строки.',
     },
     emailAction: {
+      mainEyebrow: 'Сообщение',
+      mainDescription: 'Укажите получателя, тему и текст письма.',
       to: 'Кому',
       toPlaceholder: 'ops@example.com',
       subject: 'Тема',
       subjectPlaceholder: 'Новый заказ {{input.id}}',
       body: 'Текст',
       bodyPlaceholder: 'Здравствуйте, {{input.customerName}}',
-      showJson: 'Открыть JSON',
-      hideJson: 'Скрыть JSON',
+      previewEyebrow: 'Предпросмотр',
+      previewDescription:
+        'Проверьте письмо на данных из последнего теста или запуска.',
+      advancedEyebrow: 'Дополнительно',
+      advancedDescription:
+        'Ручной JSON остаётся здесь, если нужно править весь шаг целиком.',
+      showAdvanced: 'Открыть дополнительно',
+      hideAdvanced: 'Скрыть дополнительно',
+      showJson: 'Открыть JSON шага',
+      hideJson: 'Скрыть JSON шага',
     },
     emailTrigger: {
       info:
@@ -832,6 +849,8 @@ export const ru = {
         'Сохраните сценарий, чтобы получить адрес для входящих писем',
     },
     httpRequest: {
+      mainEyebrow: 'Запрос',
+      mainDescription: 'Выберите метод, адрес и данные запроса.',
       url: 'URL',
       urlAriaLabel: 'URL HTTP Request',
       urlPlaceholder: 'https://example.com/orders/{{input.id}}',
@@ -857,10 +876,19 @@ export const ru = {
       addBodyField: 'Добавить поле',
       editBodyAsJson: 'JSON',
       editBodyAsFields: 'Поля',
+      bodyFieldsHint: 'Соберите данные запроса по полям.',
+      bodyJsonHint: 'Введите данные запроса как raw JSON.',
+      bodyOptionalHint:
+        'Оставьте пустым, если этот метод не должен отправлять body.',
       contentTypeHint:
         'Если Content-Type не задан, добавим application/json автоматически',
-      showJson: 'Открыть JSON',
-      hideJson: 'Скрыть JSON',
+      advancedEyebrow: 'Дополнительно',
+      advancedDescription:
+        'Свои заголовки и ручной JSON шага находятся здесь.',
+      showAdvanced: 'Открыть дополнительно',
+      hideAdvanced: 'Скрыть дополнительно',
+      showJson: 'Открыть JSON шага',
+      hideJson: 'Скрыть JSON шага',
       showAdvancedHeaders: 'Открыть',
       hideAdvancedHeaders: 'Скрыть',
       headersCount: (count: number) => `${count} заголовк(а) настроено`,
@@ -869,22 +897,36 @@ export const ru = {
       remove: 'Удалить',
     },
     telegram: {
+      mainEyebrow: 'Сообщение',
+      mainDescription: 'Укажите чат и сообщение для отправки.',
       chatId: 'Chat ID',
       chatIdPlaceholder: '-1001234567890',
       chatIdHelper: 'Как узнать свой Chat ID',
+      chatIdHelperHint:
+        'Сначала нужен chat ID? Его можно получить через @userinfobot.',
+      showChatIdHelp: 'Показать шаги',
+      hideChatIdHelp: 'Скрыть шаги',
       chatIdHelperSteps:
         '1. Откройте Telegram и найдите @userinfobot\n2. Отправьте боту /start\n3. Бот ответит вашим Chat ID\n4. Вставьте его выше',
       message: 'Сообщение',
       messagePlaceholder: 'Заказ {{input.id}} готов.',
-      showJson: 'Открыть JSON',
-      hideJson: 'Скрыть JSON',
+      previewEyebrow: 'Предпросмотр',
+      previewDescription:
+        'Проверьте сообщение на данных из последнего теста или запуска.',
+      advancedEyebrow: 'Дополнительно',
+      advancedDescription:
+        'Ручной JSON остаётся здесь, если нужен полный config шага.',
+      showAdvanced: 'Открыть дополнительно',
+      hideAdvanced: 'Скрыть дополнительно',
+      showJson: 'Открыть JSON шага',
+      hideJson: 'Скрыть JSON шага',
     },
     rawJson: {
       mustBeObject: 'Должен быть JSON-объектом',
       invalidJson: 'Невалидный JSON',
       expertEyebrow: 'JSON шага',
       expertDescription:
-        'Открывайте только если визуальной формы не хватает.',
+        'Правьте весь config шага напрямую.',
     },
     templatedInput: {
       editAsCode: 'Ввести вручную',

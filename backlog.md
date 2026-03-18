@@ -2022,3 +2022,36 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-N3: align remaining action forms with inspector shell
+- **Статус**: `done`
+- **Цель**: выровнять оставшиеся action-формы под inspector-архитектуру из `TASK-N1`/`TASK-N2`, чтобы основной путь вёл через предметную настройку, а manual JSON/helpers оставались во вторичном local advanced layer
+- **Scope**:
+  - `HTTP Request`: перестроить flow в порядке `method → url → body`, увести headers и `RawJsonFallback` в local advanced section, сохранить compatibility logic для body fields/json и `data-testid` `http-headers-toggle` / `http-add-header-button`
+  - `Email Action`: перестроить flow в порядке `to → subject → body`, оставить `MessagePreview` secondary confidence block ниже полей, увести `RawJsonFallback` в local advanced section
+  - `Telegram Action`: перестроить flow в порядке `chatId → message`, сделать helper по `chatId` вторичным по визуальному весу, оставить `MessagePreview` secondary confidence block, увести `RawJsonFallback` в local advanced section
+  - `Data Transform`: сделать primary path вокруг `mode + active config`, обновить mode-copy под способ формирования output, оставить template/mapping в main path, увести `RawJsonFallback` в local advanced section
+  - обновить EN/RU copy и локальный nested layout для `RawJsonFallback`, не меняя `ConfigPanel` shell, `StepTestSection`, `DbQueryConfig`, trigger forms, backend API и зависимости
+- **Не входит**:
+  - изменения `ConfigPanel` shell, `StepTestSection`, `DbQueryConfig` и trigger-форм
+  - изменения backend API
+  - новые зависимости
+- **Файлы**:
+  - `apps/web/src/components/editor/config-forms/HttpRequestConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/EmailActionConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/TelegramConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/DataTransformConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/RawJsonFallback.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - все 4 action-формы читаются как часть одной inspector-системы
+  - `HTTP Request` больше не показывает headers/raw JSON как равноправные primary blocks
+  - `Email` и `Telegram` держат preview как secondary confidence block
+  - `Data Transform` оставляет `mode + active config` в main path, а raw JSON уходит в advanced
+  - existing behavior body-fields/json, message preview, chatId helper и mapping/template logic не ломается
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`

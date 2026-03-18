@@ -93,6 +93,9 @@ export function HttpRequestConfig({
   const [headersOpen, setHeadersOpen] = useState(() =>
     Object.keys(toStringRecord(config.headers)).length > 0,
   );
+  const [advancedOpen, setAdvancedOpen] = useState(() =>
+    Object.keys(toStringRecord(config.headers)).length > 0,
+  );
 
   // Track extra empty placeholder rows (local UI state, not persisted).
   const [extraBodyRows, setExtraBodyRows] = useState(0);
@@ -115,6 +118,7 @@ export function HttpRequestConfig({
   useEffect(() => {
     if (Object.keys(toStringRecord(config.headers)).length > 0) {
       setHeadersOpen(true);
+      setAdvancedOpen(true);
     }
   }, [config.headers]);
 
@@ -254,215 +258,148 @@ export function HttpRequestConfig({
 
   return (
     <div className="space-y-5">
-      {/* URL */}
-      <TemplatedField
-        ariaLabel={t.urlAriaLabel}
-        config={config}
-        configKey="url"
-        label={t.url}
-        onChange={onChange}
-        placeholder={t.urlPlaceholder}
-      />
-
-      {/* Method */}
-      <label className="block">
-        <span className="muted-label">{t.method}</span>
-        <select
-          aria-label={t.methodAriaLabel}
-          className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-          onChange={(event) => {
-            const value = event.target.value;
-            onChange((prev) => ({ ...prev, method: value }));
-          }}
-          value={method}
-        >
-          <option value="GET">GET</option>
-          <option value="POST">POST</option>
-          <option value="PUT">PUT</option>
-          <option value="PATCH">PATCH</option>
-          <option value="DELETE">DELETE</option>
-        </select>
-      </label>
-
-      {/* Content-Type hint */}
-      {showContentTypeHint && (
-        <p className="text-xs text-amber-600">{t.contentTypeHint}</p>
-      )}
-
-      {/* Headers */}
-      <div className="rounded-[1.15rem] border border-slate-900/10 bg-slate-50/70 px-4 py-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <span className="muted-label">{t.headers}</span>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
-              {storedHeaderCount > 0
-                ? t.headersCount(storedHeaderCount)
-                : t.headersHint}
-            </p>
-          </div>
-          <button
-            className="shrink-0 rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-200 hover:text-amber-700"
-            data-testid="http-headers-toggle"
-            onClick={() => setHeadersOpen((value) => !value)}
-            type="button"
-          >
-            {headersOpen ? t.hideAdvancedHeaders : t.showAdvancedHeaders}
-          </button>
+      <div className="space-y-5 rounded-[1.25rem] border border-slate-900/10 bg-white px-4 py-4">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">
+            {t.mainEyebrow}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            {t.mainDescription}
+          </p>
         </div>
 
-        {headersOpen ? (
-          <div className="mt-3">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-xs font-medium text-slate-500">{t.headers}</span>
-              <button
-                className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
-                data-testid="http-add-header-button"
-                onClick={addHeader}
-                type="button"
-              >
-                {t.addHeader}
-              </button>
+        <label className="block">
+          <span className="muted-label">{t.method}</span>
+          <select
+            aria-label={t.methodAriaLabel}
+            className="mt-2 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+            onChange={(event) => {
+              const value = event.target.value;
+              onChange((prev) => ({ ...prev, method: value }));
+            }}
+            value={method}
+          >
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="PATCH">PATCH</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+        </label>
+
+        <TemplatedField
+          ariaLabel={t.urlAriaLabel}
+          config={config}
+          configKey="url"
+          label={t.url}
+          onChange={onChange}
+          placeholder={t.urlPlaceholder}
+        />
+
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <span className="muted-label">{t.body}</span>
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                {hasBody
+                  ? bodyMode === 'fields'
+                    ? t.bodyFieldsHint
+                    : t.bodyJsonHint
+                  : t.bodyOptionalHint}
+              </p>
             </div>
 
-            <div className="mt-3 space-y-3">
-              {headerEntries.map(([key, value], index) => (
-                <div
-                  key={`h-${key}-${index}`}
-                  className="space-y-2 rounded-2xl border border-slate-900/10 bg-slate-50/60 p-3"
+            {hasBody ? (
+              <div className="inline-flex flex-wrap gap-1 rounded-full border border-slate-900/10 bg-slate-50 p-1">
+                <button
+                  aria-pressed={bodyMode === 'fields'}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                    bodyMode === 'fields'
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'bg-white text-slate-600 hover:bg-slate-100'
+                  }`}
+                  onClick={() => {
+                    setBodyMode('fields');
+                    setExtraBodyRows(0);
+                  }}
+                  type="button"
                 >
-                  <div className="flex items-center gap-2">
-                    <input
-                      aria-label={t.headerKeyAriaLabel(index + 1)}
-                      className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-                      onChange={(event) => updateHeaderKey(index, event.target.value)}
-                      placeholder={t.headerNamePlaceholder}
-                      type="text"
-                      value={key}
-                    />
-                    <button
-                      aria-label={t.removeHeaderRowAriaLabel(index + 1)}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                      onClick={() => removeHeader(index)}
-                      title={t.remove}
-                      type="button"
-                    >
-                      &times;
-                    </button>
-                  </div>
+                  {t.editBodyAsFields}
+                </button>
+                <button
+                  aria-pressed={bodyMode === 'json'}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                    bodyMode === 'json'
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'bg-white text-slate-600 hover:bg-slate-100'
+                  }`}
+                  onClick={() => {
+                    setBodyMode('json');
+                    setExtraBodyRows(0);
+                  }}
+                  type="button"
+                >
+                  {t.editBodyAsJson}
+                </button>
+              </div>
+            ) : null}
+          </div>
 
-                  {key.trim().length > 0 ? (
+          {showContentTypeHint ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-xs leading-5 text-amber-700">
+              {t.contentTypeHint}
+            </div>
+          ) : null}
+
+          {hasBody ? (
+            bodyMode === 'fields' ? (
+              <div className="space-y-3">
+                {bodyKv.map(([key, value], index) => (
+                  <div
+                    key={`b-${index}`}
+                    className="space-y-2 rounded-2xl border border-slate-900/10 bg-slate-50/60 p-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <input
+                        aria-label={t.bodyKeyAriaLabel(index + 1)}
+                        className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                        onChange={(event) =>
+                          updateBodyKey(index, event.target.value)
+                        }
+                        placeholder={t.bodyKeyPlaceholder}
+                        type="text"
+                        value={key}
+                      />
+                      <button
+                        aria-label={t.removeBodyRowAriaLabel(index + 1)}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                        onClick={() => removeBodyField(index)}
+                        title={t.remove}
+                        type="button"
+                      >
+                        &times;
+                      </button>
+                    </div>
+
                     <TemplatedField
-                      ariaLabel={t.headerValueAriaLabel(index + 1)}
+                      ariaLabel={t.bodyValueAriaLabel(index + 1)}
                       label=""
-                      onValueChange={(v) => updateHeaderValue(index, v)}
-                      placeholder={t.headerValuePlaceholder}
+                      onValueChange={(v) => updateBodyValue(index, v)}
+                      placeholder={t.bodyValuePlaceholder}
                       value={value}
                     />
-                  ) : (
-                    <input
-                      aria-label={t.headerValueAriaLabel(index + 1)}
-                      className="w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-                      onChange={(event) => updateHeaderValue(index, event.target.value)}
-                      placeholder={t.headerValuePlaceholder}
-                      type="text"
-                      value={value}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </div>
-
-      {/* Body */}
-      {hasBody && (
-        <div>
-          <div className="flex items-center justify-between gap-3">
-            <span className="muted-label">{t.body}</span>
-            <div className="inline-flex flex-wrap gap-1 rounded-full border border-slate-900/10 bg-slate-50 p-1">
-              <button
-                aria-pressed={bodyMode === 'fields'}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                  bodyMode === 'fields'
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'bg-white text-slate-600 hover:bg-slate-100'
-                }`}
-                onClick={() => {
-                  setBodyMode('fields');
-                  setExtraBodyRows(0);
-                }}
-                type="button"
-              >
-                {t.editBodyAsFields}
-              </button>
-              <button
-                aria-pressed={bodyMode === 'json'}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                  bodyMode === 'json'
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'bg-white text-slate-600 hover:bg-slate-100'
-                }`}
-                onClick={() => {
-                  setBodyMode('json');
-                  setExtraBodyRows(0);
-                }}
-                type="button"
-              >
-                {t.editBodyAsJson}
-              </button>
-            </div>
-          </div>
-
-          {bodyMode === 'fields' ? (
-            <div className="mt-3 space-y-3">
-              {bodyKv.map(([key, value], index) => (
-                <div
-                  key={`b-${index}`}
-                  className="space-y-2 rounded-2xl border border-slate-900/10 bg-slate-50/60 p-3"
-                >
-                  <div className="flex items-center gap-2">
-                    <input
-                      aria-label={t.bodyKeyAriaLabel(index + 1)}
-                      className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
-                      onChange={(event) =>
-                        updateBodyKey(index, event.target.value)
-                      }
-                      placeholder={t.bodyKeyPlaceholder}
-                      type="text"
-                      value={key}
-                    />
-                    <button
-                      aria-label={t.removeBodyRowAriaLabel(index + 1)}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                      onClick={() => removeBodyField(index)}
-                      title={t.remove}
-                      type="button"
-                    >
-                      &times;
-                    </button>
                   </div>
+                ))}
 
-                  <TemplatedField
-                    ariaLabel={t.bodyValueAriaLabel(index + 1)}
-                    label=""
-                    onValueChange={(v) => updateBodyValue(index, v)}
-                    placeholder={t.bodyValuePlaceholder}
-                    value={value}
-                  />
-                </div>
-              ))}
-
-              <button
-                className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
-                onClick={addBodyField}
-                type="button"
-              >
-                {t.addBodyField}
-              </button>
-            </div>
-          ) : (
-            <div className="mt-3">
+                <button
+                  className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+                  onClick={addBodyField}
+                  type="button"
+                >
+                  {t.addBodyField}
+                </button>
+              </div>
+            ) : (
               <TemplatedField
                 ariaLabel={t.bodyAriaLabel}
                 config={config}
@@ -472,33 +409,145 @@ export function HttpRequestConfig({
                 onChange={onChange}
                 placeholder={t.bodyPlaceholder}
               />
-            </div>
+            )
+          ) : (
+            <TemplatedField
+              ariaLabel={t.bodyAriaLabel}
+              config={config}
+              configKey="body"
+              label=""
+              multiline
+              onChange={onChange}
+              placeholder={t.bodyPlaceholder}
+            />
           )}
         </div>
-      )}
+      </div>
 
-      {/* Body for non-body methods (GET, DELETE) — still show raw textarea */}
-      {!hasBody && (
-        <TemplatedField
-          ariaLabel={t.bodyAriaLabel}
-          config={config}
-          configKey="body"
-          label={t.body}
-          multiline
-          onChange={onChange}
-          placeholder={t.bodyPlaceholder}
-        />
-      )}
+      <div className="rounded-[1.15rem] border border-slate-900/10 bg-slate-50/70 px-4 py-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">
+              {t.advancedEyebrow}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              {t.advancedDescription}
+            </p>
+          </div>
+          <button
+            className="shrink-0 rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-200 hover:text-amber-700"
+            onClick={() => setAdvancedOpen((value) => !value)}
+            type="button"
+          >
+            {advancedOpen ? t.hideAdvanced : t.showAdvanced}
+          </button>
+        </div>
 
-      {/* Raw JSON fallback */}
-      <RawJsonFallback
-        config={config}
-        hideLabel={t.hideJson}
-        onChange={onChange}
-        onToggle={() => setShowJson((v) => !v)}
-        open={showJson}
-        showLabel={t.showJson}
-      />
+        {advancedOpen ? (
+          <div className="mt-4 space-y-4 border-t border-slate-900/10 pt-4">
+            <div className="rounded-2xl border border-slate-900/10 bg-white px-3 py-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="muted-label">{t.headers}</span>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    {storedHeaderCount > 0
+                      ? t.headersCount(storedHeaderCount)
+                      : t.headersHint}
+                  </p>
+                </div>
+                <button
+                  className="shrink-0 rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-200 hover:text-amber-700"
+                  data-testid="http-headers-toggle"
+                  onClick={() => setHeadersOpen((value) => !value)}
+                  type="button"
+                >
+                  {headersOpen ? t.hideAdvancedHeaders : t.showAdvancedHeaders}
+                </button>
+              </div>
+
+              {headersOpen ? (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-medium text-slate-500">
+                      {t.headers}
+                    </span>
+                    <button
+                      className="rounded-full border border-slate-900/10 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+                      data-testid="http-add-header-button"
+                      onClick={addHeader}
+                      type="button"
+                    >
+                      {t.addHeader}
+                    </button>
+                  </div>
+
+                  <div className="mt-3 space-y-3">
+                    {headerEntries.map(([key, value], index) => (
+                      <div
+                        key={`h-${key}-${index}`}
+                        className="space-y-2 rounded-2xl border border-slate-900/10 bg-slate-50/60 p-3"
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            aria-label={t.headerKeyAriaLabel(index + 1)}
+                            className="min-w-0 flex-1 rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                            onChange={(event) =>
+                              updateHeaderKey(index, event.target.value)
+                            }
+                            placeholder={t.headerNamePlaceholder}
+                            type="text"
+                            value={key}
+                          />
+                          <button
+                            aria-label={t.removeHeaderRowAriaLabel(index + 1)}
+                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                            onClick={() => removeHeader(index)}
+                            title={t.remove}
+                            type="button"
+                          >
+                            &times;
+                          </button>
+                        </div>
+
+                        {key.trim().length > 0 ? (
+                          <TemplatedField
+                            ariaLabel={t.headerValueAriaLabel(index + 1)}
+                            label=""
+                            onValueChange={(v) => updateHeaderValue(index, v)}
+                            placeholder={t.headerValuePlaceholder}
+                            value={value}
+                          />
+                        ) : (
+                          <input
+                            aria-label={t.headerValueAriaLabel(index + 1)}
+                            className="w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+                            onChange={(event) =>
+                              updateHeaderValue(index, event.target.value)
+                            }
+                            placeholder={t.headerValuePlaceholder}
+                            type="text"
+                            value={value}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <RawJsonFallback
+              config={config}
+              hideLabel={t.hideJson}
+              onChange={onChange}
+              onToggle={() => setShowJson((v) => !v)}
+              open={showJson}
+              showLabel={t.showJson}
+              variant="embedded"
+            />
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

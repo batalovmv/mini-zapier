@@ -10,6 +10,7 @@ interface RawJsonFallbackProps {
   onToggle: () => void;
   showLabel: string;
   hideLabel: string;
+  variant?: 'card' | 'embedded';
 }
 
 export function RawJsonFallback({
@@ -19,12 +20,17 @@ export function RawJsonFallback({
   onToggle,
   showLabel,
   hideLabel,
+  variant = 'card',
 }: RawJsonFallbackProps) {
   const { messages } = useLocale();
   const t = messages.configForms.rawJson;
   const [raw, setRaw] = useState(() => JSON.stringify(config, null, 2));
   const [error, setError] = useState<string | null>(null);
   const lastPushedRef = useRef<string | null>(null);
+  const containerClass =
+    variant === 'embedded'
+      ? 'rounded-2xl border border-slate-900/10 bg-white px-3 py-3'
+      : 'rounded-[1.15rem] border border-slate-900/10 bg-slate-50/70 px-4 py-3';
 
   // Sync from config → raw when config changes externally (e.g. node switch)
   // Skip if config matches what we last pushed via onChange (our own edit echo)
@@ -58,7 +64,7 @@ export function RawJsonFallback({
   }
 
   return (
-    <div className="rounded-[1.15rem] border border-slate-900/10 bg-slate-50/70 px-4 py-3">
+    <div className={containerClass}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-500">

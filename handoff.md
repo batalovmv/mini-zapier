@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-N2 — `redesign DB query inspector flow`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт
+- **Последнее изменение**: TASK-N3 — `align remaining action forms with inspector shell`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -29,9 +29,21 @@
   - **TASK-M local build**: `HTTP Request` advanced headers block получил стабильные `data-testid`, а live smoke больше не зависит от текстов `Optional headers` / `Show`; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
   - **TASK-N1 local build**: inspector shell стал более контекстным и спокойным: верхний progress-summary и `AC/TR` убраны, connection section сведён к select + `Создать новое` + `Обновить список`, `Step Test` стал secondary и свёрнутым по умолчанию, а delete action переехал в quiet footer; `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-N2 local build**: `DB Query` теперь использует primary visual flow `Что сделать` → `Таблица` → operation-specific controls без верхнего `Builder/SQL` toggle; raw SQL, params и `RawJsonFallback` перенесены в локальную advanced section, legacy raw steps сохраняют `query`/`params`, а SQL preview остаётся только у visual path; `pnpm --filter @mini-zapier/web build` ✅
+  - **TASK-N3 local verification**: оставшиеся action-формы выровнены под inspector hierarchy: `HTTP Request` начинается с `method → url → body`, headers и step JSON живут в local advanced section, `Email`/`Telegram` держат preview как secondary confidence block, helper по `chatId` стал тише, `Data Transform` центрируется вокруг `mode + active config`; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
   - **TASK-J root cause**: live GitHub Actions smoke падал не на deploy/build, а из-за двойного рассинхрона после email-login migration: CI по-прежнему прокидывал только legacy `MINI_ZAPIER_E2E_USERNAME=admin`, а smoke ожидал существующий prod user и brittle dashboard text после входа
   - Console errors: 0 за всю сессию тестирования ✅
   - **Примечание**: после VPS redeploy выяснилось, что оставшаяся проблема visual DB Query была уже не в missing routes, а в том, что backend introspection искал таблицы только в `public`. Из-за пустого metadata list visual mode не мог дать выбрать таблицу и, как следствие, не мог сгенерировать SQL для кнопки `Тестировать запрос`
+- **Что сделано в TASK-N3**:
+  - `apps/web/src/components/editor/config-forms/HttpRequestConfig.tsx` — основной блок перестроен в порядке `method → url → body`; headers и `RawJsonFallback` вынесены в local advanced section, при этом сохранены body fields/json compatibility logic и `data-testid` `http-headers-toggle` / `http-add-header-button`
+  - `apps/web/src/components/editor/config-forms/EmailActionConfig.tsx`, `apps/web/src/components/editor/config-forms/TelegramConfig.tsx` — основной путь теперь ведёт через поля сообщения, `MessagePreview` живёт в более слабом secondary confidence block, а step JSON переехал в local advanced section; helper по `chatId` перенесён под поле и стал quieter helper surface
+  - `apps/web/src/components/editor/config-forms/DataTransformConfig.tsx` — главный блок теперь строится вокруг выбора способа собрать output и активной конфигурации (`template` или `mapping`), а `RawJsonFallback` уходит в advanced без изменения backend semantics
+  - `apps/web/src/components/editor/config-forms/RawJsonFallback.tsx` — добавлен opt-in embedded variant для вложенных advanced sections, поэтому новые action-формы можно успокоить без изменения уже выровненного `DB Query`
+  - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — copy action-форм сокращён и выровнен под одну inspector-систему: предметный main path наверху, calmer preview/helper blocks ниже, manual JSON только в advanced
+  - **Проверки TASK-N3**:
+    - `pnpm --filter @mini-zapier/web build` ✓
+    - `pnpm --filter @mini-zapier/web exec playwright test --list` ✓
+  - **Ограничения TASK-N3**:
+    - manual browser QA на live/Vercel для `HTTP Request`, `Email`, `Telegram` и `Data Transform` в этой сессии не запускался; покрытие подтверждено сборкой, parsing smoke suite и code-path review
 - **Что сделано в TASK-N2**:
   - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx` — убран верхний `Builder/SQL` toggle, а основной visual path перестроен в порядке `Что сделать` → `Таблица` → operation-specific controls (`Read`: fields/filters/sort/limit, `Add`: values, `Change`: values/filters, `Delete`: filters)
   - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx` — raw SQL path переведён в локальную advanced section: там теперь живут editor для `query`, editor для `params` и `RawJsonFallback`; для новых пустых шагов visual mode остаётся default, а legacy raw steps без `_builderState` продолжают открываться как manual SQL без потери данных
@@ -630,7 +642,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-TASK-N2 закрыт локально: следующий практический шаг — отправить commit в `main`, дождаться зелёной сборки и затем отдельно руками проверить live `DB Query` inspector на новом пустом шаге, legacy raw SQL шаге и metadata-unavailable fallback, чтобы подтвердить visual-first flow и secondary advanced/raw path уже в браузере.
+TASK-N3 закрыт локально: следующий практический шаг — отправить commit в `main`, дождаться зелёной сборки и затем отдельно руками проверить live inspector для `HTTP Request`, `Email`, `Telegram` и `Data Transform`, чтобы подтвердить новую primary/secondary hierarchy уже в браузере.
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke против live Vercel не запускался; для TASK-J локальная проверка ограничена `build` + `playwright test --list`.
@@ -790,3 +802,4 @@ TASK-N2 закрыт локально: следующий практически
 | TASK-M | done | см. `git log` (`TASK-M: repair live smoke after inspector copy update`) | HTTP Request headers block now exposes stable test ids, and the webhook → HTTP → Data Transform smoke no longer depends on fragile UI copy like `Optional headers` / `Show` |
 | TASK-N1 | done | см. `git log` (`TASK-N1: refactor editor inspector shell`) | Inspector shell now uses a contextual header, simplified connection/main/test hierarchy, quiet footer delete action, and a single guidance empty state block |
 | TASK-N2 | done | см. `git log` (`TASK-N2: redesign DB query inspector flow`) | DB Query now starts with a visual-first inspector flow (`Action` → `Table` → operation-specific controls), while raw SQL, params and JSON fallback live in a local advanced section and legacy raw steps keep their existing data |
+| TASK-N3 | done | см. `git log` (`TASK-N3: align remaining action forms with inspector shell`) | Remaining action forms now share the inspector hierarchy: HTTP starts with `method → url → body`, Email/Telegram keep preview secondary, Telegram helper is quieter, and Data Transform centers on output shaping while manual JSON stays in advanced |
