@@ -772,7 +772,7 @@ export const ru = {
       orderDesc: 'DESC',
       limit: 'Лимит',
       sqlPreview: 'Предпросмотр SQL',
-      testButton: 'Проверить запрос',
+      testButton: 'Проверить SQL',
       testRunning: 'Выполняется\u2026',
       testResult: 'Результат',
       testRowCount: (count: number) => `${count} строк(а) возвращено`,
@@ -781,12 +781,25 @@ export const ru = {
         'Выберите PostgreSQL-подключение, чтобы открыть конструктор.',
       showJson: 'Открыть JSON',
       hideJson: 'Скрыть JSON шага',
+      advancedEyebrow: 'Дополнительно',
+      advancedDescription:
+        'Нужен ручной контроль? Raw SQL, параметры и полный JSON шага находятся здесь.',
+      advancedDescriptionRaw:
+        'Этот шаг сейчас выполняется из raw SQL. Продолжайте редактировать его здесь.',
+      showAdvanced: 'Открыть дополнительно',
+      hideAdvanced: 'Скрыть дополнительно',
       introspectionError: 'Не удалось загрузить список таблиц и колонок.',
       metadataUnavailable:
         'В этой версии сервиса визуальная работа с PostgreSQL пока недоступна. Можно написать SQL самостоятельно.',
       testUnavailable:
         'В этой версии сервиса проверка SQL из редактора пока недоступна. Можно выполнить сценарий обычным запуском.',
-      switchToRawSql: 'Перейти в SQL',
+      switchToRawSql: 'Перейти на raw SQL',
+      rawEditingHint:
+        'Если начнёте править поля ниже, этот шаг перейдёт с визуального конструктора на ручной SQL.',
+      rawPathEyebrow: 'Ручной SQL',
+      rawPathTitle: 'Этот шаг сейчас работает через raw SQL.',
+      rawPathDescription:
+        'Ниже можно продолжать редактировать SQL и параметры. Визуальная сборка остаётся необязательной.',
       opSelect: 'Прочитать',
       opInsert: 'Добавить',
       opUpdate: 'Изменить',

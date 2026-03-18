@@ -1992,3 +1992,33 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-N2: redesign DB query inspector flow
+- **Статус**: `done`
+- **Цель**: сделать `DB Query` первым fully-aligned action inspector внутри нового shell из `TASK-N1`, чтобы основной путь вёл через предметные решения, а raw SQL оставался secondary expert-path
+- **Scope**:
+  - убрать верхний mode-toggle `Builder/SQL` из первого экрана `DB Query`
+  - перестроить visual flow в порядке `Что сделать` → `Таблица` → operation-specific controls
+  - раскрыть операции как: `Read` → fields/filters/sort/limit, `Add` → values, `Change` → values/filters, `Delete` → filters
+  - добавить локальную advanced section внутри `DbQueryConfig` для raw SQL, params и `RawJsonFallback`
+  - сохранить backward compatibility для `_builderState`, `query` и `params`, включая existing raw SQL steps и metadata-unavailable fallback
+  - переименовать локальную SQL-проверку в `Check SQL / Проверить SQL`, оставить её внутри `DbQueryConfig`
+- **Не входит**:
+  - изменения других action forms
+  - изменения `ConfigPanel` shell
+  - изменения backend API
+  - новые зависимости
+- **Файлы**:
+  - `apps/web/src/components/editor/config-forms/DbQueryConfig.tsx`
+  - `apps/web/src/components/editor/config-forms/RawJsonFallback.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - новый пустой `DB Query` step открывается в visual flow без mode-toggle наверху
+  - основной путь начинается с `Action/Что сделать` и `Table/Таблица`
+  - existing raw SQL step сохраняет raw SQL и params
+  - raw SQL path доступен через local advanced section
+  - SQL preview виден только в visual path
+  - `pnpm --filter @mini-zapier/web build` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`

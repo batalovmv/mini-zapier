@@ -737,7 +737,7 @@ export const en = {
       orderDesc: 'DESC',
       limit: 'Limit',
       sqlPreview: 'SQL preview',
-      testButton: 'Test query',
+      testButton: 'Check SQL',
       testRunning: 'Running\u2026',
       testResult: 'Result',
       testRowCount: (count: number) => `${count} row(s) returned`,
@@ -746,12 +746,25 @@ export const en = {
         'Choose a PostgreSQL connection to open the builder.',
       showJson: 'Open JSON',
       hideJson: 'Hide step JSON',
+      advancedEyebrow: 'Advanced',
+      advancedDescription:
+        'Need manual control? Raw SQL, params and the full step JSON live here.',
+      advancedDescriptionRaw:
+        'This step currently runs from raw SQL. Keep editing it here.',
+      showAdvanced: 'Open advanced',
+      hideAdvanced: 'Hide advanced',
       introspectionError: 'Could not load tables and columns.',
       metadataUnavailable:
         'Visual PostgreSQL setup is not available in this service version yet. You can write the SQL yourself instead.',
       testUnavailable:
         'SQL checks from the editor are not available in this service version yet. Run the workflow normally instead.',
-      switchToRawSql: 'Switch to SQL',
+      switchToRawSql: 'Use raw SQL',
+      rawEditingHint:
+        'Editing the fields below switches this step from the visual builder to manual SQL.',
+      rawPathEyebrow: 'Manual SQL',
+      rawPathTitle: 'This step is using raw SQL.',
+      rawPathDescription:
+        'Keep editing the SQL and params below. The visual builder stays optional.',
       opSelect: 'Read',
       opInsert: 'Add',
       opUpdate: 'Change',
