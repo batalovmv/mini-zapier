@@ -3,9 +3,10 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-Q0 — `plan connections catalog redesign slices`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт + TASK-O5 закрыт + TASK-O6 закрыт + TASK-P1 закрыт + TASK-P2 закрыт + TASK-P3 закрыт + TASK-P4 закрыт + TASK-P5 закрыт + TASK-P7 закрыт + TASK-Q0 закрыт; connections catalog redesign/scale planning slice завершён, новый sequential track `TASK-Q1`–`TASK-Q5` зафиксирован без изменения product scope, следующий рабочий срез — `TASK-Q1`
+- **Последнее изменение**: TASK-Q1 — `add scalable connections catalog summary API`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт + TASK-O5 закрыт + TASK-O6 закрыт + TASK-P1 закрыт + TASK-P2 закрыт + TASK-P3 закрыт + TASK-P4 закрыт + TASK-P5 закрыт + TASK-P7 закрыт + TASK-Q0 закрыт + TASK-Q1 закрыт; connections catalog track получил первый backend slice с новым summary endpoint, следующий рабочий срез — `TASK-Q2`
 - **TASK-Q0 planning**: connections catalog redesign/scale track разложен на последовательные задачи `TASK-Q1`–`TASK-Q5`; первый implementation slice добавляет scalable summary API для больших библиотек подключений, не ломая существующие `GET /connections` и `GET /connections/:id`
+- **TASK-Q1 local build**: добавлен owner-scoped `GET /api/connections/catalog` с backend pagination/filter/sort/query (`page`, `limit`, `query`, `type`, `usage`, `sort`), summary-only payload без `credentials`, shared enums/contracts для catalog response, Swagger query/response DTO и page-level `usageCount` aggregation; существующие `GET /api/connections` и `GET /api/connections/:id` сохранены без breaking changes. Локально подтверждены `pnpm --filter @mini-zapier/shared build` и `pnpm --filter @mini-zapier/api build` ✅
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -780,17 +781,17 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-Следующий рабочий срез: `TASK-Q1 — add scalable connections catalog summary API`.
+Следующий рабочий срез: `TASK-Q2 — rebuild connections page into an operational catalog shell`.
 
 Перед исполнением:
-- держать scope только внутри нового summary contract для больших библиотек подключений
-- не ломать существующие `GET /connections` и `GET /connections/:id`
-- не расширять scope до workflow names list, last used, health check, breaking CRUD changes, RBAC/sharing/OAuth reconnect/tags/bulk actions
+- держать scope внутри page-level catalog shell и wiring уже готового `GET /api/connections/catalog`
+- сохранить текущие create/edit/delete flows и полный detail fetch только при открытии edit dialog
+- не расширять scope до финального density polish, editor picker, workflow names list, last used, health check, bulk actions, sharing/RBAC/OAuth reconnect
 
-В `TASK-Q1`:
-- новый summary endpoint каталога с `query` / `type` / `usage` / `sort` / `page` / `limit`
-- summary item = `id`, `name`, `type`, `usageCount`, `credentialFieldCount`, `updatedAt`
-- `api/shared` build + Swagger/DTO contract
+В `TASK-Q2`:
+- заменить hero + per-type sections на server-driven catalog shell
+- добавить search/filter/sort controls и pagination/load-more поверх summary endpoint
+- не ломать текущий CRUD и не тащить фронт в `TASK-Q3`/`TASK-Q4`
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke против live Vercel не запускался; для TASK-J локальная проверка ограничена `build` + `playwright test --list`.
@@ -970,3 +971,4 @@
 | TASK-P5 | done | см. `git log` (`TASK-P5: flatten action inspector hierarchy`) | Flattened the action inspector into a denser tool-panel: lighter shell, compact secondary Preview/Advanced/Step Test sections, row-group repeated controls, tighter rail CSS/copy, and passing web build + Playwright test list |
 | TASK-P7 | done | см. `git log` (`TASK-P7: remove redundant editor palette guidance`) | Removed the redundant left palette hero/order guidance, tightened the rail start in `NodeSidebar`, deleted unused EN/RU palette copy, and kept web build + Playwright test list green |
 | TASK-Q0 | done | см. `git log` (`TASK-Q0: plan connections catalog redesign slices`) | Defined the sequential connections catalog redesign track `TASK-Q1`–`TASK-Q5`, kept scope within catalog scaling/redesign only, and pointed the next implementation slice to the summary API contract |
+| TASK-Q1 | done | см. `git log` (`TASK-Q1: add scalable connections catalog summary API`) | Added owner-scoped `GET /api/connections/catalog` with summary-only pagination/filter/sort/query, shared catalog contracts + Swagger DTOs, page-level usage aggregation, and a Windows-safe Prisma sync step so `pnpm --filter @mini-zapier/api build` stays green |

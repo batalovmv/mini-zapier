@@ -8,6 +8,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -20,11 +21,14 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import type { ConnectionCatalogResponseDto } from '@mini-zapier/shared';
 import { ConnectionDto } from '@mini-zapier/shared';
 
 import type { AuthenticatedUser } from '../auth/auth.service';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { ConnectionCatalogResponseBodyDto } from './dto/connection-catalog-response.dto';
 import { CreateConnectionDto } from './dto/create-connection.dto';
+import { ListConnectionCatalogQueryDto } from './dto/list-connection-catalog-query.dto';
 import { TestQueryDto } from './dto/test-query.dto';
 import { UpdateConnectionDto } from './dto/update-connection.dto';
 import { ConnectionService } from './connection.service';
@@ -56,6 +60,22 @@ export class ConnectionController {
     @CurrentUser() currentUser: AuthenticatedUser,
   ): Promise<ConnectionDto[]> {
     return this.connectionService.findAll(currentUser.id);
+  }
+
+  @Get('catalog')
+  @ApiOperation({ summary: 'List connection catalog summaries' })
+  @ApiOkResponse({
+    description: 'Paginated connection catalog summary returned.',
+    type: ConnectionCatalogResponseBodyDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Catalog pagination, filters, or sort are invalid.',
+  })
+  findCatalog(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Query() query: ListConnectionCatalogQueryDto,
+  ): Promise<ConnectionCatalogResponseDto> {
+    return this.connectionService.findCatalog(currentUser.id, query);
   }
 
   @Get(':id')

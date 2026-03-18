@@ -5,12 +5,26 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { ConnectionDto, ConnectionType } from '@mini-zapier/shared';
+import type {
+  ConnectionCatalogItemDto,
+  ConnectionCatalogResponseDto,
+} from '@mini-zapier/shared';
+import {
+  ConnectionCatalogSort,
+  ConnectionCatalogUsageFilter,
+  ConnectionDto,
+  ConnectionType,
+} from '@mini-zapier/shared';
 import { decrypt, encrypt } from '@mini-zapier/server-utils';
-import { Connection, ConnectionType as PrismaConnectionType } from '@prisma/client';
+import {
+  Connection,
+  ConnectionType as PrismaConnectionType,
+  Prisma,
+} from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateConnectionDto } from './dto/create-connection.dto';
+import { ListConnectionCatalogQueryDto } from './dto/list-connection-catalog-query.dto';
 import { UpdateConnectionDto } from './dto/update-connection.dto';
 
 declare const process: {
@@ -18,8 +32,15 @@ declare const process: {
 };
 
 const MASKED_VALUE = '****';
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 20;
+const MAX_CATALOG_LIMIT = 100;
 
 type ConnectionCredentials = Record<string, string>;
+type ConnectionCatalogRecord = Pick<
+  Connection,
+  'id' | 'name' | 'type' | 'credentials' | 'updatedAt'
+>;
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return Object.prototype.toString.call(value) === '[object Object]';
@@ -54,6 +75,96 @@ export class ConnectionService {
     });
 
     return connections.map((connection) => this.toConnectionDto(connection));
+  }
+
+  async findCatalog(
+    userId: string,
+    queryDto: ListConnectionCatalogQueryDto,
+  ): Promise<ConnectionCatalogResponseDto> {
+    const page = this.parsePositiveInteger(queryDto.page, 'page', DEFAULT_PAGE);
+    const limit = this.parsePositiveInteger(
+      queryDto.limit,
+      'limit',
+      DEFAULT_LIMIT,
+      MAX_CATALOG_LIMIT,
+    );
+    const query = this.normalizeCatalogQuery(queryDto.query);
+    const type =
+      queryDto.type === undefined
+        ? undefined
+        : (this.validateType(queryDto.type) as PrismaConnectionType);
+    const usage = this.normalizeCatalogUsageFilter(queryDto.usage);
+    const sort = this.normalizeCatalogSort(queryDto.sort);
+    const where = this.buildCatalogWhere(userId, query, type, usage);
+    const orderBy = this.buildCatalogOrderBy(sort);
+
+    const { total, connections, usageGroups } = await this.prisma.$transaction(
+      async (tx) => {
+        const total = await tx.connection.count({ where });
+        const connections = await tx.connection.findMany({
+          where,
+          skip: (page - 1) * limit,
+          take: limit,
+          orderBy,
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            credentials: true,
+            updatedAt: true,
+          },
+        });
+        const connectionIds = connections.map((connection) => connection.id);
+        const usageGroups =
+          connectionIds.length === 0
+            ? []
+            : await tx.workflowNode.groupBy({
+                by: ['connectionId'],
+                where: {
+                  connectionId: {
+                    in: connectionIds,
+                  },
+                  workflow: {
+                    is: {
+                      userId,
+                    },
+                  },
+                },
+                _count: {
+                  connectionId: true,
+                },
+              });
+
+        return {
+          total,
+          connections,
+          usageGroups,
+        };
+      },
+    );
+
+    const usageCountByConnectionId = new Map<string, number>();
+
+    for (const usageGroup of usageGroups) {
+      if (usageGroup.connectionId !== null) {
+        usageCountByConnectionId.set(
+          usageGroup.connectionId,
+          usageGroup._count.connectionId,
+        );
+      }
+    }
+
+    return {
+      items: connections.map((connection) =>
+        this.toConnectionCatalogItemDto(
+          connection,
+          usageCountByConnectionId.get(connection.id) ?? 0,
+        ),
+      ),
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOne(userId: string, id: string): Promise<ConnectionDto> {
@@ -177,6 +288,88 @@ export class ConnectionService {
     };
   }
 
+  private toConnectionCatalogItemDto(
+    connection: ConnectionCatalogRecord,
+    usageCount: number,
+  ): ConnectionCatalogItemDto {
+    const credentials = this.decryptCredentials(connection.credentials);
+
+    return {
+      id: connection.id,
+      name: connection.name,
+      type: connection.type as ConnectionType,
+      usageCount,
+      credentialFieldCount: Object.keys(credentials).length,
+      updatedAt: connection.updatedAt.toISOString(),
+    };
+  }
+
+  private buildCatalogWhere(
+    userId: string,
+    query: string | undefined,
+    type: PrismaConnectionType | undefined,
+    usage: ConnectionCatalogUsageFilter,
+  ): Prisma.ConnectionWhereInput {
+    const where: Prisma.ConnectionWhereInput = {
+      userId,
+    };
+
+    if (query !== undefined) {
+      where.name = {
+        contains: query,
+        mode: 'insensitive',
+      };
+    }
+
+    if (type !== undefined) {
+      where.type = type;
+    }
+
+    const ownedWorkflowNodeFilter: Prisma.WorkflowNodeWhereInput = {
+      workflow: {
+        is: {
+          userId,
+        },
+      },
+    };
+
+    if (usage === ConnectionCatalogUsageFilter.USED) {
+      where.workflowNodes = {
+        some: ownedWorkflowNodeFilter,
+      };
+    }
+
+    if (usage === ConnectionCatalogUsageFilter.UNUSED) {
+      where.workflowNodes = {
+        none: ownedWorkflowNodeFilter,
+      };
+    }
+
+    return where;
+  }
+
+  private buildCatalogOrderBy(
+    sort: ConnectionCatalogSort,
+  ): Prisma.ConnectionOrderByWithRelationInput[] {
+    switch (sort) {
+      case ConnectionCatalogSort.UPDATED_ASC:
+        return [{ updatedAt: 'asc' }, { id: 'asc' }];
+      case ConnectionCatalogSort.NAME_ASC:
+        return [{ name: 'asc' }, { id: 'asc' }];
+      case ConnectionCatalogSort.NAME_DESC:
+        return [{ name: 'desc' }, { id: 'desc' }];
+      case ConnectionCatalogSort.USAGE_DESC:
+        return [
+          { workflowNodes: { _count: 'desc' } },
+          { updatedAt: 'desc' },
+          { id: 'desc' },
+        ];
+      case ConnectionCatalogSort.UPDATED_DESC:
+      default:
+        return [{ updatedAt: 'desc' }, { id: 'desc' }];
+    }
+  }
+
   private normalizeName(name: unknown): string {
     if (typeof name !== 'string' || name.trim().length === 0) {
       throw new BadRequestException('Connection name must be a non-empty string.');
@@ -194,6 +387,60 @@ export class ConnectionService {
     }
 
     return type as ConnectionType;
+  }
+
+  private normalizeCatalogUsageFilter(
+    usage: unknown,
+  ): ConnectionCatalogUsageFilter {
+    if (usage === undefined) {
+      return ConnectionCatalogUsageFilter.ALL;
+    }
+
+    if (
+      typeof usage !== 'string' ||
+      !Object.values(ConnectionCatalogUsageFilter).includes(
+        usage as ConnectionCatalogUsageFilter,
+      )
+    ) {
+      throw new BadRequestException(
+        'Connection catalog usage filter is invalid.',
+      );
+    }
+
+    return usage as ConnectionCatalogUsageFilter;
+  }
+
+  private normalizeCatalogSort(sort: unknown): ConnectionCatalogSort {
+    if (sort === undefined) {
+      return ConnectionCatalogSort.UPDATED_DESC;
+    }
+
+    if (
+      typeof sort !== 'string' ||
+      !Object.values(ConnectionCatalogSort).includes(
+        sort as ConnectionCatalogSort,
+      )
+    ) {
+      throw new BadRequestException('Connection catalog sort is invalid.');
+    }
+
+    return sort as ConnectionCatalogSort;
+  }
+
+  private normalizeCatalogQuery(query: unknown): string | undefined {
+    if (query === undefined) {
+      return undefined;
+    }
+
+    if (typeof query !== 'string') {
+      throw new BadRequestException(
+        'Connection catalog query must be a string.',
+      );
+    }
+
+    const normalizedQuery = query.trim();
+
+    return normalizedQuery.length === 0 ? undefined : normalizedQuery;
   }
 
   private encryptCredentials(credentials: unknown): string {
@@ -261,5 +508,37 @@ export class ConnectionService {
     }
 
     return encryptionKey;
+  }
+
+  private parsePositiveInteger(
+    value: unknown,
+    fieldName: string,
+    defaultValue: number,
+    maxValue?: number,
+  ): number {
+    if (value === undefined) {
+      return defaultValue;
+    }
+
+    const normalizedValue =
+      typeof value === 'string' ? Number.parseInt(value, 10) : value;
+
+    if (
+      typeof normalizedValue !== 'number' ||
+      !Number.isInteger(normalizedValue) ||
+      normalizedValue <= 0
+    ) {
+      throw new BadRequestException(
+        `${fieldName} must be a positive integer.`,
+      );
+    }
+
+    if (maxValue !== undefined && normalizedValue > maxValue) {
+      throw new BadRequestException(
+        `${fieldName} must be less than or equal to ${maxValue}.`,
+      );
+    }
+
+    return normalizedValue;
   }
 }

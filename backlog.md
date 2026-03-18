@@ -2632,7 +2632,7 @@
   - docs-only task; build/test не требуются
 
 ### TASK-Q1: add scalable connections catalog summary API
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: дать фронту легковесный контракт для больших библиотек подключений
 - **Scope**:
   - новый summary endpoint каталога с `query` / `type` / `usage` / `sort` / `page` / `limit`
