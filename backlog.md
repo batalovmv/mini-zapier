@@ -2357,6 +2357,41 @@
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
 
+### TASK-O6: final dashboard density and column-balance polish
+- **Статус**: `todo`
+- **Цель**: довести главную страницу до более собранного операционного состояния через снятие лишнего смыслового дублирования, уплотнение визуального ритма и балансировку правой колонки recent activity
+- **Scope**:
+  - убрать повтор одного и того же сигнала между `status` и `attention reason` там, где они сообщают одно и то же (`PAUSED`, `DRAFT`)
+  - сохранить отдельный attention signal только там, где он реально добавляет новый смысл (`FAILED last run`, `ACTIVE without runs`)
+  - сбалансировать правую колонку `recent activity`, чтобы при `0-1` событиях она не выглядела недозагруженной и не спорила со списком сценариев
+  - ещё на один шаг ужать визуальный шум в dashboard surfaces: pills, secondary chips, пустые отступы, лишнюю мягкость панелей
+  - не менять product logic, data contract, search/filter/sort и существующие dashboard actions
+- **Не входит**:
+  - новый backend API
+  - global executions page
+  - новые dashboard features beyond visual/UX polish
+  - redesign других страниц
+  - новые зависимости
+- **Файлы**:
+  - `apps/web/src/pages/DashboardPage.tsx`
+  - `apps/web/src/components/dashboard/WorkflowList.tsx`
+  - `apps/web/src/components/dashboard/WorkflowCard.tsx`
+  - `apps/web/src/components/dashboard/StatsOverview.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+  - `apps/web/src/index.css`
+  - `apps/web/e2e/ui-smoke.spec.ts`
+- **Acceptance**:
+  - workflow rows больше не дублируют один и тот же operational смысл через `status` и `attention reason`
+  - dashboard визуально плотнее и спокойнее без потери читаемости
+  - recent activity колонка при малом числе событий выглядит уместно и не кажется случайно пустой
+  - текущие actions, filters и sort сохранены
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
 ---
 
 ## Срез P: Workflow editor workspace hierarchy

@@ -4,7 +4,7 @@
 
 ## Текущее состояние
 - **Последнее изменение**: TASK-P3 — `compact workflow editor command bar`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт + TASK-O5 закрыт + TASK-P1 закрыт + TASK-P2 закрыт + TASK-P3 закрыт; dashboard redesign track закрыт, editor workspace hierarchy command bar follow-up закрыт
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт + TASK-O5 закрыт + TASK-P1 закрыт + TASK-P2 закрыт + TASK-P3 закрыт; основной dashboard redesign track закрыт, editor workspace hierarchy command bar follow-up закрыт, добавлен финальный dashboard micro-slice `TASK-O6`
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -18,7 +18,8 @@
   - **TASK-O5 local verification**: dashboard copy сокращён и синхронизирован между RU/EN, header/attention/stats/list/recent activity получили стабильные `data-testid`, mobile/desktop layout tightened without logic changes, а smoke больше не зависит от текстовой ссылки `← Back`; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
   - **TASK-P1 local verification**: editor shell больше не растягивается в три одинаково тяжёлые desktop-панели; page composition ограничена по ширине, `NodeSidebar` и `FlowCanvas` стали компактнее и тише, empty canvas упрощён, а `FieldPicker` вынесен в viewport-aware portal overlay вместо локального `absolute` popover; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
   - **TASK-P2 local verification**: проведён manual QA route по пустому workflow, `trigger -> action`, `HTTP Request`, `DB Query`, `Data Transform`, `Email` и `Telegram` на desktop ширинах около `1280`, `1440` и `>=1600`; подтверждён только один residual defect: chip inspector у `TemplatedField` рендерился относительно неправильного ancestor и уезжал к верху inspector rail вместо позиции рядом с выбранным chip. Корневой контейнер `TemplatedField` переведён в `relative`, после чего overlay снова якорится рядом с chip; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
-  - **TASK-P3 local verification**: верх editor-а пересобран из высокой hero-like card в компактный command bar: `Back` стал quieter text-action, workflow name поднят в доминирующий anchor, `status` / `dirty` / `version` сжаты в secondary meta chips, а `Save` остался primary при secondary `Activate/Pause` и `Run`; вертикальный gap между header и workspace уменьшен без изменения handlers, store logic или editor behavior. Локально подтверждены `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
+- **TASK-P3 local verification**: верх editor-а пересобран из высокой hero-like card в компактный command bar: `Back` стал quieter text-action, workflow name поднят в доминирующий anchor, `status` / `dirty` / `version` сжаты в secondary meta chips, а `Save` остался primary при secondary `Activate/Pause` и `Run`; вертикальный gap между header и workspace уменьшен без изменения handlers, store logic или editor behavior. Локально подтверждены `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
+- **Dashboard follow-up planning**: после финального визуального просмотра главной страницы зафиксирован узкий polish-pass `TASK-O6` на снятие дублирования `status`/`attention`, дополнительное уплотнение surfaces и балансировку правой колонки `recent activity` без изменения data/API/features
   - Editor canvas: все 3 trigger types (Webhook, Cron, Email Trigger) + все 5 action types (HTTP Request, Email, Telegram, PostgreSQL Query, Data Transform) — узлы drag-and-drop, config panels — ✅
   - **TASK-056 preview UI**: Email config → кнопка «▸ Предпросмотр» → empty state корректный; Telegram config → аналогично ✅
   - **TASK-A local build**: editor dirty-state + route/beforeunload guard собраны локально, `pnpm --filter @mini-zapier/web build` ✅
@@ -775,7 +776,17 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-`TASK-P3` закрыл компактный command bar pass для editor header и не менял canvas, rails, inspector, API или store behavior. Следующий практический шаг — либо руками подтвердить visual QA на сценариях `new/saved/unsaved/save/activate-pause/run` и desktop widths `1280` / `1440` / `>=1600`, либо перед следующими изменениями editor-а зафиксировать новый backlog slice; открытых `todo` в `backlog.md` сейчас нет.
+Следующий продуктовый шаг: `TASK-O6` — финальный micro-slice для dashboard.
+
+Что нужно добить в `TASK-O6`:
+- убрать смысловое дублирование между `status` и `attention reason` в строках `PAUSED` и `DRAFT`
+- ещё немного уплотнить dashboard surfaces и secondary chips без потери читаемости
+- визуально сбалансировать правую колонку `recent activity`, особенно когда там `0-1` событие
+- не трогать API, product logic, filters/sort и другие страницы
+
+Editor follow-up после `TASK-P3` остаётся вне backlog как ручной QA:
+- визуально пройти сценарии `new/saved/unsaved/save/activate-pause/run`
+- отдельно проверить desktop widths `1280` / `1440` / `>=1600`
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke против live Vercel не запускался; для TASK-J локальная проверка ограничена `build` + `playwright test --list`.
