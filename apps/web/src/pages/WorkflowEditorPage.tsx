@@ -1,11 +1,13 @@
 import type { WorkflowDto } from '@mini-zapier/shared';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { ConfigPanel } from '../components/editor/ConfigPanel';
+import { getNodeDefinition } from '../components/editor/editor-definitions';
 import { FlowCanvas } from '../components/editor/FlowCanvas';
 import { NodeSidebar } from '../components/editor/NodeSidebar';
+import { ConfirmationDialog } from '../components/ui/ConfirmationDialog';
 import { LoadingState } from '../components/ui/LoadingState';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import { useLocale } from '../locale/LocaleProvider';
@@ -63,6 +65,9 @@ export function WorkflowEditorPage() {
     (state) => state.saveWorkflow,
   );
 
+  const selectedNodeId = useWorkflowEditorStore((state) => state.selectedNodeId);
+  const removeNode = useWorkflowEditorStore((state) => state.removeNode);
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState(false);
@@ -71,6 +76,8 @@ export function WorkflowEditorPage() {
   const [toolboxCollapsed, setToolboxCollapsed] = useState(() =>
     localStorage.getItem(TOOLBOX_COLLAPSED_KEY) === 'true',
   );
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteNodeLabel, setDeleteNodeLabel] = useState('');
 
   function toggleToolbox() {
     setToolboxCollapsed((prev) => {
@@ -127,6 +134,59 @@ export function WorkflowEditorPage() {
     messages.workflowEditorPage.untitledWorkflow,
     resetEditor,
   ]);
+
+  const handleSaveRef = useRef(handleSave);
+  handleSaveRef.current = handleSave;
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const isModKey = event.metaKey || event.ctrlKey;
+
+      if (isModKey && event.key === 's') {
+        event.preventDefault();
+        if (!saving) {
+          void handleSaveRef.current();
+        }
+        return;
+      }
+
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        const target = event.target as HTMLElement;
+        if (
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLSelectElement ||
+          target.isContentEditable
+        ) {
+          return;
+        }
+
+        const currentSelectedNodeId = useWorkflowEditorStore.getState().selectedNodeId;
+        if (currentSelectedNodeId) {
+          event.preventDefault();
+          const state = useWorkflowEditorStore.getState();
+          const node = state.nodes.find((n) => n.id === currentSelectedNodeId);
+          if (node) {
+            const def = getNodeDefinition(node.data.nodeKind, node.data.nodeType);
+            const defCopy = def ? messages.editorDefinitions[def.id] : undefined;
+            setDeleteNodeLabel(defCopy?.label ?? node.data.label ?? '');
+          }
+          setDeleteDialogOpen(true);
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [saving, messages.editorDefinitions]);
+
+  function handleDeleteSelectedNode() {
+    const nodeId = useWorkflowEditorStore.getState().selectedNodeId;
+    if (!nodeId) return;
+    removeNode(nodeId);
+    setDeleteDialogOpen(false);
+    toast.success(messages.configPanel.nodeDeletedToast(deleteNodeLabel));
+  }
 
   async function handleSave() {
     const validationErrors = validateWorkflow();
@@ -229,6 +289,7 @@ export function WorkflowEditorPage() {
       : `v${workflowVersion}`;
 
   return (
+    <>
     <div className="flex min-h-0 flex-1 flex-col gap-3 xl:overflow-hidden">
       <section className="editor-command-bar mx-auto w-full max-w-[1740px] shrink-0 overflow-hidden">
         <div className="editor-command-bar__inner">
@@ -338,5 +399,17 @@ export function WorkflowEditorPage() {
         </div>
       </section>
     </div>
+
+    {deleteDialogOpen ? (
+      <ConfirmationDialog
+        confirmLabel={messages.configPanel.deleteNodeDialogConfirm}
+        confirmTone="danger"
+        description={messages.configPanel.deleteNodeDialogDescription(deleteNodeLabel)}
+        onCancel={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteSelectedNode}
+        title={messages.configPanel.deleteNodeDialogTitle}
+      />
+    ) : null}
+    </>
   );
 }
