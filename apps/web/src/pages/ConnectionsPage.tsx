@@ -11,8 +11,7 @@ import toast from 'react-hot-toast';
 
 import { ConnectionFormDialog } from '../components/connections/ConnectionFormDialog';
 import { ConfirmationDialog } from '../components/ui/ConfirmationDialog';
-import { EmptyState } from '../components/ui/EmptyState';
-import { LoadingState } from '../components/ui/LoadingState';
+import { Spinner } from '../components/ui/Spinner';
 import { useLocale } from '../locale/LocaleProvider';
 import { getApiErrorMessage } from '../lib/api/client';
 import {
@@ -269,10 +268,11 @@ export function ConnectionsPage() {
 
   const items = catalog?.items ?? [];
   const totalConnections = catalog?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(totalConnections / PAGE_LIMIT));
+  const currentLimit = catalog?.limit ?? PAGE_LIMIT;
+  const totalPages = Math.max(1, Math.ceil(totalConnections / currentLimit));
   const { start: rangeStart, end: rangeEnd } = buildCatalogRange(
     page,
-    PAGE_LIMIT,
+    currentLimit,
     totalConnections,
   );
   const hasActiveFilters =
@@ -294,6 +294,8 @@ export function ConnectionsPage() {
   const showPageErrorState = !loading && pageError !== null && catalog === null;
   const controlsDisabled =
     refreshing || submitPending || deletePending || editLoadingId !== null;
+  const totalConnectionsLabel =
+    messages.connectionsPage.totalConnections(totalConnections);
   const countLabel =
     refreshing && catalog !== null
       ? messages.connectionsPage.refreshing
@@ -303,7 +305,7 @@ export function ConnectionsPage() {
             rangeEnd,
             totalConnections,
           )
-        : messages.connectionsPage.totalConnections(0);
+        : null;
 
   return (
     <div className="space-y-4 sm:space-y-5">
@@ -321,11 +323,13 @@ export function ConnectionsPage() {
 
               <div className="mt-3 flex flex-wrap gap-2">
                 <span className="dashboard-chip max-w-full whitespace-normal">
-                  {messages.connectionsPage.totalConnections(totalConnections)}
+                  {totalConnectionsLabel}
                 </span>
-                <span className="dashboard-chip max-w-full whitespace-normal">
-                  {countLabel}
-                </span>
+                {countLabel ? (
+                  <span className="dashboard-chip max-w-full whitespace-normal">
+                    {countLabel}
+                  </span>
+                ) : null}
               </div>
             </div>
 
@@ -361,9 +365,11 @@ export function ConnectionsPage() {
             </h2>
           </div>
 
-          <p className="dashboard-chip w-fit max-w-full whitespace-normal">
-            {countLabel}
-          </p>
+          {countLabel ? (
+            <p className="dashboard-chip w-fit max-w-full whitespace-normal">
+              {countLabel}
+            </p>
+          ) : null}
         </div>
 
         <div className="dashboard-controls-grid mt-3.5">
@@ -469,31 +475,43 @@ export function ConnectionsPage() {
         ) : null}
 
         {pageError && catalog !== null ? (
-          <div className="mt-3.5 rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <div className="connections-inline-alert mt-3.5" data-tone="danger">
             {pageError}
           </div>
         ) : null}
 
         {editLoadError ? (
-          <div className="mt-3.5 rounded-[1.2rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <div className="connections-inline-alert mt-3.5" data-tone="warning">
             {editLoadError}
           </div>
         ) : null}
 
         <div className="mt-3.5">
           {loading ? (
-            <LoadingState
-              compact
-              description={messages.connectionsPage.loadingDescription}
-              title={messages.connectionsPage.loadingTitle}
-            />
+            <div
+              className="connections-state-card"
+              data-tone="loading"
+              role="status"
+            >
+              <div className="flex items-start gap-3">
+                <Spinner size="sm" />
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    {messages.connectionsPage.loadingTitle}
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-5 text-slate-600">
+                    {messages.connectionsPage.loadingDescription}
+                  </p>
+                </div>
+              </div>
+            </div>
           ) : showPageErrorState ? (
-            <div className="rounded-3xl border border-rose-200 bg-rose-50 px-6 py-8 text-center">
-              <h3 className="text-lg font-semibold text-rose-900">
+            <div className="connections-state-card" data-tone="danger">
+              <h3 className="text-base font-semibold text-rose-900">
                 {messages.connectionsPage.errorTitle}
               </h3>
-              <p className="mt-3 text-sm leading-6 text-rose-700">{pageError}</p>
-              <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <p className="mt-2 text-sm leading-5 text-rose-700">{pageError}</p>
+              <div className="connections-state-card__actions mt-4">
                 <button
                   className="dashboard-filter-reset"
                   onClick={() => void loadCatalog()}
@@ -511,8 +529,14 @@ export function ConnectionsPage() {
               </div>
             </div>
           ) : showInitialEmptyState ? (
-            <EmptyState
-              action={
+            <div className="connections-state-card" data-tone="neutral">
+              <h3 className="text-base font-semibold text-slate-900">
+                {messages.connectionsPage.emptyTitle}
+              </h3>
+              <p className="mt-2 text-sm leading-5 text-slate-600">
+                {messages.connectionsPage.emptyDescription}
+              </p>
+              <div className="connections-state-card__actions mt-4">
                 <button
                   className="inline-flex items-center justify-center rounded-full bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700"
                   onClick={() => openCreateDialog()}
@@ -520,13 +544,17 @@ export function ConnectionsPage() {
                 >
                   {messages.connectionsPage.createConnection}
                 </button>
-              }
-              description={messages.connectionsPage.emptyDescription}
-              title={messages.connectionsPage.emptyTitle}
-            />
+              </div>
+            </div>
           ) : showNoResultsState ? (
-            <EmptyState
-              action={
+            <div className="connections-state-card" data-tone="neutral">
+              <h3 className="text-base font-semibold text-slate-900">
+                {messages.connectionsPage.noResultsTitle}
+              </h3>
+              <p className="mt-2 text-sm leading-5 text-slate-600">
+                {messages.connectionsPage.noResultsDescription}
+              </p>
+              <div className="connections-state-card__actions mt-4">
                 <button
                   className="dashboard-filter-reset"
                   onClick={resetFilters}
@@ -534,66 +562,62 @@ export function ConnectionsPage() {
                 >
                   {messages.connectionsPage.controls.clear}
                 </button>
-              }
-              description={messages.connectionsPage.noResultsDescription}
-              title={messages.connectionsPage.noResultsTitle}
-            />
+              </div>
+            </div>
           ) : (
             <>
-              <div className="overflow-hidden rounded-[1.35rem] border border-slate-900/10 bg-white/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+              <div className="connections-list-shell">
                 <div className="divide-y divide-slate-900/8">
                   {items.map((item) => (
-                    <article key={item.id} className="px-4 py-4 sm:px-5">
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2.5">
-                            <h3 className="truncate text-base font-semibold text-slate-900 sm:text-lg">
-                              {item.name}
-                            </h3>
-                            <span className="app-chip px-3 py-1 text-xs font-semibold">
-                              {connectionTypeLabels[item.type]}
-                            </span>
-                          </div>
+                    <article key={item.id} className="connections-row">
+                      <div className="connections-row__layout">
+                        <div className="connections-row__main">
+                          <h3
+                            className="connections-row__name"
+                            title={item.name}
+                          >
+                            {item.name}
+                          </h3>
 
-                          <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2 xl:grid-cols-4">
-                            <div className="rounded-2xl border border-slate-900/8 bg-slate-50/70 px-3.5 py-3">
-                              <p className="muted-label">
+                          <dl className="connections-row__meta">
+                            <div className="connections-row__meta-item">
+                              <dt className="connections-row__meta-label">
                                 {messages.connectionsPage.typeSummaryLabel}
-                              </p>
-                              <p className="mt-1.5 font-semibold text-slate-900">
+                              </dt>
+                              <dd className="connections-row__meta-value m-0">
                                 {connectionTypeLabels[item.type]}
-                              </p>
+                              </dd>
                             </div>
-                            <div className="rounded-2xl border border-slate-900/8 bg-slate-50/70 px-3.5 py-3">
-                              <p className="muted-label">
+                            <div className="connections-row__meta-item">
+                              <dt className="connections-row__meta-label">
                                 {messages.connectionsPage.usageCountLabel}
-                              </p>
-                              <p className="mt-1.5 font-semibold text-slate-900">
+                              </dt>
+                              <dd className="connections-row__meta-value m-0">
                                 {formatNumber(item.usageCount)}
-                              </p>
+                              </dd>
                             </div>
-                            <div className="rounded-2xl border border-slate-900/8 bg-slate-50/70 px-3.5 py-3">
-                              <p className="muted-label">
+                            <div className="connections-row__meta-item">
+                              <dt className="connections-row__meta-label">
                                 {messages.connectionsPage.credentialFieldCountLabel}
-                              </p>
-                              <p className="mt-1.5 font-semibold text-slate-900">
+                              </dt>
+                              <dd className="connections-row__meta-value m-0">
                                 {formatNumber(item.credentialFieldCount)}
-                              </p>
+                              </dd>
                             </div>
-                            <div className="rounded-2xl border border-slate-900/8 bg-slate-50/70 px-3.5 py-3">
-                              <p className="muted-label">
+                            <div className="connections-row__meta-item connections-row__meta-item--wide">
+                              <dt className="connections-row__meta-label">
                                 {messages.connectionsPage.updatedLabel}
-                              </p>
-                              <p className="mt-1.5 font-semibold text-slate-900">
+                              </dt>
+                              <dd className="connections-row__meta-value m-0">
                                 {formatDateTime(item.updatedAt)}
-                              </p>
+                              </dd>
                             </div>
-                          </div>
+                          </dl>
                         </div>
 
-                        <div className="workflow-action-stack lg:ml-4 lg:mt-1">
+                        <div className="connections-row__actions">
                           <button
-                            className="workflow-action-secondary"
+                            className="connections-row__action connections-row__action--edit"
                             disabled={controlsDisabled}
                             onClick={() => void handleEditClick(item)}
                             type="button"
@@ -603,8 +627,8 @@ export function ConnectionsPage() {
                               : messages.connectionsPage.editConnection}
                           </button>
                           <button
-                            className="workflow-action-danger"
-                            disabled={deletePending}
+                            className="connections-row__action connections-row__action--delete"
+                            disabled={controlsDisabled}
                             onClick={() => setDeleteTarget(item)}
                             type="button"
                           >

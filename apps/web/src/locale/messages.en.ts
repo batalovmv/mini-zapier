@@ -443,7 +443,7 @@ export const en = {
   connectionsPage: {
     eyebrow: 'Connections',
     title: 'Connections catalog',
-    description: 'Search, filter and manage saved connections.',
+    description: 'Search and manage saved connections.',
     createConnection: 'Create connection',
     refresh: 'Refresh',
     refreshing: 'Refreshing...',
@@ -452,24 +452,24 @@ export const en = {
     reuseHint:
       'Connections created here appear in node inspectors and can be reused across multiple workflows.',
     loadingTitle: 'Loading connections...',
-    loadingDescription: 'Fetching the connection catalog from the API.',
+    loadingDescription: 'Loading the catalog from the API.',
     errorTitle: 'Could not load connections',
     retry: 'Retry',
-    emptyTitle: 'No connections yet',
+    emptyTitle: 'No saved connections',
     emptyDescription:
-      'Create the first connection to reuse it in workflow steps.',
+      'Create the first connection and reuse it in workflow steps.',
     resultsEyebrow: 'Catalog',
-    resultsTitle: 'Results',
+    resultsTitle: 'Connections',
     showingRange: (start: number, end: number, total: number) =>
       `Showing ${formatCount('en-US', start)}-${formatCount('en-US', end)} of ${formatCount('en-US', total)}`,
     pageSummary: (page: number, totalPages: number) =>
       `Page ${formatCount('en-US', page)} of ${formatCount('en-US', totalPages)}`,
     previousPage: 'Previous',
     nextPage: 'Next',
-    filtersActive: 'Filters are active.',
-    noResultsTitle: 'No connections match these controls',
+    filtersActive: 'Filters active.',
+    noResultsTitle: 'No matches',
     noResultsDescription:
-      'Change the current search or filters to see more connections.',
+      'Clear search or filters to see the full catalog.',
     controls: {
       searchLabel: 'Search',
       searchPlaceholder: 'Search by name',
@@ -494,7 +494,7 @@ export const en = {
       },
     },
     typeSummaryLabel: 'Type',
-    usageCountLabel: 'Usage',
+    usageCountLabel: 'Used',
     credentialFieldCountLabel: 'Fields',
     sectionEyebrow: 'Connection type',
     typeDescriptions: {

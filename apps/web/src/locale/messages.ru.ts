@@ -480,7 +480,7 @@ export const ru = {
   connectionsPage: {
     eyebrow: 'Подключения',
     title: 'Каталог подключений',
-    description: 'Ищите, фильтруйте и обновляйте сохранённые подключения.',
+    description: 'Ищите и управляйте сохранёнными подключениями.',
     createConnection: 'Создать подключение',
     refresh: 'Обновить',
     refreshing: 'Обновление...',
@@ -489,14 +489,14 @@ export const ru = {
     reuseHint:
       'Подключения, созданные здесь, появляются в инспекторе узлов и переиспользуются в нескольких сценариях.',
     loadingTitle: 'Загрузка подключений...',
-    loadingDescription: 'Получаем каталог подключений из API.',
+    loadingDescription: 'Загружаем каталог из API.',
     errorTitle: 'Не удалось загрузить подключения',
     retry: 'Повторить',
-    emptyTitle: 'Подключений пока нет',
+    emptyTitle: 'Сохранённых подключений нет',
     emptyDescription:
-      'Создайте первое подключение, чтобы потом переиспользовать его в шагах сценария.',
+      'Создайте первое подключение и переиспользуйте его в шагах сценария.',
     resultsEyebrow: 'Каталог',
-    resultsTitle: 'Результаты',
+    resultsTitle: 'Подключения',
     showingRange: (start: number, end: number, total: number) =>
       `Показано ${formatCount('ru-RU', start)}-${formatCount('ru-RU', end)} из ${formatCount('ru-RU', total)}`,
     pageSummary: (page: number, totalPages: number) =>
@@ -504,9 +504,9 @@ export const ru = {
     previousPage: 'Назад',
     nextPage: 'Далее',
     filtersActive: 'Фильтры активны.',
-    noResultsTitle: 'По этим параметрам подключений нет',
+    noResultsTitle: 'Совпадений нет',
     noResultsDescription:
-      'Измените поиск или фильтры, чтобы увидеть другие подключения.',
+      'Сбросьте поиск или фильтры, чтобы вернуть весь каталог.',
     controls: {
       searchLabel: 'Поиск',
       searchPlaceholder: 'Поиск по названию',
@@ -531,7 +531,7 @@ export const ru = {
       },
     },
     typeSummaryLabel: 'Тип',
-    usageCountLabel: 'Использований',
+    usageCountLabel: 'В сценариях',
     credentialFieldCountLabel: 'Поля',
     sectionEyebrow: 'Тип подключения',
     typeDescriptions: {

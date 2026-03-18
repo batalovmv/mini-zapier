@@ -2669,7 +2669,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-Q3: tighten connections list hierarchy and row density
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: сделать список быстрее для сканирования
 - **Scope**:
   - denser rows/cards with `name`, `type`, `usageCount`, `updatedAt`, `fieldCount`
