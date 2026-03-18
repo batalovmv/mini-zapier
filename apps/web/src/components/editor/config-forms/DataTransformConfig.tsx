@@ -151,10 +151,11 @@ export function DataTransformConfig({
             multiline
             onChange={onChange}
             placeholder={t.templatePlaceholder}
+            testId="data-transform-template-input"
           />
         ) : (
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="muted-label">{t.mapping}</span>
               <button
                 className="editor-inspector-link"

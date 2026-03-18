@@ -300,6 +300,7 @@ export function HttpRequestConfig({
           label={t.url}
           onChange={onChange}
           placeholder={t.urlPlaceholder}
+          testId="http-request-url-input"
         />
 
         <div className="space-y-3">
@@ -402,6 +403,7 @@ export function HttpRequestConfig({
 
                 <button
                   className="editor-inspector-link"
+                  data-testid="http-add-body-field-button"
                   onClick={addBodyField}
                   type="button"
                 >
@@ -452,7 +454,7 @@ export function HttpRequestConfig({
         {advancedOpen ? (
           <div className="mt-3 space-y-3 border-t border-slate-900/8 pt-3">
             <div className="space-y-3">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="editor-inspector-eyebrow">{t.headers}</p>
                   <p className="editor-inspector-note">

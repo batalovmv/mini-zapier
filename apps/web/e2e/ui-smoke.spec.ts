@@ -422,7 +422,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     connectionId = await page.getByTestId('connection-select').inputValue();
 
     await httpNode.click();
-    await page.getByLabel('HTTP request URL').fill(httpRequestUrl);
+    await page.getByTestId('http-request-url-input').fill(httpRequestUrl);
     await page.getByTestId('http-advanced-toggle').click();
     await page.getByTestId('http-headers-toggle').click();
     await page.getByTestId('http-add-header-button').click();
@@ -439,7 +439,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
         .fill('smoke-{{input.eventId}}@example.com');
     }
 
-    await page.getByRole('button', { name: 'Add field' }).click();
+    await page.getByTestId('http-add-body-field-button').click();
 
     if (OVERRIDE_HTTP_REQUEST_URL) {
       await page.getByLabel('Body field key 2').fill('eventId');
@@ -450,7 +450,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     }
 
     await transformNode.click();
-    await page.getByLabel('Data transform template').fill(
+    await page.getByTestId('data-transform-template-input').fill(
       OVERRIDE_HTTP_REQUEST_URL
         ? 'Processed {{input.data.json.name}} / {{input.data.json.eventId}}'
         : 'Processed {{input.data.ok}} / {{input.status}}',

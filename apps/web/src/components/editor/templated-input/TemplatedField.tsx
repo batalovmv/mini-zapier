@@ -28,10 +28,17 @@ type TemplatedFieldProps = (ConfigKeyProps | ControlledProps) & {
   multiline?: boolean;
   placeholder?: string;
   ariaLabel?: string;
+  testId?: string;
 };
 
 export function TemplatedField(props: TemplatedFieldProps) {
-  const { label, multiline = false, placeholder, ariaLabel } = props;
+  const {
+    label,
+    multiline = false,
+    placeholder,
+    ariaLabel,
+    testId,
+  } = props;
   const { messages } = useLocale();
   const t = messages.configForms.templatedInput;
 
@@ -186,7 +193,7 @@ export function TemplatedField(props: TemplatedFieldProps) {
   const chipRect = inspectedChip?.chipEl.getBoundingClientRect();
 
   return (
-    <div className="relative block" ref={containerRef}>
+    <div className="relative block min-w-0" ref={containerRef}>
       {label ? (
         <div className="flex flex-wrap items-center gap-2">
           <span className="muted-label">{label}</span>
@@ -202,12 +209,14 @@ export function TemplatedField(props: TemplatedFieldProps) {
             onChipClick={handleChipClick}
             placeholder={placeholder}
             ref={templatedRef}
+            testId={testId}
             value={currentValue}
           />
         ) : multiline ? (
           <textarea
             aria-label={ariaLabel}
-            className="min-h-36 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+            className="min-h-36 min-w-0 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+            data-testid={testId}
             onChange={(e) => setValue(e.target.value)}
             placeholder={placeholder}
             ref={(el) => {
@@ -218,7 +227,8 @@ export function TemplatedField(props: TemplatedFieldProps) {
         ) : (
           <input
             aria-label={ariaLabel}
-            className="w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+            className="min-w-0 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500"
+            data-testid={testId}
             onChange={(e) => setValue(e.target.value)}
             placeholder={placeholder}
             ref={(el) => {

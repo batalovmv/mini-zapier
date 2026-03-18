@@ -2547,7 +2547,7 @@
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
 
 ### TASK-P6: inspector overflow, responsive QA and smoke stabilization
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: после structural flatten закрыть residual defects narrow inspector rail: long-text overflow, placeholder clipping, narrow-width regressions и хрупкие selectors после обновления DOM
 - **Scope**:
   - исправить переполнение и clipping длинных URL/template/SQL/JSON значений в narrow inspector, включая single-line `TemplatedInput`

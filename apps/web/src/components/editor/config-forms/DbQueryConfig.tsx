@@ -938,7 +938,7 @@ export function DbQueryConfig({
 
           {showSetValues && builder.table && columns.length > 0 ? (
             <div className="space-y-2">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <span className="muted-label">{t.setValues}</span>
                 <button
                   className="editor-inspector-link"
@@ -1014,7 +1014,7 @@ export function DbQueryConfig({
 
           {showFilters && builder.table && columns.length > 0 ? (
             <div className="space-y-2">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <span className="muted-label">{t.filters}</span>
                 <button
                   className="editor-inspector-link"

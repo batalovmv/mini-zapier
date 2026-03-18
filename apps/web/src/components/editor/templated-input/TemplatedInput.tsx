@@ -27,6 +27,7 @@ interface TemplatedInputProps {
   placeholder?: string;
   className?: string;
   ariaLabel?: string;
+  testId?: string;
   onChipClick?: (
     path: string | null,
     raw: string,
@@ -106,6 +107,7 @@ export const TemplatedInput = forwardRef<
     placeholder,
     className,
     ariaLabel,
+    testId,
     onChipClick,
   },
   ref,
@@ -342,12 +344,16 @@ export const TemplatedInput = forwardRef<
   const isEmpty = value.length === 0;
 
   const baseClass =
-    'w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus-within:border-amber-500';
-  const singleLineClass = 'whitespace-nowrap overflow-x-auto';
-  const multiLineClass = 'min-h-36 whitespace-pre-wrap break-words';
+    'min-w-0 w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus-within:border-amber-500';
+  const singleLineClass = 'overflow-x-auto overflow-y-hidden whitespace-nowrap';
+  const multiLineClass =
+    'min-h-36 overflow-y-auto whitespace-pre-wrap break-words';
+  const placeholderClass = multiline
+    ? 'pointer-events-none absolute inset-x-4 top-3 whitespace-pre-wrap break-words text-sm leading-6 text-slate-400'
+    : 'pointer-events-none absolute inset-y-0 left-4 right-4 flex items-center overflow-hidden text-ellipsis whitespace-nowrap text-sm text-slate-400';
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0">
       <div
         aria-label={ariaLabel}
         className={[
@@ -359,6 +365,7 @@ export const TemplatedInput = forwardRef<
           .join(' ')}
         contentEditable
         data-placeholder={placeholder}
+        data-testid={testId}
         onCompositionEnd={() => {
           isComposingRef.current = false;
           handleInput();
@@ -375,7 +382,10 @@ export const TemplatedInput = forwardRef<
         suppressContentEditableWarning
       />
       {isEmpty ? (
-        <div className="pointer-events-none absolute left-4 top-3 text-sm text-slate-400">
+        <div
+          aria-hidden="true"
+          className={placeholderClass}
+        >
           {placeholder}
         </div>
       ) : null}
