@@ -2392,3 +2392,27 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+### TASK-P2: editor page manual QA fixes after workspace rebalance
+- **Статус**: `done`
+- **Цель**: после `TASK-P1` вручную проверить editor page на desktop width и закрыть только подтверждённые visual/interaction defects без нового redesign scope
+- **Scope**:
+  - пройти manual QA-маршрут для пустого workflow, `trigger -> action`, `HTTP Request`, `DB Query`, `Data Transform`, `Email`, `Telegram`
+  - проверить desktop widths около `1280`, `1440`, `>=1600`
+  - исправить только подтверждённые residual defects внутри editor page без изменения backend API, execution logic, config semantics и editor store behavior
+  - не расширять scope до `TASK-P3`
+- **Не входит**:
+  - новый redesign editor-а
+  - backend/API/dashboard changes
+  - новые зависимости
+- **Файлы**:
+  - `apps/web/src/components/editor/templated-input/TemplatedField.tsx`
+- **Acceptance**:
+  - все подтверждённые manual QA defects в рамках editor page исправлены
+  - related overlays больше не конфликтуют с inspector shell в подтверждённых templated-field сценариях
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - manual browser QA
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`

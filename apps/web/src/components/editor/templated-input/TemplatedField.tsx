@@ -186,7 +186,7 @@ export function TemplatedField(props: TemplatedFieldProps) {
   const chipRect = inspectedChip?.chipEl.getBoundingClientRect();
 
   return (
-    <div className="block" ref={containerRef}>
+    <div className="relative block" ref={containerRef}>
       {label ? (
         <div className="flex flex-wrap items-center gap-2">
           <span className="muted-label">{label}</span>
