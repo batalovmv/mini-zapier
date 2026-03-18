@@ -11,7 +11,6 @@ import {
   WorkflowListStatusFilter,
 } from '../components/dashboard/WorkflowList';
 import { ConfirmationDialog } from '../components/ui/ConfirmationDialog';
-import { EmptyState } from '../components/ui/EmptyState';
 import { LoadingState } from '../components/ui/LoadingState';
 import { useLocale } from '../locale/LocaleProvider';
 import { getApiErrorMessage } from '../lib/api/client';
@@ -322,6 +321,8 @@ export function DashboardPage() {
   const recentActivityLoading =
     loading && recentExecutions.length === 0 && dashboardError === null;
   const recentActivityItems = recentExecutions.slice(0, 6);
+  const featuredRecentExecution =
+    recentActivityItems.length === 1 ? recentActivityItems[0] : null;
   const recentFailuresCount = recentExecutions.filter(
     (execution) => execution.status === 'FAILED',
   ).length;
@@ -399,34 +400,34 @@ export function DashboardPage() {
           : messages.dashboardPage.recentActivity.emptySummary;
 
   return (
-    <div className="space-y-4 sm:space-y-5 xl:space-y-6" data-testid="dashboard-page">
+    <div className="space-y-4 sm:space-y-5 xl:space-y-5" data-testid="dashboard-page">
       <section
-        className="dashboard-operational-panel app-panel overflow-hidden"
+        className="dashboard-panel dashboard-operational-panel app-panel overflow-hidden"
         data-testid="dashboard-operational-header"
       >
-        <div className="px-6 py-5 sm:px-7 sm:py-6">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="px-5 py-4 sm:px-6 sm:py-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl">
               <p className="muted-label">{messages.dashboardPage.eyebrow}</p>
-              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[2.15rem] sm:leading-[1.08]">
+              <h1 className="mt-1.5 text-[1.9rem] font-semibold tracking-tight text-slate-900 sm:text-[2.05rem] sm:leading-[1.06]">
                 {messages.dashboardPage.title}
               </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+              <p className="mt-2 max-w-2xl text-sm leading-[1.35rem] text-slate-600">
                 {messages.dashboardPage.description}
               </p>
 
-              <div className="mt-4 flex flex-wrap gap-2.5">
-                <span className="app-chip max-w-full whitespace-normal">
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="dashboard-chip max-w-full whitespace-normal">
                   {workflowSummaryLabel}
                 </span>
-                <span className="app-chip max-w-full whitespace-normal">
+                <span className="dashboard-chip max-w-full whitespace-normal">
                   {attentionSummaryLabel}
                 </span>
               </div>
             </div>
 
             <Link
-              className="inline-flex w-full justify-center self-stretch rounded-full bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_34px_-22px_rgba(141,69,20,0.62)] transition hover:bg-amber-700 sm:w-auto sm:self-start"
+              className="inline-flex w-full justify-center self-stretch rounded-full bg-amber-600 px-[1.125rem] py-2.5 text-sm font-semibold text-white shadow-[0_16px_28px_-22px_rgba(141,69,20,0.54)] transition hover:bg-amber-700 sm:w-auto sm:self-start"
               data-testid="create-workflow-link"
               to="/workflows/new"
             >
@@ -436,9 +437,9 @@ export function DashboardPage() {
         </div>
 
         {dashboardError ? (
-          <div className="px-6 pb-6 pt-0 sm:px-7 sm:pb-7">
+          <div className="px-5 pb-5 pt-0 sm:px-6 sm:pb-6">
             <div
-              className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
+              className="rounded-[1.35rem] border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-700"
               data-testid="dashboard-error"
             >
               {dashboardError}
@@ -448,25 +449,25 @@ export function DashboardPage() {
       </section>
 
       <section
-        className="app-panel app-panel-strong overflow-hidden p-5 sm:p-6"
+        className="dashboard-panel dashboard-panel-strong app-panel app-panel-strong overflow-hidden p-4 sm:p-5"
         data-testid="dashboard-attention-strip"
       >
-        <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-2.5 border-b border-slate-900/10 pb-3.5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="muted-label">
               {messages.dashboardPage.attentionEyebrow}
             </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-900 sm:text-[1.65rem]">
+            <h2 className="mt-1.5 text-[1.25rem] font-semibold tracking-tight text-slate-900 sm:text-[1.45rem]">
               {messages.dashboardPage.attentionTitle}
             </h2>
           </div>
 
-          <p className="app-chip w-fit max-w-full whitespace-normal">
+          <p className="dashboard-chip w-fit max-w-full whitespace-normal">
             {attentionSummaryLabel}
           </p>
         </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-3.5 grid gap-2.5 md:grid-cols-2 xl:grid-cols-4">
           {attentionItems.map((item) => {
             const isActive = hasDashboardData && item.count > 0;
 
@@ -521,7 +522,7 @@ export function DashboardPage() {
         stats={stats}
       />
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(19rem,0.95fr)] xl:items-start xl:gap-6">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.72fr)_minmax(18rem,0.9fr)] xl:items-start xl:gap-5">
         <WorkflowList
           attentionFilter={attentionFilter}
           controlsDisabled={controlsDisabled}
@@ -544,25 +545,25 @@ export function DashboardPage() {
         />
 
         <section
-          className="app-panel overflow-hidden p-5 sm:p-6"
+          className="dashboard-panel dashboard-aside-panel app-panel overflow-hidden p-4 sm:p-5 xl:sticky xl:top-6"
           data-testid="dashboard-recent-activity"
         >
-          <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-4">
+          <div className="flex flex-col gap-2.5 border-b border-slate-900/10 pb-3.5">
             <div>
               <p className="muted-label">
                 {messages.dashboardPage.recentActivity.eyebrow}
               </p>
-              <h2 className="mt-2 text-[1.45rem] font-semibold tracking-tight text-slate-900 sm:text-[1.6rem]">
+              <h2 className="mt-1.5 text-[1.2rem] font-semibold tracking-tight text-slate-900 sm:text-[1.3rem]">
                 {messages.dashboardPage.recentActivity.title}
               </h2>
             </div>
 
-            <p className="app-chip w-fit max-w-full whitespace-normal">
+            <p className="dashboard-chip w-fit max-w-full whitespace-normal">
               {recentActivityLabel}
             </p>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-3.5">
             {recentActivityLoading ? (
               <div data-testid="dashboard-recent-loading">
                 <LoadingState
@@ -574,17 +575,61 @@ export function DashboardPage() {
                 />
               </div>
             ) : recentActivityItems.length === 0 ? (
-              <div data-testid="dashboard-recent-empty">
-                <EmptyState
-                  description={
-                    workflows.length > 0
-                      ? messages.dashboardPage.recentActivity.emptyDescription
-                      : messages.dashboardPage.recentActivity
-                          .emptyDescriptionNoWorkflows
-                  }
-                  title={messages.dashboardPage.recentActivity.emptyTitle}
-                />
+              <div
+                className="dashboard-empty-compact"
+                data-testid="dashboard-recent-empty"
+              >
+                <h3 className="text-sm font-semibold text-slate-900">
+                  {messages.dashboardPage.recentActivity.emptyTitle}
+                </h3>
+                <p className="mt-1.5 text-sm leading-5 text-slate-600">
+                  {workflows.length > 0
+                    ? messages.dashboardPage.recentActivity.emptyDescription
+                    : messages.dashboardPage.recentActivity
+                        .emptyDescriptionNoWorkflows}
+                </p>
               </div>
+            ) : featuredRecentExecution ? (
+              <Link
+                className="dashboard-activity-featured"
+                data-status={featuredRecentExecution.status}
+                data-testid={`dashboard-recent-execution-${featuredRecentExecution.id}`}
+                to={`/workflows/${featuredRecentExecution.workflowId}/history`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`status-pill ${recentExecutionStatusClassNames[featuredRecentExecution.status]}`}
+                      >
+                        {
+                          messages.common.executionStatusLabels[
+                            featuredRecentExecution.status
+                          ]
+                        }
+                      </span>
+                      <p className="text-base font-semibold text-slate-950">
+                        {featuredRecentExecution.workflowName}
+                      </p>
+                    </div>
+
+                    <p className="mt-2.5 text-sm leading-6 text-slate-600">
+                      {getRecentExecutionSummary(featuredRecentExecution)}
+                    </p>
+                  </div>
+
+                  <div className="dashboard-activity-meta flex shrink-0 flex-col items-end gap-1 text-right">
+                    <span className="text-xs font-medium text-slate-500">
+                      {formatDateTime(
+                        getExecutionDisplayTime(featuredRecentExecution),
+                      )}
+                    </span>
+                    <span className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+                      {messages.dashboardPage.recentActivity.openHistory}
+                    </span>
+                  </div>
+                </div>
+              </Link>
             ) : (
               <div className="dashboard-activity-list" data-testid="dashboard-recent-list">
                 {recentActivityItems.map((execution) => (

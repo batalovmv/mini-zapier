@@ -316,19 +316,45 @@ select {
     padding: 0 1rem 0.95rem;
   }
 
-  .workflow-list-shell {
-    @apply overflow-hidden rounded-[1.65rem] border;
-    border-color: rgba(51, 65, 85, 0.12);
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 245, 237, 0.78) 100%);
+  .dashboard-panel.app-panel {
+    border-radius: 1.65rem;
+    border-color: rgba(51, 65, 85, 0.11);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.74),
-      0 18px 38px -34px rgba(15, 23, 42, 0.28);
+      0 22px 46px -40px rgba(15, 23, 42, 0.32),
+      inset 0 1px 0 rgba(255, 255, 255, 0.74);
+  }
+
+  .dashboard-panel-strong.app-panel-strong {
+    box-shadow:
+      0 24px 52px -40px rgba(15, 23, 42, 0.36),
+      inset 0 1px 0 rgba(255, 255, 255, 0.76);
+  }
+
+  .dashboard-aside-panel.app-panel {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 244, 236, 0.88) 100%),
+      radial-gradient(circle at top, rgba(255, 255, 255, 0.7), transparent 56%);
+  }
+
+  .dashboard-chip {
+    @apply inline-flex items-center rounded-full border px-3 py-1 text-[12px] font-medium;
+    border-color: rgba(51, 65, 85, 0.11);
+    background: rgba(248, 244, 238, 0.84);
+    color: #5f6b7a;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  }
+
+  .workflow-list-shell {
+    @apply overflow-hidden rounded-[1.35rem] border;
+    border-color: rgba(51, 65, 85, 0.1);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 243, 235, 0.8) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   }
 
   .dashboard-controls-grid {
     display: grid;
-    gap: 0.9rem;
+    gap: 0.75rem;
   }
 
   @media (min-width: 768px) {
@@ -346,25 +372,23 @@ select {
   .dashboard-control-field {
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    gap: 0.35rem;
   }
 
   .dashboard-control-label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.18em];
+    @apply text-[10px] font-semibold uppercase tracking-[0.16em];
     color: #738194;
   }
 
   .dashboard-control-input {
-    min-height: 2.9rem;
+    min-height: 2.65rem;
     width: 100%;
-    border-radius: 1.1rem;
-    border: 1px solid rgba(51, 65, 85, 0.12);
-    background: rgba(255, 255, 255, 0.9);
+    border-radius: 1rem;
+    border: 1px solid rgba(51, 65, 85, 0.11);
+    background: rgba(255, 255, 255, 0.92);
     color: #152033;
-    padding: 0.82rem 0.95rem;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.7),
-      0 14px 28px -30px rgba(15, 23, 42, 0.25);
+    padding: 0.72rem 0.9rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
     transition:
       border-color 160ms ease,
       box-shadow 160ms ease,
@@ -390,7 +414,7 @@ select {
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
+    gap: 0.6rem;
   }
 
   @media (max-width: 639px) {
@@ -404,11 +428,11 @@ select {
   }
 
   .dashboard-filter-reset {
-    @apply inline-flex items-center justify-center rounded-full px-3.5 py-2 text-[13px] font-semibold transition;
-    border: 1px solid rgba(51, 65, 85, 0.14);
+    @apply inline-flex items-center justify-center rounded-full px-3 py-1.5 text-[12px] font-semibold transition;
+    border: 1px solid rgba(51, 65, 85, 0.12);
     background: rgba(255, 255, 255, 0.9);
     color: #334155;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   }
 
   .dashboard-filter-reset:hover {
@@ -423,7 +447,7 @@ select {
   }
 
   .workflow-list-row {
-    @apply relative overflow-hidden px-4 py-4 sm:px-5 sm:py-5;
+    @apply relative overflow-hidden px-4 py-3.5 sm:px-4 sm:py-4;
     isolation: isolate;
   }
 
@@ -435,9 +459,9 @@ select {
     content: '';
     position: absolute;
     left: 0;
-    top: 18px;
-    bottom: 18px;
-    width: 4px;
+    top: 14px;
+    bottom: 14px;
+    width: 3px;
     border-radius: 9999px;
     background: rgba(var(--workflow-row-accent), 0.95);
   }
@@ -487,14 +511,6 @@ select {
     );
   }
 
-  .workflow-list-row[data-attention-reason='paused']::after {
-    background: linear-gradient(
-      90deg,
-      rgba(245, 158, 11, 0.08) 0%,
-      transparent 26%
-    );
-  }
-
   .workflow-summary-clamp {
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -502,25 +518,54 @@ select {
     overflow: hidden;
   }
 
+  .workflow-heading-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.55rem;
+  }
+
   .workflow-inline-label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.18em];
+    @apply text-[10px] font-semibold uppercase tracking-[0.16em];
     color: #8a95a4;
   }
 
+  .workflow-attention-pill {
+    @apply inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  }
+
+  .workflow-last-run-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.7rem;
+    min-height: 1.75rem;
+  }
+
+  .workflow-last-run-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+
   .workflow-meta-list {
-    @apply flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-slate-500;
+    @apply flex flex-wrap items-center gap-x-1.5 gap-y-1.5 text-xs text-slate-500;
   }
 
   .workflow-meta-item {
-    @apply inline-flex items-center rounded-full px-2.5 py-1;
-    border: 1px solid rgba(51, 65, 85, 0.08);
-    background: rgba(248, 250, 252, 0.82);
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5;
+    border: 1px solid rgba(51, 65, 85, 0.07);
+    background: rgba(248, 250, 252, 0.74);
+    font-size: 11px;
   }
 
   .workflow-action-stack {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
 
   .workflow-action-primary,
@@ -528,8 +573,9 @@ select {
   .workflow-action-quiet,
   .workflow-action-muted,
   .workflow-action-danger {
-    @apply inline-flex items-center justify-center rounded-full px-3.5 py-2 text-[13px] font-semibold transition;
+    @apply inline-flex items-center justify-center rounded-full px-3 py-1.5 text-[12px] font-semibold transition;
     min-width: 0;
+    min-height: 2.1rem;
   }
 
   .workflow-action-stack > .workflow-action-primary {
@@ -548,7 +594,7 @@ select {
     border: 1px solid transparent;
     background: #0f172a;
     color: white;
-    box-shadow: 0 18px 28px -20px rgba(15, 23, 42, 0.72);
+    box-shadow: 0 14px 22px -18px rgba(15, 23, 42, 0.56);
   }
 
   .workflow-action-primary:hover {
@@ -603,10 +649,8 @@ select {
   }
 
   .dashboard-attention-card {
-    @apply rounded-[1.55rem] border p-4;
-    box-shadow:
-      0 20px 40px -34px rgba(15, 23, 42, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.68);
+    @apply rounded-[1.35rem] border p-3.5;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
     transition:
       border-color 160ms ease,
       background-color 160ms ease,
@@ -615,36 +659,54 @@ select {
 
   .dashboard-attention-card[data-active='true'] {
     box-shadow:
-      0 24px 48px -34px rgba(15, 23, 42, 0.36),
-      inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      inset 0 1px 0 rgba(255, 255, 255, 0.72),
+      0 14px 28px -28px rgba(15, 23, 42, 0.16);
   }
 
   .dashboard-stat-card {
-    @apply rounded-[1.45rem] border p-4;
+    @apply rounded-[1.2rem] border p-3.5;
     border-color: rgba(51, 65, 85, 0.1);
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(247, 242, 234, 0.72) 100%);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.7),
-      0 16px 32px -32px rgba(15, 23, 42, 0.24);
+      linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(247, 242, 234, 0.76) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   }
 
   .dashboard-activity-list {
-    @apply overflow-hidden rounded-[1.5rem] border;
+    @apply overflow-hidden rounded-[1.3rem] border;
     border-color: rgba(51, 65, 85, 0.1);
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(248, 243, 235, 0.82) 100%);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.72),
-      0 16px 34px -34px rgba(15, 23, 42, 0.24);
+      linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 243, 235, 0.84) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  }
+
+  .dashboard-activity-featured {
+    @apply block rounded-[1.3rem] border p-4;
+    border-color: rgba(51, 65, 85, 0.1);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 243, 235, 0.86) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    transition:
+      background-color 160ms ease,
+      transform 160ms ease;
+  }
+
+  .dashboard-activity-featured:hover {
+    background: rgba(255, 251, 245, 0.96);
+    transform: translateY(-1px);
+  }
+
+  .dashboard-activity-featured[data-status='FAILED'] {
+    background:
+      linear-gradient(90deg, rgba(255, 241, 242, 0.92) 0%, rgba(255, 255, 255, 0) 32%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 243, 235, 0.86) 100%);
   }
 
   .dashboard-activity-row {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 0.95rem;
-    padding: 1rem 1.05rem;
+    gap: 0.8rem;
+    padding: 0.85rem 0.95rem;
     transition:
       background-color 160ms ease,
       transform 160ms ease;
@@ -665,13 +727,19 @@ select {
       transparent;
   }
 
+  .dashboard-empty-compact {
+    @apply rounded-[1.25rem] border border-dashed px-4 py-4;
+    border-color: rgba(148, 163, 184, 0.34);
+    background: rgba(255, 255, 255, 0.68);
+  }
+
   .status-pill {
-    @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em];
+    @apply inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em];
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   }
 
   .muted-label {
-    @apply text-xs font-semibold uppercase tracking-[0.24em] text-slate-500;
+    @apply text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500;
     color: #657283;
   }
 
@@ -737,6 +805,7 @@ select {
       flex-basis: 100%;
     }
 
+    .dashboard-activity-featured > div,
     .dashboard-activity-row {
       flex-direction: column;
       align-items: stretch;

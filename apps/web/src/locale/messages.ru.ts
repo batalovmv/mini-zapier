@@ -254,7 +254,6 @@ export const ru = {
     eyebrow: 'Сценарий',
     workflowStatusEyebrow: 'Статус сценария',
     lastExecutionEyebrow: 'Последний запуск',
-    attentionEyebrow: 'Требует внимания',
     loadingLatestExecution: 'Загружаем последний запуск...',
     syncing: 'Синхронизация',
     noDescription: 'Описания нет.',
@@ -274,9 +273,7 @@ export const ru = {
     noExecutions: 'Запусков ещё не было.',
     runManually: 'Запустить',
     attentionReasons: {
-      failed: 'Последний запуск завершился ошибкой',
-      paused: 'Сценарий на паузе',
-      draft: 'Сценарий в черновике',
+      failed: 'Ошибка в последнем запуске',
       activeWithoutRuns: 'Ждёт первый запуск',
     },
     running: 'Запуск...',

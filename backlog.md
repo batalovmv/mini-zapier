@@ -2358,7 +2358,7 @@
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
 
 ### TASK-O6: final dashboard density and column-balance polish
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: довести главную страницу до более собранного операционного состояния через снятие лишнего смыслового дублирования, уплотнение визуального ритма и балансировку правой колонки recent activity
 - **Scope**:
   - убрать повтор одного и того же сигнала между `status` и `attention reason` там, где они сообщают одно и то же (`PAUSED`, `DRAFT`)

@@ -71,22 +71,24 @@ export function WorkflowList({
 
   return (
     <section
-      className="app-panel overflow-hidden p-5 sm:p-6"
+      className="dashboard-panel app-panel overflow-hidden p-4 sm:p-5"
       data-testid="dashboard-workflow-list"
     >
-      <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-2.5 border-b border-slate-900/10 pb-3.5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="muted-label">{messages.workflowList.eyebrow}</p>
-          <h2 className="mt-2 text-[1.45rem] font-semibold tracking-tight text-slate-900 sm:text-[1.65rem]">
+          <h2 className="mt-1.5 text-[1.3rem] font-semibold tracking-tight text-slate-900 sm:text-[1.45rem]">
             {messages.workflowList.title}
           </h2>
         </div>
 
-        <p className="app-chip w-fit max-w-full whitespace-normal">{countLabel}</p>
+        <p className="dashboard-chip w-fit max-w-full whitespace-normal">
+          {countLabel}
+        </p>
       </div>
 
       {loading || totalCount > 0 ? (
-        <div className="dashboard-controls-grid mt-4" data-testid="dashboard-controls">
+        <div className="dashboard-controls-grid mt-3.5" data-testid="dashboard-controls">
           <label className="dashboard-control-field">
             <span className="dashboard-control-label">
               {messages.workflowList.controls.searchLabel}
@@ -196,7 +198,7 @@ export function WorkflowList({
       ) : null}
 
       {hasActiveFilters ? (
-        <div className="dashboard-controls-footer mt-3">
+        <div className="dashboard-controls-footer mt-2.5">
           <p className="text-sm text-slate-600">
             {messages.workflowList.filteredCount(workflows.length, totalCount)}
           </p>
@@ -212,7 +214,7 @@ export function WorkflowList({
         </div>
       ) : null}
 
-      <div className="mt-4">
+      <div className="mt-3.5">
         {loading ? (
           <div data-testid="dashboard-workflow-list-loading">
             <LoadingState

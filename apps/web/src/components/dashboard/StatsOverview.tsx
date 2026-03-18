@@ -69,48 +69,48 @@ export function StatsOverview({
 
   return (
     <section
-      className="app-panel overflow-hidden p-5 sm:p-6"
+      className="dashboard-panel app-panel overflow-hidden p-4 sm:p-5"
       data-testid="dashboard-stats"
     >
-      <div className="flex flex-col gap-3 border-b border-slate-900/10 pb-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-2.5 border-b border-slate-900/10 pb-3.5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="muted-label">{messages.statsOverview.eyebrow}</p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-900 sm:text-[1.6rem]">
+          <h2 className="mt-1.5 text-[1.25rem] font-semibold tracking-tight text-slate-900 sm:text-[1.4rem]">
             {messages.statsOverview.title}
           </h2>
         </div>
 
-        <p className="app-chip w-fit max-w-full whitespace-normal">
+        <p className="dashboard-chip w-fit max-w-full whitespace-normal">
           {refreshing && !loading
             ? messages.statsOverview.refreshing
             : messages.statsOverview.pausedWorkflows(stats?.pausedWorkflows ?? null)}
         </p>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-3.5 grid gap-2.5 md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
           <article
             key={card.key}
             className="dashboard-stat-card"
             data-testid={`dashboard-stat-${card.key}`}
           >
-            <span className={`block h-1.5 w-10 rounded-full ${card.accent}`} />
-            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+            <span className={`block h-1.5 w-8 rounded-full ${card.accent}`} />
+            <p className="mt-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
               {card.label}
             </p>
-            <div className="mt-3 min-h-10">
+            <div className="mt-2 min-h-8">
               {card.value === null ? (
                 <div className="flex items-center gap-3 text-slate-600">
                   <Spinner size="sm" />
                   <span className="text-sm font-medium">{messages.statsOverview.loading}</span>
                 </div>
               ) : (
-                <p className={`text-[1.9rem] font-semibold tracking-tight ${card.valueTone}`}>
+                <p className={`text-[1.65rem] font-semibold tracking-tight ${card.valueTone}`}>
                   {card.value}
                 </p>
               )}
             </div>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
+            <p className="mt-1 text-[13px] leading-5 text-slate-600">
               {card.description}
             </p>
           </article>

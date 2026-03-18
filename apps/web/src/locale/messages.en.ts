@@ -231,7 +231,6 @@ export const en = {
     eyebrow: 'Workflow',
     workflowStatusEyebrow: 'Workflow status',
     lastExecutionEyebrow: 'Last run',
-    attentionEyebrow: 'Attention',
     loadingLatestExecution: 'Loading last run...',
     syncing: 'Syncing',
     noDescription: 'No description.',
@@ -246,9 +245,7 @@ export const en = {
     noExecutions: 'No runs yet.',
     runManually: 'Run now',
     attentionReasons: {
-      failed: 'Last run failed',
-      paused: 'Workflow paused',
-      draft: 'Still draft',
+      failed: 'Failed last run',
       activeWithoutRuns: 'Waiting for first run',
     },
     running: 'Running...',

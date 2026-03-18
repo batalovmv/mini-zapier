@@ -20,11 +20,7 @@ interface WorkflowCardProps {
 
 type WorkflowStatus = DashboardWorkflowSummary['status'];
 type ExecutionStatus = DashboardExecutionSummary['status'];
-type AttentionReasonKey =
-  | 'failed'
-  | 'paused'
-  | 'draft'
-  | 'activeWithoutRuns';
+type RowAttentionReasonKey = 'failed' | 'activeWithoutRuns';
 
 const workflowStatusClassNames = {
   ACTIVE: 'border-emerald-200 bg-emerald-50 text-emerald-700',
@@ -48,37 +44,21 @@ const executionTextClassNames = {
 
 const attentionReasonClassNames = {
   failed: 'border-rose-200 bg-rose-50 text-rose-700',
-  paused: 'border-amber-200 bg-amber-50 text-amber-700',
-  draft: 'border-slate-200 bg-slate-100 text-slate-600',
   activeWithoutRuns: 'border-sky-200 bg-sky-50 text-sky-700',
-} as Record<AttentionReasonKey, string>;
+} as Record<RowAttentionReasonKey, string>;
 
 function getExecutionDisplayTime(execution: DashboardExecutionSummary): string {
   return execution.completedAt ?? execution.startedAt ?? execution.createdAt;
 }
 
-function getAttentionReason(
+function getRowAttentionReason(
   workflow: DashboardWorkflowSummary,
   messages: ReturnType<typeof useLocale>['messages'],
-): { key: AttentionReasonKey; label: string } | null {
+): { key: RowAttentionReasonKey; label: string } | null {
   if (workflow.lastExecution?.status === 'FAILED') {
     return {
       key: 'failed',
       label: messages.workflowCard.attentionReasons.failed,
-    };
-  }
-
-  if (workflow.status === 'PAUSED') {
-    return {
-      key: 'paused',
-      label: messages.workflowCard.attentionReasons.paused,
-    };
-  }
-
-  if (workflow.status === 'DRAFT') {
-    return {
-      key: 'draft',
-      label: messages.workflowCard.attentionReasons.draft,
     };
   }
 
@@ -102,7 +82,7 @@ export function WorkflowCard({
 }: WorkflowCardProps) {
   const { messages, formatDateTime, formatNumber } = useLocale();
   const isBusy = pendingAction !== null;
-  const attentionReason = getAttentionReason(workflow, messages);
+  const attentionReason = getRowAttentionReason(workflow, messages);
   const statusActionLabel =
     workflow.status === 'ACTIVE'
       ? messages.common.pause
@@ -119,87 +99,77 @@ export function WorkflowCard({
       data-workflow-status={workflow.status}
     >
       <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <span
-            className={`status-pill ${workflowStatusClassNames[workflow.status]}`}
-          >
-            {messages.common.workflowStatusLabels[workflow.status]}
-          </span>
-        </div>
-
-        <div className="mt-3">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="workflow-heading-row">
               <h3
-                className="break-words text-[1.05rem] font-semibold leading-tight text-slate-950 sm:text-[1.12rem]"
+                className="break-words text-[1rem] font-semibold leading-tight text-slate-950 sm:text-[1.08rem]"
                 data-testid={`dashboard-workflow-name-${workflow.id}`}
               >
                 {workflow.name}
               </h3>
-              <p className="workflow-summary-clamp mt-1.5 max-w-3xl text-sm leading-6 text-slate-600">
-                {workflow.description?.trim() || messages.workflowCard.noDescription}
-              </p>
-            </div>
-          </div>
-        </div>
 
-        <div className="mt-4 flex flex-col gap-3">
-          <div className="flex flex-wrap items-start gap-x-5 gap-y-2">
-            <div className="flex min-w-0 sm:min-w-[15rem] flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <span className="workflow-inline-label">
-                  {messages.workflowCard.lastExecutionEyebrow}
-                </span>
-                {executionLoading ? (
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    {messages.workflowCard.syncing}
-                  </span>
-                ) : null}
-              </div>
+              <span
+                className={`status-pill ${workflowStatusClassNames[workflow.status]}`}
+              >
+                {messages.common.workflowStatusLabels[workflow.status]}
+              </span>
 
-              {executionLoading && !lastExecution ? (
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Spinner size="sm" />
-                  <span>{messages.workflowCard.loadingLatestExecution}</span>
-                </div>
-              ) : lastExecution ? (
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                  <span
-                    className={`inline-flex items-center gap-2 font-medium ${executionTextClassNames[lastExecution.status]}`}
-                  >
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full ${executionDotClassNames[lastExecution.status]}`}
-                    />
-                    {messages.common.executionStatusLabels[lastExecution.status]}
-                  </span>
-                  <span className="font-medium text-slate-900">
-                    {formatDateTime(getExecutionDisplayTime(lastExecution))}
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    {messages.workflowCard.workflowVersion(
-                      lastExecution.workflowVersion,
-                    )}
-                  </span>
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500">
-                  {messages.workflowCard.noExecutions}
-                </p>
-              )}
-            </div>
-
-            {attentionReason ? (
-              <div className="flex min-w-0 sm:min-w-[14rem] flex-col gap-1">
-                <span className="workflow-inline-label">
-                  {messages.workflowCard.attentionEyebrow}
-                </span>
+              {attentionReason ? (
                 <span
-                  className={`inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-semibold ${attentionReasonClassNames[attentionReason.key]}`}
+                  className={`workflow-attention-pill ${attentionReasonClassNames[attentionReason.key]}`}
                 >
                   {attentionReason.label}
                 </span>
-              </div>
+              ) : null}
+            </div>
+
+            <p className="workflow-summary-clamp mt-1.5 max-w-3xl text-[13px] leading-5 text-slate-600">
+              {workflow.description?.trim() || messages.workflowCard.noDescription}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3.5 flex flex-col gap-2.5">
+          <div className="workflow-last-run-row">
+            <span className="workflow-inline-label">
+              {messages.workflowCard.lastExecutionEyebrow}
+            </span>
+            {executionLoading ? (
+              <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                {messages.workflowCard.syncing}
+              </span>
             ) : null}
+
+            {executionLoading && !lastExecution ? (
+              <span className="workflow-last-run-loading">
+                <Spinner size="sm" />
+                <span>{messages.workflowCard.loadingLatestExecution}</span>
+              </span>
+            ) : lastExecution ? (
+              <>
+                <span
+                  className={`inline-flex items-center gap-2 text-sm font-medium ${executionTextClassNames[lastExecution.status]}`}
+                >
+                  <span
+                    className={`h-2.5 w-2.5 rounded-full ${executionDotClassNames[lastExecution.status]}`}
+                  />
+                  {messages.common.executionStatusLabels[lastExecution.status]}
+                </span>
+                <span className="text-sm font-medium text-slate-900">
+                  {formatDateTime(getExecutionDisplayTime(lastExecution))}
+                </span>
+                <span className="text-xs text-slate-500">
+                  {messages.workflowCard.workflowVersion(
+                    lastExecution.workflowVersion,
+                  )}
+                </span>
+              </>
+            ) : (
+              <span className="text-sm text-slate-500">
+                {messages.workflowCard.noExecutions}
+              </span>
+            )}
           </div>
 
           <div className="workflow-meta-list">
