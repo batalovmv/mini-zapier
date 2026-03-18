@@ -1,4 +1,10 @@
-import { ConnectionDto } from '@mini-zapier/shared';
+import type {
+  ConnectionCatalogResponseDto,
+  ConnectionCatalogSort,
+  ConnectionCatalogUsageFilter,
+  ConnectionDto,
+  ConnectionType,
+} from '@mini-zapier/shared';
 
 import { apiClient } from './client';
 import {
@@ -8,6 +14,28 @@ import {
 
 export async function listConnections(): Promise<ConnectionDto[]> {
   const response = await apiClient.get<ConnectionDto[]>('/connections');
+
+  return response.data;
+}
+
+export interface ListConnectionsCatalogParams {
+  page?: number;
+  limit?: number;
+  query?: string;
+  type?: ConnectionType;
+  usage?: ConnectionCatalogUsageFilter;
+  sort?: ConnectionCatalogSort;
+}
+
+export async function listConnectionsCatalog(
+  params: ListConnectionsCatalogParams,
+): Promise<ConnectionCatalogResponseDto> {
+  const response = await apiClient.get<ConnectionCatalogResponseDto>(
+    '/connections/catalog',
+    {
+      params,
+    },
+  );
 
   return response.data;
 }

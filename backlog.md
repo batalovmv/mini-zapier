@@ -2651,7 +2651,7 @@
   - `pnpm --filter @mini-zapier/shared build`
 
 ### TASK-Q2: rebuild connections page into an operational catalog shell
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: заменить hero + per-type sections на server-driven catalog shell
 - **Scope**:
   - compact header

@@ -478,22 +478,61 @@ export const ru = {
       'Проверка пока недоступна в этой версии сервиса. Обновите backend или выполните сценарий обычным запуском.',
   },
   connectionsPage: {
-    eyebrow: 'Библиотека подключений',
-    title: 'Храните переиспользуемые секреты и доступы в одном месте.',
-    description:
-      'Управляйте Telegram, SMTP, PostgreSQL и webhook-подключениями отдельно от сценариев, а затем выбирайте их в редакторе.',
+    eyebrow: 'Подключения',
+    title: 'Каталог подключений',
+    description: 'Ищите, фильтруйте и обновляйте сохранённые подключения.',
     createConnection: 'Создать подключение',
-    refresh: 'Обновить список',
+    refresh: 'Обновить',
     refreshing: 'Обновление...',
     totalConnections: (count: number) =>
-      `Подключений сохранено: ${formatCount('ru-RU', count)}`,
+      `Подключения: ${formatCount('ru-RU', count)}`,
     reuseHint:
       'Подключения, созданные здесь, появляются в инспекторе узлов и переиспользуются в нескольких сценариях.',
     loadingTitle: 'Загрузка подключений...',
-    loadingDescription: 'Получаем сохранённые подключения из API.',
+    loadingDescription: 'Получаем каталог подключений из API.',
+    errorTitle: 'Не удалось загрузить подключения',
+    retry: 'Повторить',
     emptyTitle: 'Подключений пока нет',
     emptyDescription:
-      'Создайте первое переиспользуемое подключение, чтобы потом выбирать его в узлах сценария вместо повторного ввода секретов.',
+      'Создайте первое подключение, чтобы потом переиспользовать его в шагах сценария.',
+    resultsEyebrow: 'Каталог',
+    resultsTitle: 'Результаты',
+    showingRange: (start: number, end: number, total: number) =>
+      `Показано ${formatCount('ru-RU', start)}-${formatCount('ru-RU', end)} из ${formatCount('ru-RU', total)}`,
+    pageSummary: (page: number, totalPages: number) =>
+      `Страница ${formatCount('ru-RU', page)} из ${formatCount('ru-RU', totalPages)}`,
+    previousPage: 'Назад',
+    nextPage: 'Далее',
+    filtersActive: 'Фильтры активны.',
+    noResultsTitle: 'По этим параметрам подключений нет',
+    noResultsDescription:
+      'Измените поиск или фильтры, чтобы увидеть другие подключения.',
+    controls: {
+      searchLabel: 'Поиск',
+      searchPlaceholder: 'Поиск по названию',
+      typeLabel: 'Тип',
+      usageLabel: 'Использование',
+      sortLabel: 'Сортировка',
+      clear: 'Сбросить фильтры',
+      typeOptions: {
+        ALL: 'Все типы',
+      },
+      usageOptions: {
+        ALL: 'Все подключения',
+        USED: 'Используются в сценариях',
+        UNUSED: 'Не используются',
+      },
+      sortOptions: {
+        UPDATED_DESC: 'Сначала новые',
+        UPDATED_ASC: 'Сначала старые',
+        NAME_ASC: 'Название А-Я',
+        NAME_DESC: 'Название Я-А',
+        USAGE_DESC: 'Сначала часто используемые',
+      },
+    },
+    typeSummaryLabel: 'Тип',
+    usageCountLabel: 'Использований',
+    credentialFieldCountLabel: 'Поля',
     sectionEyebrow: 'Тип подключения',
     typeDescriptions: {
       WEBHOOK:
@@ -514,6 +553,9 @@ export const ru = {
       `Полей сохранено: ${formatCount('ru-RU', count)}`,
     updatedLabel: 'Обновлён',
     editConnection: 'Редактировать',
+    editLoading: 'Загрузка...',
+    editLoadError: (name: string) =>
+      `Не удалось загрузить "${name}" для редактирования.`,
     deleteConnection: 'Удалить',
     dialogEyebrow: 'Библиотека подключений',
     createDialogTitle: (typeLabel: string) => `Создать подключение ${typeLabel}`,

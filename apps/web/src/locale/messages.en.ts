@@ -441,22 +441,61 @@ export const en = {
       'Testing is not available in this service version yet. Update the backend or run the workflow normally.',
   },
   connectionsPage: {
-    eyebrow: 'Connections library',
-    title: 'Store reusable secrets and service credentials in one place.',
-    description:
-      'Manage Telegram, SMTP, PostgreSQL and webhook connections separately from workflows, then reuse them anywhere in the editor.',
+    eyebrow: 'Connections',
+    title: 'Connections catalog',
+    description: 'Search, filter and manage saved connections.',
     createConnection: 'Create connection',
-    refresh: 'Refresh list',
+    refresh: 'Refresh',
     refreshing: 'Refreshing...',
     totalConnections: (count: number) =>
-      `Connections saved: ${formatCount('en-US', count)}`,
+      `Connections: ${formatCount('en-US', count)}`,
     reuseHint:
       'Connections created here appear in node inspectors and can be reused across multiple workflows.',
     loadingTitle: 'Loading connections...',
-    loadingDescription: 'Fetching the saved connections from the API.',
-    emptyTitle: 'No connections saved yet',
+    loadingDescription: 'Fetching the connection catalog from the API.',
+    errorTitle: 'Could not load connections',
+    retry: 'Retry',
+    emptyTitle: 'No connections yet',
     emptyDescription:
-      'Create the first reusable connection so workflow nodes can select it later instead of entering secrets repeatedly.',
+      'Create the first connection to reuse it in workflow steps.',
+    resultsEyebrow: 'Catalog',
+    resultsTitle: 'Results',
+    showingRange: (start: number, end: number, total: number) =>
+      `Showing ${formatCount('en-US', start)}-${formatCount('en-US', end)} of ${formatCount('en-US', total)}`,
+    pageSummary: (page: number, totalPages: number) =>
+      `Page ${formatCount('en-US', page)} of ${formatCount('en-US', totalPages)}`,
+    previousPage: 'Previous',
+    nextPage: 'Next',
+    filtersActive: 'Filters are active.',
+    noResultsTitle: 'No connections match these controls',
+    noResultsDescription:
+      'Change the current search or filters to see more connections.',
+    controls: {
+      searchLabel: 'Search',
+      searchPlaceholder: 'Search by name',
+      typeLabel: 'Type',
+      usageLabel: 'Usage',
+      sortLabel: 'Sort',
+      clear: 'Clear filters',
+      typeOptions: {
+        ALL: 'All types',
+      },
+      usageOptions: {
+        ALL: 'All connections',
+        USED: 'Used in workflows',
+        UNUSED: 'Unused',
+      },
+      sortOptions: {
+        UPDATED_DESC: 'Recently updated',
+        UPDATED_ASC: 'Oldest updated',
+        NAME_ASC: 'Name A-Z',
+        NAME_DESC: 'Name Z-A',
+        USAGE_DESC: 'Most used',
+      },
+    },
+    typeSummaryLabel: 'Type',
+    usageCountLabel: 'Usage',
+    credentialFieldCountLabel: 'Fields',
     sectionEyebrow: 'Connection type',
     typeDescriptions: {
       WEBHOOK:
@@ -477,6 +516,8 @@ export const en = {
       `Stored fields: ${formatCount('en-US', count)}`,
     updatedLabel: 'Updated',
     editConnection: 'Edit',
+    editLoading: 'Loading...',
+    editLoadError: (name: string) => `Could not load "${name}" for editing.`,
     deleteConnection: 'Delete',
     dialogEyebrow: 'Connection library',
     createDialogTitle: (typeLabel: string) => `Create ${typeLabel} connection`,
