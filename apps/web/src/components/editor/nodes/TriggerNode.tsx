@@ -20,13 +20,13 @@ export function TriggerNode({
       data-node-label={data.label}
       data-node-type={data.nodeType}
       data-testid="editor-node"
-      className={`min-w-[220px] rounded-3xl border bg-white shadow-lg transition ${
+      className={`min-w-[200px] rounded-xl border bg-white shadow-lg transition ${
         selected
           ? 'border-emerald-500 shadow-emerald-900/20'
           : 'border-emerald-900/10 shadow-slate-900/10'
       }`}
     >
-      <div className="rounded-t-3xl bg-emerald-600 px-4 py-3 text-white">
+      <div className="rounded-xl bg-emerald-600 px-3 py-2.5 text-white">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/18 text-xs font-black tracking-[0.24em]">
             {definition?.icon ?? 'TR'}
@@ -38,15 +38,6 @@ export function TriggerNode({
             <p className="text-sm font-semibold">{copy?.label ?? data.label}</p>
           </div>
         </div>
-      </div>
-
-      <div className="px-4 py-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
-          {copy?.label ?? data.nodeType}
-        </p>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          {copy?.description ?? messages.editorNodes.fallbackTriggerDescription}
-        </p>
       </div>
 
       <Handle

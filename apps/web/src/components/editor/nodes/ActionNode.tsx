@@ -20,7 +20,7 @@ export function ActionNode({
       data-node-label={data.label}
       data-node-type={data.nodeType}
       data-testid="editor-node"
-      className={`min-w-[240px] rounded-3xl border bg-white shadow-lg transition ${
+      className={`min-w-[200px] rounded-xl border bg-white shadow-lg transition ${
         selected
           ? 'border-sky-500 shadow-sky-900/20'
           : 'border-slate-900/10 shadow-slate-900/10'
@@ -33,7 +33,7 @@ export function ActionNode({
         type="target"
       />
 
-      <div className="rounded-t-3xl bg-sky-600 px-4 py-3 text-white">
+      <div className="rounded-t-xl bg-sky-600 px-3 py-2.5 text-white">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/18 text-xs font-black tracking-[0.24em]">
             {definition?.icon ?? 'AC'}
@@ -45,15 +45,6 @@ export function ActionNode({
             <p className="text-sm font-semibold">{copy?.label ?? data.label}</p>
           </div>
         </div>
-      </div>
-
-      <div className="px-4 py-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">
-          {copy?.label ?? data.nodeType}
-        </p>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          {copy?.description ?? messages.editorNodes.fallbackActionDescription}
-        </p>
       </div>
 
       <Handle
