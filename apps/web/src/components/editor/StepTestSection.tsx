@@ -25,6 +25,7 @@ interface StepTestSectionProps {
   nodeType: string;
   config: Record<string, unknown>;
   connectionId: string | null;
+  requiresConnection: boolean;
 }
 
 export function StepTestSection({
@@ -33,6 +34,7 @@ export function StepTestSection({
   nodeType,
   config,
   connectionId,
+  requiresConnection,
 }: StepTestSectionProps) {
   const { messages } = useLocale();
   const t = messages.stepTest;
@@ -81,6 +83,9 @@ export function StepTestSection({
   );
   const [open, setOpen] = useState(false);
   const lastSyncedInputRef = useRef(defaultInputText);
+  const previousResultRef = useRef(existingResult);
+  const previousUnsupportedMessageRef = useRef<string | null>(null);
+  const hasConnectionBlocker = requiresConnection && connectionId === null;
 
   useEffect(() => {
     if (running) {
@@ -97,8 +102,27 @@ export function StepTestSection({
     lastSyncedInputRef.current = defaultInputText;
   }, [defaultInputText, inputText, running]);
 
+  useEffect(() => {
+    const hasNewResult =
+      existingResult !== null && existingResult !== previousResultRef.current;
+    const hasNewFailure =
+      hasNewResult && existingResult?.status === 'FAILED';
+    const hasNewUnsupportedMessage =
+      unsupportedMessage !== null &&
+      unsupportedMessage !== previousUnsupportedMessageRef.current;
+
+    if (hasNewResult || hasNewFailure || hasNewUnsupportedMessage) {
+      setOpen(true);
+    }
+
+    previousResultRef.current = existingResult;
+    previousUnsupportedMessageRef.current = unsupportedMessage;
+  }, [existingResult, unsupportedMessage]);
+
   const handleTest = useCallback(async () => {
-    if (!workflowId) return;
+    if (!workflowId || hasConnectionBlocker || unsupportedMessage !== null) {
+      return;
+    }
 
     let parsedInput: unknown;
 
@@ -143,6 +167,7 @@ export function StepTestSection({
     }
   }, [
     workflowId,
+    hasConnectionBlocker,
     inputText,
     nodeType,
     config,
@@ -154,17 +179,28 @@ export function StepTestSection({
     messages.errors,
   ]);
 
-  const disabled = !workflowId || unsupportedMessage !== null;
+  const disabled =
+    hasConnectionBlocker || !workflowId || unsupportedMessage !== null;
   const summaryText =
     unsupportedMessage !== null
       ? t.testButtonUnsupported
-      : existingResult
-        ? existingResult.status === 'SUCCESS'
-          ? t.lastResultSuccess
-          : t.lastResultFailed
+      : hasConnectionBlocker
+        ? t.connectionRequiredSummary
         : !workflowId
           ? t.testButtonSaveFirst
-          : t.sectionDescription;
+          : existingResult
+            ? existingResult.status === 'SUCCESS'
+              ? t.lastResultSuccess
+              : t.lastResultFailed
+            : t.sectionDescription;
+  const buttonTitle =
+    unsupportedMessage !== null
+      ? t.testButtonUnsupported
+      : hasConnectionBlocker
+        ? t.testButtonChooseConnectionFirst
+        : !workflowId
+          ? t.testButtonSaveFirst
+          : undefined;
 
   return (
     <section className={railSectionClass}>
@@ -180,6 +216,7 @@ export function StepTestSection({
         <button
           className="rounded-full border border-slate-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-violet-200 hover:text-violet-700"
           aria-expanded={open}
+          data-testid="step-test-toggle"
           onClick={() => setOpen((value) => !value)}
           type="button"
         >
@@ -235,13 +272,7 @@ export function StepTestSection({
               className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
               disabled={disabled || running}
               onClick={() => void handleTest()}
-              title={
-                unsupportedMessage !== null
-                  ? t.testButtonUnsupported
-                  : disabled
-                    ? t.testButtonSaveFirst
-                    : undefined
-              }
+              title={buttonTitle}
               type="button"
             >
               {running ? t.testRunning : t.testButton}

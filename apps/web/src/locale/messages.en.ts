@@ -307,83 +307,28 @@ export const en = {
     cronEmailSuggestedName: 'Cron to Email',
   },
   configPanel: {
-    inspectorSteps: [
-      {
-        step: '1',
-        title: 'Drop or select a node',
-        description: 'The canvas controls what appears in this inspector.',
-      },
-      {
-        step: '2',
-        title: 'Configure its settings',
-        description: 'Forms for the selected trigger or action open here.',
-      },
-      {
-        step: '3',
-        title: 'Attach a connection when needed',
-        description:
-          'Nodes that use secrets get their connection controls here too.',
-      },
-    ],
     noFormAvailable: 'No editor form is available for this node type.',
     emptyEyebrow: 'Step setup',
     emptyTitle: 'Select a step on the canvas',
     emptyDescription:
       'Select a step on the canvas to open its connection, main fields and test tools here.',
-    workspaceGuidanceEyebrow: 'How to work with steps',
-    whatShowsUpTitle: 'What shows up here',
-    whatShowsUpDescription:
-      'For the selected step, this panel shows connection setup, the main fields and a test area.',
-    panelEyebrow: 'Step setup',
-    defaultSelectedDescription: 'Fill in the fields for the selected step.',
-    nodeTypeEyebrow: 'Node type',
     connectionEyebrow: 'Connection',
     headerConnectionRequired: (connectionType: string) =>
       `Choose a ${connectionType} connection first.`,
+    headerSaveToTest: 'Save the workflow before testing.',
+    headerLastTestSuccess: 'Last test succeeded.',
+    headerLastTestFailed: 'Last test failed.',
     headerConnectionSelected: (name: string) => `Connection: ${name}.`,
-    headerSaveToTest: 'Main fields are below. Save the workflow before testing.',
-    headerMainFields: 'Main step fields are below.',
-    connectionRequired: (connectionType: string) =>
-      `${connectionType} connection required`,
-    noConnectionRequired: 'No connection required',
-    connectionSectionDescription: (connectionType: string) =>
-      `Choose or create the ${connectionType} connection used by this step.`,
-    connectionNotSelected: 'No connection selected',
-    noConnectionsInline: 'No connections',
-    availableConnectionsCount: (count: number) =>
-      `Available: ${formatCount('en-US', count)}`,
-    selectedConnectionSummary: (name: string) => `Selected: ${name}`,
-    availableConnections: 'Connection',
+    headerConnectionSelectedFallback: 'Connection selected.',
+    headerMainFields: 'Main fields are below.',
     selectConnection: (connectionType: string) =>
       `Choose a ${connectionType} connection`,
-    requiredType: (connectionType: string) => `Required type: ${connectionType}.`,
     createConnection: 'Create new',
     refreshConnections: 'Refresh list',
-    noConnectionsTitle: (connectionType: string) =>
-      `No ${connectionType} connections`,
     noConnectionsDescription: (connectionType: string) =>
       `No ${connectionType} connections yet. Create one to use it here.`,
-    noConnectionNeeded: 'This step does not require a connection.',
     nodeSettingsEyebrow: 'Main',
-    nodeSettingsDescription:
-      'Fill in the main fields first. Open advanced modes only when you need them.',
-    loadingConnectionsTitle: 'Loading connections...',
     loadingConnectionsDescription: 'Loading your saved connections.',
-    nextStepEyebrow: 'What to do now',
-    statusNow: 'Fill this in now',
-    statusLater: 'Available next',
-    statusAvailable: 'Ready to test',
-    statusSaveFirst: 'Save first',
-    sectionReady: 'Ready',
-    sectionNeedsAttention: 'Needs attention',
-    nextActionConnect: (connectionType: string) =>
-      `First, choose the ${connectionType} connection`,
-    nextActionConfigure: 'Now fill in the main step fields',
-    nextActionSaveFirst: 'Save the workflow to unlock testing',
-    nextActionTest: 'You can run a quick test and inspect the result',
-    dangerZoneEyebrow: 'Delete step',
-    dangerZoneDescription:
-      'Remove this step only when you are sure it is no longer needed in the chain.',
     deleteNode: 'Delete step',
     deleteNodeDialogTitle: 'Delete selected step?',
     deleteNodeDialogDescription: (label: string) =>
@@ -394,11 +339,12 @@ export const en = {
   },
   stepTest: {
     sectionEyebrow: 'Test step with input data',
-    sectionDescription:
-      'Open this when you want to run the step against sample JSON.',
+    sectionDescription: 'Run this step against sample JSON.',
     testButton: 'Run test',
     testRunning: 'Running...',
     testButtonSaveFirst: 'Save the workflow to enable this test.',
+    testButtonChooseConnectionFirst: 'Choose a connection first.',
+    connectionRequiredSummary: 'Choose a connection to enable testing.',
     testButtonUnsupported: 'Testing is not available in this service version yet.',
     inputDataLabel: 'Input data (JSON)',
     inputDataPlaceholder: '{}',
@@ -406,12 +352,11 @@ export const en = {
     invalidJson: 'Invalid JSON.',
     successStatus: 'Success',
     failedStatus: 'Failed',
-    lastResultSuccess: 'Latest result: success.',
-    lastResultFailed: 'Latest result: failed.',
+    lastResultSuccess: 'Last test succeeded.',
+    lastResultFailed: 'Last test failed.',
     duration: (ms: number) => `${ms}ms`,
     outputDataLabel: 'Output',
     fieldsUpdated: 'Available fields updated for downstream steps.',
-    noConnectionWarning: 'Select a connection first.',
     expandInput: 'Show input',
     collapseInput: 'Hide input',
     expandOutput: 'Show output',

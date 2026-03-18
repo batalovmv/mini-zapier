@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-N4 — `align trigger forms with inspector shell`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт
+- **Последнее изменение**: TASK-N5 — `finalize inspector status and copy polish`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -31,9 +31,19 @@
   - **TASK-N2 local build**: `DB Query` теперь использует primary visual flow `Что сделать` → `Таблица` → operation-specific controls без верхнего `Builder/SQL` toggle; raw SQL, params и `RawJsonFallback` перенесены в локальную advanced section, legacy raw steps сохраняют `query`/`params`, а SQL preview остаётся только у visual path; `pnpm --filter @mini-zapier/web build` ✅
   - **TASK-N3 local verification**: оставшиеся action-формы выровнены под inspector hierarchy: `HTTP Request` начинается с `method → url → body`, headers и step JSON живут в local advanced section, `Email`/`Telegram` держат preview как secondary confidence block, helper по `chatId` стал тише, `Data Transform` центрируется вокруг `mode + active config`; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
   - **TASK-N4 local build**: trigger-формы теперь используют тот же inspector rhythm, но без action-like пустот: `Webhook` и `Email Trigger` поднимают URL в dominant block, security/provider guidance уходит в quieter secondary help surfaces, а `Cron` ведёт через visual presets/time/day controls, держит `Next run` отдельно и переносит raw cron в local advanced path без потери existing custom expressions; `pnpm --filter @mini-zapier/web build` ✅
+  - **TASK-N5 local verification**: inspector header теперь честно резолвит следующий шаг через `connection → save → last test → selected connection → main fields`, `Step Test` блокируется при обязательном, но не выбранном connection, автоматически раскрывается после нового result/unsupported/failure и получил стабильные hooks `config-panel-status-line` / `step-test-toggle`; устаревшие shell locale keys старой progress/wizard модели удалены только там, где больше не используются; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
   - **TASK-J root cause**: live GitHub Actions smoke падал не на deploy/build, а из-за двойного рассинхрона после email-login migration: CI по-прежнему прокидывал только legacy `MINI_ZAPIER_E2E_USERNAME=admin`, а smoke ожидал существующий prod user и brittle dashboard text после входа
   - Console errors: 0 за всю сессию тестирования ✅
   - **Примечание**: после VPS redeploy выяснилось, что оставшаяся проблема visual DB Query была уже не в missing routes, а в том, что backend introspection искал таблицы только в `public`. Из-за пустого metadata list visual mode не мог дать выбрать таблицу и, как следствие, не мог сгенерировать SQL для кнопки `Тестировать запрос`
+- **Что сделано в TASK-N5**:
+  - `apps/web/src/components/editor/ConfigPanel.tsx` — header status line теперь использует `stepTestResults` и правдивый приоритет состояния: сначала missing connection blocker, затем unsaved action blocker, затем последний test result, затем выбранное connection и только потом нейтральное `Main fields are below`; для QA добавлен стабильный `data-testid="config-panel-status-line"`
+  - `apps/web/src/components/editor/StepTestSection.tsx` — добавлен явный `requiresConnection`; если action требует connection и `connectionId=null`, тестовая кнопка disabled, summary/title честно указывают на blocker, а секция автоматически раскрывается при новом результате, unsupported-state и failure; для QA добавлен `data-testid="step-test-toggle"`
+  - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — shell/status/step-test copy сокращён и синхронизирован между EN/RU; удалены только реально мёртвые ключи старой progress/wizard inspector-модели, которые больше не используются после `TASK-N1`–`TASK-N4`
+  - **Проверки TASK-N5**:
+    - `pnpm --filter @mini-zapier/web build` ✓
+    - `pnpm --filter @mini-zapier/web exec playwright test --list` ✓
+  - **Ограничения TASK-N5**:
+    - live browser QA и deploy в этой сессии не запускались по scope задачи; покрытие подтверждено локальной сборкой, parsing smoke suite и code-path review
 - **Что сделано в TASK-N4**:
   - `apps/web/src/components/editor/config-forms/WebhookConfig.tsx` — URL и copy-actions собраны в dominant primary block, при этом сохранены `webhook-url-input`, `Copy URL`, `Copy curl` и честный placeholder для несохранённого workflow; security и dedupe перенесены в quieter secondary help block
   - `apps/web/src/components/editor/config-forms/EmailTriggerConfig.tsx` — inbound URL стал главным surface для настройки триггера, а provider/signature guidance вынесен в отдельный secondary help block без добавления preview/test behavior
@@ -652,7 +662,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-TASK-N4 закрыт локально: следующий практический шаг — отправить commit в `main`, дождаться зелёной сборки и затем отдельно руками проверить live inspector для `Webhook`, `Cron` и `Email Trigger`, чтобы подтвердить новую primary/secondary hierarchy уже в браузере.
+TASK-N5 закрыт локально: следующий практический шаг — отправить commit в `main`, дождаться зелёной сборки и затем уже отдельной сессией решать, нужен ли ещё один целевой UX/QA task по inspector-у; текущая shell-стабилизация для `3 trigger + 5 action` на этом этапе собрана и локально подтверждена.
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke против live Vercel не запускался; для TASK-J локальная проверка ограничена `build` + `playwright test --list`.
@@ -814,3 +824,4 @@ TASK-N4 закрыт локально: следующий практически
 | TASK-N2 | done | см. `git log` (`TASK-N2: redesign DB query inspector flow`) | DB Query now starts with a visual-first inspector flow (`Action` → `Table` → operation-specific controls), while raw SQL, params and JSON fallback live in a local advanced section and legacy raw steps keep their existing data |
 | TASK-N3 | done | см. `git log` (`TASK-N3: align remaining action forms with inspector shell`) | Remaining action forms now share the inspector hierarchy: HTTP starts with `method → url → body`, Email/Telegram keep preview secondary, Telegram helper is quieter, and Data Transform centers on output shaping while manual JSON stays in advanced |
 | TASK-N4 | done | см. `git log` (`TASK-N4: align trigger forms with inspector shell`) | Trigger inspectors now share the same shell rhythm: Webhook/Email keep the URL primary, Cron leads with visual scheduling, and security/raw guidance moves into secondary help/advanced surfaces |
+| TASK-N5 | done | см. `git log` (`TASK-N5: finalize inspector status and copy polish`) | Inspector header/status and Step Test gating now resolve honestly across saved state, connection blockers and last test results, while EN/RU shell copy drops the remaining unused progress-model keys |

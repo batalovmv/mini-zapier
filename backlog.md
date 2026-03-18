@@ -2084,3 +2084,32 @@
   - `pnpm --filter @mini-zapier/web build` проходит
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
+
+### TASK-N5: finalize inspector status, step-test gating and copy polish
+- **Статус**: `done`
+- **Цель**: завершить inspector как одну согласованную систему для 3 trigger + 5 action, чтобы header/status, Step Test и финальный copy были честными, компактными и не противоречили shell-архитектуре после `TASK-N1`/`TASK-N2`/`TASK-N3`/`TASK-N4`
+- **Scope**:
+  - финализировать resolver status line в `ConfigPanel` с предметным приоритетом: `choose connection first` → `save workflow before testing` → `last test succeeded/failed` → `connection: ...` → `main fields are below`
+  - использовать `stepTestResults` store в `ConfigPanel` и при необходимости добавить стабильный QA hook для status line
+  - передать явный `requiresConnection` в `StepTestSection`; при `connectionId=null` честно блокировать тест кнопкой, summary text и `title`, сохранив blocker для `!workflowId`
+  - автоматически раскрывать `Step Test`, когда появляется новый result, unsupported-state или failure
+  - обновить только shell/status/step-test copy в `messages.en.ts` / `messages.ru.ts` и удалить только реально мёртвые ключи старой inspector-модели
+- **Не входит**:
+  - изменения backend API
+  - redesign inspector-а или переработка action/trigger forms вне compile-fix
+  - trigger-side testing, новые зависимости и изменение execution semantics
+- **Файлы**:
+  - `apps/web/src/components/editor/ConfigPanel.tsx`
+  - `apps/web/src/components/editor/StepTestSection.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - header status line inspector-а правдива, короткая и помогает понять следующий шаг
+  - для action с обязательным connection `Step Test` disabled, пока connection не выбран
+  - `Step Test` auto-expands после нового результата, unsupported-state и failure
+  - EN/RU shell copy не содержит живых следов старой progress/wizard модели там, где ключи действительно больше не используются
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`

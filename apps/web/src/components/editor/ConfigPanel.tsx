@@ -41,6 +41,9 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
   const { messages } = useLocale();
   const nodes = useWorkflowEditorStore((state) => state.nodes);
   const selectedNodeId = useWorkflowEditorStore((state) => state.selectedNodeId);
+  const stepTestResults = useWorkflowEditorStore(
+    (state) => state.stepTestResults,
+  );
   const updateNodeConfig = useWorkflowEditorStore(
     (state) => state.updateNodeConfig,
   );
@@ -246,22 +249,32 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
       : availableConnections.find(
           (connection) => connection.id === selectedNode.data.connectionId,
         ) ?? null;
+  const existingStepTestResult = stepTestResults[selectedNode.id] ?? null;
   const requiresConnection = Boolean(definition?.connectionType);
   const isActionNode = selectedNode.data.nodeKind === 'action';
+  const hasConnectionSelected = selectedNode.data.connectionId !== null;
   const nodeKindChipClass =
     selectedNode.data.nodeKind === 'trigger'
       ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
       : 'border-sky-200 bg-sky-50 text-sky-700';
   const headerStatusLine =
-    requiresConnection && !selectedConnection
+    requiresConnection && !hasConnectionSelected
       ? messages.configPanel.headerConnectionRequired(
           connectionTypeLabel ?? definition?.connectionType ?? '',
         )
-      : selectedConnection
-        ? messages.configPanel.headerConnectionSelected(selectedConnection.name)
-        : isActionNode && !workflowId
-          ? messages.configPanel.headerSaveToTest
-          : messages.configPanel.headerMainFields;
+      : isActionNode && !workflowId
+        ? messages.configPanel.headerSaveToTest
+        : existingStepTestResult
+          ? existingStepTestResult.status === 'SUCCESS'
+            ? messages.configPanel.headerLastTestSuccess
+            : messages.configPanel.headerLastTestFailed
+          : hasConnectionSelected
+            ? selectedConnection
+              ? messages.configPanel.headerConnectionSelected(
+                  selectedConnection.name,
+                )
+              : messages.configPanel.headerConnectionSelectedFallback
+            : messages.configPanel.headerMainFields;
 
   return (
     <>
@@ -276,7 +289,10 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
                 {messages.common.nodeKindLabels[selectedNode.data.nodeKind]}
               </span>
             </div>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+            <p
+              className="mt-2 text-sm leading-6 text-slate-600"
+              data-testid="config-panel-status-line"
+            >
               {headerStatusLine}
             </p>
           </div>
@@ -390,6 +406,7 @@ export function ConfigPanel({ workflowId }: ConfigPanelProps) {
               connectionId={selectedNode.data.connectionId ?? null}
               nodeId={selectedNode.id}
               nodeType={selectedNode.data.nodeType}
+              requiresConnection={requiresConnection}
               workflowId={workflowId}
             />
           ) : null}

@@ -325,85 +325,28 @@ export const ru = {
     cronEmailSuggestedName: 'Cron в Email',
   },
   configPanel: {
-    inspectorSteps: [
-      {
-        step: '1',
-        title: 'Добавьте или выберите узел',
-        description: 'Содержимое инспектора зависит от выбранного узла на canvas.',
-      },
-      {
-        step: '2',
-        title: 'Настройте его параметры',
-        description: 'Формы для выбранного триггера или действия открываются здесь.',
-      },
-      {
-        step: '3',
-        title: 'При необходимости привяжите подключение',
-        description:
-          'Для узлов с секретами здесь же доступны controls подключения.',
-      },
-    ],
     noFormAvailable: 'Для этого типа узла нет формы настройки.',
     emptyEyebrow: 'Настройка шага',
     emptyTitle: 'Выберите шаг на схеме',
     emptyDescription:
       'Выберите шаг на canvas, чтобы справа открыть его подключение, основные поля и проверку.',
-    workspaceGuidanceEyebrow: 'Как работать с шагами',
-    whatShowsUpTitle: 'Что показывается здесь',
-    whatShowsUpDescription:
-      'Для выбранного шага здесь показываются подключение, главные настройки и проверка.',
-    panelEyebrow: 'Настройка шага',
-    defaultSelectedDescription: 'Заполните поля выбранного шага.',
-    nodeTypeEyebrow: 'Тип узла',
     connectionEyebrow: 'Подключение',
     headerConnectionRequired: (connectionType: string) =>
       `Сначала выберите подключение ${connectionType}.`,
+    headerSaveToTest: 'Сохраните сценарий перед тестом.',
+    headerLastTestSuccess: 'Последний тест прошёл.',
+    headerLastTestFailed: 'Последний тест не прошёл.',
     headerConnectionSelected: (name: string) => `Подключение: ${name}.`,
-    headerSaveToTest:
-      'Основные поля ниже. Сначала сохраните сценарий, потом тестируйте.',
-    headerMainFields: 'Основные поля этого шага ниже.',
-    connectionRequired: (connectionType: string) =>
-      `Требуется подключение ${connectionType}`,
-    noConnectionRequired: 'Подключение не требуется',
-    connectionSectionDescription: (connectionType: string) =>
-      `Выберите или создайте подключение ${connectionType}, которое будет использовать этот шаг.`,
-    connectionNotSelected: 'Подключение не выбрано',
-    noConnectionsInline: 'Нет подключений',
-    availableConnectionsCount: (count: number) =>
-      `Доступно: ${formatCount('ru-RU', count)}`,
-    selectedConnectionSummary: (name: string) => `Выбрано: ${name}`,
-    availableConnections: 'Подключение',
+    headerConnectionSelectedFallback: 'Подключение выбрано.',
+    headerMainFields: 'Основные поля ниже.',
     selectConnection: (connectionType: string) =>
       `Выберите подключение ${connectionType}`,
-    requiredType: (connectionType: string) =>
-      `Требуемый тип: ${connectionType}.`,
     createConnection: 'Создать новое',
     refreshConnections: 'Обновить список',
-    noConnectionsTitle: (connectionType: string) =>
-      `Нет подключений ${connectionType}`,
     noConnectionsDescription: (connectionType: string) =>
       `Подключений ${connectionType} пока нет. Создайте новое, чтобы выбрать его здесь.`,
-    noConnectionNeeded: 'Этому шагу подключение не требуется.',
     nodeSettingsEyebrow: 'Основное',
-    nodeSettingsDescription:
-      'Заполните основные поля. Дополнительные режимы открываются по необходимости.',
-    loadingConnectionsTitle: 'Загрузка подключений...',
     loadingConnectionsDescription: 'Загружаем сохранённые подключения.',
-    nextStepEyebrow: 'Что делать сейчас',
-    statusNow: 'Заполнить сейчас',
-    statusLater: 'Откроется следующим шагом',
-    statusAvailable: 'Проверка доступна',
-    statusSaveFirst: 'Сначала сохранить',
-    sectionReady: 'Готово',
-    sectionNeedsAttention: 'Нужно внимание',
-    nextActionConnect: (connectionType: string) =>
-      `Сначала выберите подключение ${connectionType}`,
-    nextActionConfigure: 'Теперь заполните основные поля шага',
-    nextActionSaveFirst: 'Сохраните сценарий, чтобы открыть проверку',
-    nextActionTest: 'Можно запустить проверку и посмотреть результат',
-    dangerZoneEyebrow: 'Удаление шага',
-    dangerZoneDescription:
-      'Удаляйте шаг только когда он точно больше не нужен в цепочке.',
     deleteNode: 'Удалить шаг',
     deleteNodeDialogTitle: 'Удалить выбранный шаг?',
     deleteNodeDialogDescription: (label: string) =>
@@ -414,12 +357,14 @@ export const ru = {
   },
   stepTest: {
     sectionEyebrow: 'Тест шага с входными данными',
-    sectionDescription:
-      'Откройте этот блок, когда нужно быстро прогнать шаг на JSON-входе.',
+    sectionDescription: 'Запустите шаг на примере JSON.',
     testButton: 'Запустить тест',
     testRunning: 'Выполняется...',
     testButtonSaveFirst:
       'Сохраните сценарий, чтобы включить этот тест.',
+    testButtonChooseConnectionFirst: 'Сначала выберите подключение.',
+    connectionRequiredSummary:
+      'Сначала выберите подключение, чтобы открыть тест.',
     testButtonUnsupported: 'Проверка пока недоступна в этой версии сервиса.',
     inputDataLabel: 'Входные данные (JSON)',
     inputDataPlaceholder: '{}',
@@ -427,12 +372,11 @@ export const ru = {
     invalidJson: 'Невалидный JSON.',
     successStatus: 'Успешно',
     failedStatus: 'Ошибка',
-    lastResultSuccess: 'Последний результат: успешно.',
-    lastResultFailed: 'Последний результат: ошибка.',
+    lastResultSuccess: 'Последний тест прошёл.',
+    lastResultFailed: 'Последний тест не прошёл.',
     duration: (ms: number) => `${ms}мс`,
     outputDataLabel: 'Результат',
     fieldsUpdated: 'Доступные поля обновлены для следующих шагов.',
-    noConnectionWarning: 'Сначала выберите подключение.',
     expandInput: 'Показать входные данные',
     collapseInput: 'Скрыть входные данные',
     expandOutput: 'Показать результат',
