@@ -267,12 +267,12 @@ function FlowCanvasInner() {
 
   return (
     <div className="app-panel editor-canvas-shell relative flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="border-b border-slate-900/10 px-5 py-4">
-        <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
+      <div className="border-b border-slate-900/10 px-4 py-3.5">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
             <p className="muted-label">{messages.flowCanvas.eyebrow}</p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <h2 className="text-[1.4rem] font-semibold tracking-tight text-slate-900">
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              <h2 className="text-[1.22rem] font-semibold tracking-tight text-slate-900">
                 {isEmpty ? messages.flowCanvas.emptyTitle : messages.flowCanvas.workspaceTitle}
               </h2>
               <span className="app-pill">
@@ -281,21 +281,21 @@ function FlowCanvasInner() {
                   : messages.flowCanvas.stepCounter(triggerCount, actionCount)}
               </span>
             </div>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+            <p className="mt-2 max-w-2xl text-[13px] leading-5 text-slate-600">
               {isEmpty
                 ? messages.flowCanvas.emptyDescription
                 : messages.flowCanvas.workspaceDescription}
             </p>
           </div>
 
-          <div className="app-subpanel px-4 py-3.5 2xl:max-w-[248px]">
+          <div className="max-w-sm xl:text-right">
             <p className="muted-label">{messages.flowCanvas.inspectorEyebrow}</p>
-            <p className="mt-2 text-sm font-semibold text-slate-900">
+            <p className="mt-1.5 text-sm font-semibold text-slate-800">
               {selectedNodeLabel
                 ? messages.flowCanvas.editing(selectedNodeLabel)
                 : messages.flowCanvas.noNodeSelected}
             </p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+            <p className="mt-1 text-[12px] leading-5 text-slate-500">
               {selectedNodeLabel
                 ? messages.flowCanvas.inspectorSelectedDescription
                 : messages.flowCanvas.inspectorEmptyDescription}
@@ -373,88 +373,43 @@ function FlowCanvasInner() {
         {isEmpty ? (
           <div className="pointer-events-none absolute inset-0 z-20 flex items-start justify-center px-6 pb-10 pt-10 lg:pt-12">
             <div
-              className={`w-full max-w-4xl rounded-[34px] border px-6 py-6 shadow-[0_32px_72px_-42px_rgba(15,23,42,0.46)] transition lg:px-7 lg:py-7 ${
+              className={`w-full max-w-2xl rounded-[30px] border px-6 py-6 shadow-[0_28px_56px_-40px_rgba(15,23,42,0.38)] transition lg:px-7 lg:py-7 ${
                 isDropActive
                   ? 'border-amber-500/40 bg-white/96 shadow-amber-900/10'
                   : 'border-slate-900/12 bg-white/92'
               }`}
             >
-              <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.8fr)]">
-                <div>
-                  <p className="muted-label">{messages.flowCanvas.emptyEditorEyebrow}</p>
-                  <h3 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
-                    {messages.flowCanvas.emptyEditorTitle}
-                  </h3>
-                  <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-                    {messages.flowCanvas.emptyEditorDescription}
-                  </p>
+              <div>
+                <p className="muted-label">{messages.flowCanvas.emptyEditorEyebrow}</p>
+                <h3 className="mt-3 text-[1.9rem] font-semibold tracking-tight text-slate-900">
+                  {messages.flowCanvas.emptyEditorTitle}
+                </h3>
+                <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">
+                  {messages.flowCanvas.emptyEditorDescription}
+                </p>
 
-                  <div className="mt-5 grid gap-3">
-                    {messages.flowCanvas.steps.map((item) => (
-                      <div
-                        key={item.step}
-                        className="app-subpanel-muted px-4 py-4"
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
-                            {item.step}
-                          </span>
-                          <div>
-                            <p className="text-sm font-semibold text-slate-900">
-                              {item.title}
-                            </p>
-                            <p className="mt-1 text-sm leading-6 text-slate-600">
-                              {item.description}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center rounded-full border border-emerald-200 bg-white/92 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    1. {messages.common.nodeKindLabels.trigger}
+                  </span>
+                  <span className="h-px w-5 bg-slate-300" />
+                  <span className="inline-flex items-center rounded-full border border-sky-200 bg-white/92 px-3 py-1 text-xs font-semibold text-sky-700">
+                    2. {messages.common.nodeKindLabels.action}
+                  </span>
                 </div>
 
-                <div className="rounded-[30px] border border-dashed border-slate-900/18 bg-[rgba(250,246,239,0.82)] px-5 py-5">
+                <div className="mt-5 rounded-[1.35rem] border border-dashed border-slate-900/16 bg-[rgba(250,246,239,0.82)] px-4 py-4">
                   <p className="muted-label">{messages.flowCanvas.dropZoneEyebrow}</p>
-                  <h3 className="mt-3 text-lg font-semibold tracking-tight text-slate-900">
+                  <h3 className="mt-2 text-base font-semibold tracking-tight text-slate-900">
                     {isDropActive
                       ? messages.flowCanvas.dropZoneTitleActive
                       : messages.flowCanvas.dropZoneTitleIdle}
                   </h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
                     {isDropActive
                       ? messages.flowCanvas.dropZoneDescriptionActive
                       : messages.flowCanvas.dropZoneDescriptionIdle}
                   </p>
-
-                  <div className="mt-5 space-y-3">
-                    <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-white/92 px-4 py-3 shadow-sm">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-xs font-black tracking-[0.24em] text-white">
-                        TR
-                      </span>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          {messages.flowCanvas.triggerCardTitle}
-                        </p>
-                        <p className="text-xs leading-5 text-slate-500">
-                          {messages.flowCanvas.triggerCardDescription}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 rounded-2xl border border-sky-200 bg-white/92 px-4 py-3 shadow-sm">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-600 text-xs font-black tracking-[0.24em] text-white">
-                        AC
-                      </span>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          {messages.flowCanvas.actionCardTitle}
-                        </p>
-                        <p className="text-xs leading-5 text-slate-500">
-                          {messages.flowCanvas.actionCardDescription}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>

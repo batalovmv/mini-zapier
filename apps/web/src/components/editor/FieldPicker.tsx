@@ -1,11 +1,12 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
-  type FocusEvent,
   type RefObject,
 } from 'react';
+import { createPortal } from 'react-dom';
 
 import type { StepTestResponse } from '@mini-zapier/shared';
 
@@ -101,6 +102,58 @@ function applyTestResultOverlay(
 
 const cache = new Map<string, AvailableFieldsResponse>();
 const inflight = new Map<string, Promise<AvailableFieldsResponse>>();
+const FIELD_PICKER_MARGIN = 12;
+const FIELD_PICKER_MAX_WIDTH = 320;
+const FIELD_PICKER_MAX_HEIGHT = 320;
+const FIELD_PICKER_MIN_HEIGHT = 180;
+const FIELD_PICKER_VERTICAL_OFFSET = 8;
+
+interface OverlayPosition {
+  left: number;
+  top: number;
+  width: number;
+  maxHeight: number;
+}
+
+function computeOverlayPosition(anchorRect: DOMRect): OverlayPosition {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const width = Math.min(FIELD_PICKER_MAX_WIDTH, viewportWidth - FIELD_PICKER_MARGIN * 2);
+
+  let left = anchorRect.left;
+
+  if (left + width > viewportWidth - FIELD_PICKER_MARGIN) {
+    left = viewportWidth - FIELD_PICKER_MARGIN - width;
+  }
+
+  left = Math.max(FIELD_PICKER_MARGIN, left);
+
+  const availableBelow =
+    viewportHeight - anchorRect.bottom - FIELD_PICKER_MARGIN - FIELD_PICKER_VERTICAL_OFFSET;
+  const availableAbove =
+    anchorRect.top - FIELD_PICKER_MARGIN - FIELD_PICKER_VERTICAL_OFFSET;
+  const renderAbove = availableBelow < FIELD_PICKER_MIN_HEIGHT && availableAbove > availableBelow;
+  const maxHeight = Math.max(
+    140,
+    Math.min(
+      FIELD_PICKER_MAX_HEIGHT,
+      renderAbove ? availableAbove : availableBelow,
+    ),
+  );
+  const top = renderAbove
+    ? Math.max(
+        FIELD_PICKER_MARGIN,
+        anchorRect.top - FIELD_PICKER_VERTICAL_OFFSET - maxHeight,
+      )
+    : anchorRect.bottom + FIELD_PICKER_VERTICAL_OFFSET;
+
+  return {
+    left,
+    top,
+    width,
+    maxHeight,
+  };
+}
 
 function fetchWithDedup(
   workflowId: string,
@@ -386,7 +439,10 @@ export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: Fi
   const data = overlay.data;
   const [internalOpen, setInternalOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const prevOpenRef = useRef(false);
+  const [overlayPosition, setOverlayPosition] = useState<OverlayPosition | null>(null);
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -439,6 +495,73 @@ export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: Fi
     workflowVersion !== null &&
     data.sourceWorkflowVersion !== workflowVersion;
 
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) {
+      setOverlayPosition(null);
+
+      return;
+    }
+
+    function updatePosition() {
+      if (!triggerRef.current) {
+        return;
+      }
+
+      setOverlayPosition(
+        computeOverlayPosition(triggerRef.current.getBoundingClientRect()),
+      );
+    }
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [
+    open,
+    chainPosition,
+    loading,
+    errorMessage,
+    hasCurrentPositionData,
+    versionMismatch,
+  ]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function handlePointerDown(event: MouseEvent) {
+      const target = event.target as Node;
+
+      if (
+        containerRef.current?.contains(target) ||
+        overlayRef.current?.contains(target)
+      ) {
+        return;
+      }
+
+      setOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown, true);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown, true);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
   function handleToggle() {
     if (open) {
       setOpen(false);
@@ -457,105 +580,113 @@ export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: Fi
     setOpen(false);
   }
 
-  function handleBlur(event: FocusEvent) {
-    if (
-      containerRef.current &&
-      !containerRef.current.contains(event.relatedTarget as Node)
-    ) {
-      setOpen(false);
-    }
-  }
-
   const fpMessages = messages.fieldPicker as unknown as Record<string, string>;
+  const listMaxHeight = Math.max(
+    120,
+    (overlayPosition?.maxHeight ?? FIELD_PICKER_MAX_HEIGHT) -
+      (versionMismatch ? 38 : 0),
+  );
+  const overlayContent =
+    open && overlayPosition && typeof document !== 'undefined'
+      ? createPortal(
+          <div
+            className="fixed z-[80] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_24px_56px_-32px_rgba(15,23,42,0.42)]"
+            data-testid="field-picker-popover"
+            ref={overlayRef}
+            style={{
+              left: overlayPosition.left,
+              top: overlayPosition.top,
+              width: overlayPosition.width,
+              maxHeight: overlayPosition.maxHeight,
+            }}
+          >
+            {loading ? (
+              <div className="px-4 py-3 text-xs text-slate-400">{messages.fieldPicker.loading}</div>
+            ) : hasUnsavedChanges ? (
+              <div className="px-4 py-3 text-xs text-amber-600">
+                {messages.fieldPicker.saveWorkflowToUpdate}
+              </div>
+            ) : errorMessage !== null && !hasCurrentPositionData ? (
+              <div className="px-4 py-3 text-xs text-rose-700">
+                <p>{messages.fieldPicker.loadError(errorMessage)}</p>
+                <button
+                  className="mt-2 rounded-full border border-rose-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-rose-700 transition hover:bg-rose-50"
+                  onClick={() => refetch()}
+                  type="button"
+                >
+                  {messages.fieldPicker.retry}
+                </button>
+              </div>
+            ) : data === null || data.positions.length === 0 ? (
+              <div className="px-4 py-3 text-xs text-slate-400">
+                {data?.emptyState === 'INCOMPATIBLE_EXECUTIONS'
+                  ? messages.fieldPicker.incompatibleExecutions
+                  : data?.emptyState === 'NO_FIELDS'
+                    ? messages.fieldPicker.noFieldsFromRun
+                    : messages.fieldPicker.runAtLeastOnce}
+              </div>
+            ) : (
+              <div className="overflow-y-auto" style={{ maxHeight: listMaxHeight }}>
+                {versionMismatch ? (
+                  <div className="border-b border-slate-100 px-4 py-2 text-xs text-amber-600">
+                    {messages.fieldPicker.versionMismatch(
+                      data.sourceWorkflowVersion ?? 0,
+                      workflowVersion,
+                    )}
+                  </div>
+                ) : null}
+                {tree.length > 0 ? (
+                  <ul className="py-1">
+                    {tree.map((node) => (
+                      <TreeNodeItem
+                        key={node.path}
+                        depth={0}
+                        messages={fpMessages}
+                        node={node}
+                        onSelect={handleSelect}
+                      />
+                    ))}
+                  </ul>
+                ) : fields.length === 0 ? (
+                  <div className="px-4 py-3 text-xs text-slate-400">
+                    {messages.fieldPicker.noFieldsForPosition}
+                  </div>
+                ) : (
+                  <ul>
+                    {fields.map((field) => (
+                      <li key={field}>
+                        <button
+                          className="w-full px-4 py-1.5 text-left font-mono text-xs text-slate-700 transition hover:bg-amber-50"
+                          onClick={() => handleSelect(field)}
+                          type="button"
+                        >
+                          {field}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>,
+          document.body,
+        )
+      : null;
 
   return (
-    <div
-      className="relative"
-      onBlur={handleBlur}
-      ref={containerRef}
-      tabIndex={-1}
-    >
+    <div className="relative" ref={containerRef}>
       <button
         className="rounded-lg px-2 py-0.5 text-xs font-medium text-amber-600 transition hover:bg-amber-50"
         onClick={handleToggle}
+        ref={triggerRef}
+        aria-expanded={open}
         title={messages.fieldPicker.insertFieldReference}
         type="button"
       >
         {messages.fieldPicker.insertField}
       </button>
 
-      {open ? (
-        <div className="absolute right-0 top-8 z-50 w-72 rounded-xl border border-slate-200 bg-white shadow-lg">
-          {loading ? (
-            <div className="px-4 py-3 text-xs text-slate-400">{messages.fieldPicker.loading}</div>
-          ) : hasUnsavedChanges ? (
-            <div className="px-4 py-3 text-xs text-amber-600">
-              {messages.fieldPicker.saveWorkflowToUpdate}
-            </div>
-          ) : errorMessage !== null && !hasCurrentPositionData ? (
-            <div className="px-4 py-3 text-xs text-rose-700">
-              <p>{messages.fieldPicker.loadError(errorMessage)}</p>
-              <button
-                className="mt-2 rounded-full border border-rose-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-rose-700 transition hover:bg-rose-50"
-                onClick={() => refetch()}
-                type="button"
-              >
-                {messages.fieldPicker.retry}
-              </button>
-            </div>
-          ) : data === null || data.positions.length === 0 ? (
-            <div className="px-4 py-3 text-xs text-slate-400">
-              {data?.emptyState === 'INCOMPATIBLE_EXECUTIONS'
-                ? messages.fieldPicker.incompatibleExecutions
-                : data?.emptyState === 'NO_FIELDS'
-                  ? messages.fieldPicker.noFieldsFromRun
-                  : messages.fieldPicker.runAtLeastOnce}
-            </div>
-          ) : (
-            <div className="max-h-72 overflow-y-auto">
-              {versionMismatch ? (
-                <div className="border-b border-slate-100 px-4 py-2 text-xs text-amber-600">
-                  {messages.fieldPicker.versionMismatch(
-                    data.sourceWorkflowVersion ?? 0,
-                    workflowVersion,
-                  )}
-                </div>
-              ) : null}
-              {tree.length > 0 ? (
-                <ul className="py-1">
-                  {tree.map((node) => (
-                    <TreeNodeItem
-                      key={node.path}
-                      depth={0}
-                      messages={fpMessages}
-                      node={node}
-                      onSelect={handleSelect}
-                    />
-                  ))}
-                </ul>
-              ) : fields.length === 0 ? (
-                <div className="px-4 py-3 text-xs text-slate-400">
-                  {messages.fieldPicker.noFieldsForPosition}
-                </div>
-              ) : (
-                <ul>
-                  {fields.map((field) => (
-                    <li key={field}>
-                      <button
-                        className="w-full px-4 py-1.5 text-left font-mono text-xs text-slate-700 transition hover:bg-amber-50"
-                        onClick={() => handleSelect(field)}
-                        type="button"
-                      >
-                        {field}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-        </div>
-      ) : null}
+      {overlayContent}
     </div>
   );
 }

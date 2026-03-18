@@ -129,39 +129,39 @@ select {
 
   .editor-rail {
     background:
-      radial-gradient(circle at top, rgba(201, 109, 31, 0.1), transparent 38%),
-      linear-gradient(180deg, rgba(250, 245, 236, 0.96) 0%, rgba(255, 255, 255, 0.88) 100%);
+      radial-gradient(circle at top, rgba(201, 109, 31, 0.08), transparent 34%),
+      linear-gradient(180deg, rgba(252, 248, 241, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
     box-shadow:
-      0 30px 68px -48px rgba(15, 23, 42, 0.42),
+      0 24px 52px -42px rgba(15, 23, 42, 0.34),
       inset 0 1px 0 rgba(255, 255, 255, 0.62);
   }
 
   .editor-canvas-shell {
     background:
-      radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 28%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(251, 249, 245, 0.92) 100%);
+      radial-gradient(circle at top right, rgba(14, 165, 233, 0.06), transparent 24%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(252, 250, 246, 0.94) 100%);
     box-shadow:
-      var(--shadow-panel-strong),
+      0 30px 66px -44px rgba(15, 23, 42, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.8);
   }
 
   .editor-canvas-surface {
     background:
-      radial-gradient(circle at top, rgba(201, 109, 31, 0.08), transparent 30%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.76) 0%, rgba(248, 250, 252, 0.94) 100%);
+      radial-gradient(circle at top, rgba(201, 109, 31, 0.06), transparent 26%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(248, 250, 252, 0.96) 100%);
   }
 
   .editor-canvas-surface-empty {
     background:
-      radial-gradient(circle at top, rgba(201, 109, 31, 0.16), transparent 30%),
-      radial-gradient(circle at 16% 82%, rgba(14, 165, 233, 0.08), transparent 26%),
+      radial-gradient(circle at top, rgba(201, 109, 31, 0.12), transparent 28%),
+      radial-gradient(circle at 16% 82%, rgba(14, 165, 233, 0.06), transparent 24%),
       linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.98) 100%);
   }
 
   .editor-canvas-surface-active {
     background:
-      radial-gradient(circle at top, rgba(201, 109, 31, 0.2), transparent 30%),
-      radial-gradient(circle at 82% 20%, rgba(14, 165, 233, 0.12), transparent 24%),
+      radial-gradient(circle at top, rgba(201, 109, 31, 0.16), transparent 28%),
+      radial-gradient(circle at 82% 20%, rgba(14, 165, 233, 0.1), transparent 22%),
       linear-gradient(180deg, rgba(255, 252, 245, 0.98) 0%, rgba(255, 255, 255, 1) 100%);
   }
 

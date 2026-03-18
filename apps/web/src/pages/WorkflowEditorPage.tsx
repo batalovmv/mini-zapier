@@ -213,8 +213,8 @@ export function WorkflowEditorPage() {
     : messages.workflowEditorPage.noUnsavedChanges;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-5 xl:overflow-hidden">
-      <section className="app-panel app-panel-strong shrink-0 overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 xl:overflow-hidden">
+      <section className="app-panel app-panel-strong mx-auto w-full max-w-[1740px] shrink-0 overflow-hidden">
         <div className="flex flex-col gap-4 px-5 py-4 xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end xl:gap-6 xl:px-6 xl:py-5">
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
             <Link
@@ -297,7 +297,7 @@ export function WorkflowEditorPage() {
         ) : null}
       </section>
 
-      <section className="grid min-h-0 flex-1 gap-5 overflow-hidden xl:grid-cols-[336px_minmax(0,1fr)_336px] xl:grid-rows-[minmax(0,1fr)] 2xl:grid-cols-[352px_minmax(0,1fr)_352px]">
+      <section className="mx-auto grid min-h-0 w-full max-w-[1740px] flex-1 gap-4 overflow-hidden xl:grid-cols-[300px_minmax(0,1fr)_320px] xl:grid-rows-[minmax(0,1fr)] 2xl:grid-cols-[312px_minmax(0,1fr)_336px]">
         <div className="min-h-0 overflow-hidden">
           <NodeSidebar />
         </div>

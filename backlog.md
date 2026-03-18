@@ -2356,3 +2356,39 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+---
+
+## Срез P: Workflow editor workspace hierarchy
+
+### TASK-P1: rebalance editor workspace layout
+- **Статус**: `done`
+- **Цель**: уменьшить ощущение трёх тяжёлых равноправных колонок в editor-е, не сужая саму рабочую область по смыслу, и убрать выезжающий overlay `FieldPicker`, который конфликтует с canvas
+- **Scope**:
+  - сдержать desktop-растяжение editor shell и пересобрать визуальную иерархию `left rail -> canvas -> inspector`
+  - сделать левую toolbox-панель и canvas-header короче и тише по chrome/copy
+  - упростить empty-state canvas без изменения продуктовой логики drag-and-drop
+  - вынести `FieldPicker` в viewport-aware overlay-layer вместо локального `absolute` popover внутри формы
+  - обновить только editor-related RU/EN copy для shell/toolbox/canvas
+- **Не входит**:
+  - новый editor onboarding
+  - переработка config-forms, `ConfigPanel`, `StepTestSection` и backend API
+  - новые зависимости и отдельный redesign dashboard/other pages
+- **Файлы**:
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+  - `apps/web/src/components/editor/NodeSidebar.tsx`
+  - `apps/web/src/components/editor/FlowCanvas.tsx`
+  - `apps/web/src/components/editor/FieldPicker.tsx`
+  - `apps/web/src/index.css`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - editor desktop layout больше не растягивается как три одинаково тяжёлые панели на всю ширину
+  - left rail и canvas читаются как supporting rails вокруг workspace, а не как конкурирующие page-sections
+  - empty-state canvas стал компактнее и спокойнее
+  - `FieldPicker` больше не рендерится локальным `absolute` блоком, который может визуально вылезать в сторону canvas
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`
