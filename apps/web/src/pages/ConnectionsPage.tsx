@@ -308,7 +308,7 @@ export function ConnectionsPage() {
         : null;
 
   return (
-    <div className="space-y-4 sm:space-y-5">
+    <div className="space-y-4 sm:space-y-5" data-testid="connections-page">
       <section className="dashboard-panel dashboard-operational-panel app-panel overflow-hidden">
         <div className="px-5 py-4 sm:px-6 sm:py-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -336,6 +336,7 @@ export function ConnectionsPage() {
             <div className="flex w-full flex-wrap gap-2 sm:w-auto">
               <button
                 className="inline-flex flex-1 items-center justify-center rounded-full border border-slate-900/10 bg-white/88 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none"
+                data-testid="connections-refresh-button"
                 disabled={loading || refreshing}
                 onClick={() => void loadCatalog(true)}
                 type="button"
@@ -346,6 +347,7 @@ export function ConnectionsPage() {
               </button>
               <button
                 className="inline-flex flex-1 items-center justify-center rounded-full bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_16px_28px_-22px_rgba(141,69,20,0.54)] transition hover:bg-amber-700 sm:flex-none"
+                data-testid="connections-create-button"
                 onClick={() => openCreateDialog()}
                 type="button"
               >
@@ -379,6 +381,7 @@ export function ConnectionsPage() {
             </span>
             <input
               className="dashboard-control-input"
+              data-testid="connections-search-input"
               onChange={(event) => {
                 setQuery(event.target.value);
                 setPage(1);
@@ -395,6 +398,7 @@ export function ConnectionsPage() {
             </span>
             <select
               className="dashboard-control-input"
+              data-testid="connections-type-filter"
               disabled={controlsDisabled}
               onChange={(event) => {
                 setTypeFilter(event.target.value as ConnectionTypeFilter);
@@ -419,6 +423,7 @@ export function ConnectionsPage() {
             </span>
             <select
               className="dashboard-control-input"
+              data-testid="connections-usage-filter"
               disabled={controlsDisabled}
               onChange={(event) => {
                 setUsageFilter(
@@ -442,6 +447,7 @@ export function ConnectionsPage() {
             </span>
             <select
               className="dashboard-control-input"
+              data-testid="connections-sort"
               disabled={controlsDisabled}
               onChange={(event) => {
                 setSort(event.target.value as ConnectionCatalogSort);
@@ -465,6 +471,7 @@ export function ConnectionsPage() {
             </p>
             <button
               className="dashboard-filter-reset"
+              data-testid="connections-clear-filters"
               disabled={controlsDisabled}
               onClick={resetFilters}
               type="button"
@@ -475,13 +482,21 @@ export function ConnectionsPage() {
         ) : null}
 
         {pageError && catalog !== null ? (
-          <div className="connections-inline-alert mt-3.5" data-tone="danger">
+          <div
+            className="connections-inline-alert mt-3.5"
+            data-testid="connections-inline-alert"
+            data-tone="danger"
+          >
             {pageError}
           </div>
         ) : null}
 
         {editLoadError ? (
-          <div className="connections-inline-alert mt-3.5" data-tone="warning">
+          <div
+            className="connections-inline-alert mt-3.5"
+            data-testid="connections-edit-load-alert"
+            data-tone="warning"
+          >
             {editLoadError}
           </div>
         ) : null}
@@ -490,6 +505,7 @@ export function ConnectionsPage() {
           {loading ? (
             <div
               className="connections-state-card"
+              data-testid="connections-loading-state"
               data-tone="loading"
               role="status"
             >
@@ -506,7 +522,11 @@ export function ConnectionsPage() {
               </div>
             </div>
           ) : showPageErrorState ? (
-            <div className="connections-state-card" data-tone="danger">
+            <div
+              className="connections-state-card"
+              data-testid="connections-error-state"
+              data-tone="danger"
+            >
               <h3 className="text-base font-semibold text-rose-900">
                 {messages.connectionsPage.errorTitle}
               </h3>
@@ -529,7 +549,11 @@ export function ConnectionsPage() {
               </div>
             </div>
           ) : showInitialEmptyState ? (
-            <div className="connections-state-card" data-tone="neutral">
+            <div
+              className="connections-state-card"
+              data-testid="connections-empty-state"
+              data-tone="neutral"
+            >
               <h3 className="text-base font-semibold text-slate-900">
                 {messages.connectionsPage.emptyTitle}
               </h3>
@@ -547,7 +571,11 @@ export function ConnectionsPage() {
               </div>
             </div>
           ) : showNoResultsState ? (
-            <div className="connections-state-card" data-tone="neutral">
+            <div
+              className="connections-state-card"
+              data-testid="connections-no-results-state"
+              data-tone="neutral"
+            >
               <h3 className="text-base font-semibold text-slate-900">
                 {messages.connectionsPage.noResultsTitle}
               </h3>
@@ -566,10 +594,18 @@ export function ConnectionsPage() {
             </div>
           ) : (
             <>
-              <div className="connections-list-shell">
+              <div
+                className="connections-list-shell"
+                data-testid="connections-list"
+              >
                 <div className="divide-y divide-slate-900/8">
                   {items.map((item) => (
-                    <article key={item.id} className="connections-row">
+                    <article
+                      key={item.id}
+                      className="connections-row"
+                      data-connection-id={item.id}
+                      data-testid={`connections-row-${item.id}`}
+                    >
                       <div className="connections-row__layout">
                         <div className="connections-row__main">
                           <h3
@@ -618,6 +654,7 @@ export function ConnectionsPage() {
                         <div className="connections-row__actions">
                           <button
                             className="connections-row__action connections-row__action--edit"
+                            data-testid={`connections-edit-${item.id}`}
                             disabled={controlsDisabled}
                             onClick={() => void handleEditClick(item)}
                             type="button"
@@ -628,6 +665,7 @@ export function ConnectionsPage() {
                           </button>
                           <button
                             className="connections-row__action connections-row__action--delete"
+                            data-testid={`connections-delete-${item.id}`}
                             disabled={controlsDisabled}
                             onClick={() => setDeleteTarget(item)}
                             type="button"
@@ -649,6 +687,7 @@ export function ConnectionsPage() {
                   <div className="flex flex-wrap gap-2">
                     <button
                       className="dashboard-filter-reset"
+                      data-testid="connections-prev-page"
                       disabled={page === 1 || controlsDisabled}
                       onClick={() => setPage((currentPage) => currentPage - 1)}
                       type="button"
@@ -657,6 +696,7 @@ export function ConnectionsPage() {
                     </button>
                     <button
                       className="dashboard-filter-reset"
+                      data-testid="connections-next-page"
                       disabled={page >= totalPages || controlsDisabled}
                       onClick={() => setPage((currentPage) => currentPage + 1)}
                       type="button"

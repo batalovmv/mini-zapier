@@ -2701,7 +2701,7 @@
   - `pnpm --filter @mini-zapier/web build`
 
 ### TASK-Q5: connections QA, smoke stabilization and copy polish
-- **Статус**: `todo`
+- **Статус**: `done`
 - **Цель**: закрыть residual defects после track
 - **Scope**:
   - manual QA `/connections` + editor picker

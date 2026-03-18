@@ -406,14 +406,14 @@ export const en = {
     connectionPickerSelected: 'Selected',
     connectionPickerItemMeta: (usageCount: string, fieldCount: string) =>
       `Used ${usageCount} / Fields ${fieldCount}`,
-    createConnection: 'New',
+    createConnection: 'Create',
     refreshConnections: 'Refresh',
     noConnectionsDescription: (connectionType: string) =>
       `No ${connectionType} connections yet. Create one to use it here.`,
     nodeSettingsEyebrow: 'Main',
     loadingConnectionsDescription: 'Loading saved connections.',
     loadingMoreConnections: 'Loading more...',
-    loadMoreConnections: 'More',
+    loadMoreConnections: 'Load more',
     deleteNode: 'Delete step',
     deleteNodeDialogTitle: 'Delete selected step?',
     deleteNodeDialogDescription: (label: string) =>

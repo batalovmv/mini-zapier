@@ -442,14 +442,14 @@ export const ru = {
     connectionPickerSelected: 'Выбрано',
     connectionPickerItemMeta: (usageCount: string, fieldCount: string) =>
       `Исп. ${usageCount} / Полей ${fieldCount}`,
-    createConnection: 'Новое',
+    createConnection: 'Создать',
     refreshConnections: 'Обновить',
     noConnectionsDescription: (connectionType: string) =>
       `Подключений ${connectionType} пока нет. Создайте новое, чтобы выбрать его здесь.`,
     nodeSettingsEyebrow: 'Основное',
     loadingConnectionsDescription: 'Загружаем подключения.',
     loadingMoreConnections: 'Загружаем ещё...',
-    loadMoreConnections: 'Ещё',
+    loadMoreConnections: 'Показать ещё',
     deleteNode: 'Удалить шаг',
     deleteNodeDialogTitle: 'Удалить выбранный шаг?',
     deleteNodeDialogDescription: (label: string) =>

@@ -176,6 +176,7 @@ export function ConnectionPicker({
   const items = catalog?.items ?? [];
   const hasItems = items.length > 0;
   const hasMore = catalog !== null && items.length < catalog.total;
+  const pickerBusy = loading || loadingMore;
   const triggerLabel =
     selectedConnectionName ??
     (selectedConnectionId
@@ -195,12 +196,21 @@ export function ConnectionPicker({
 
   return (
     <div className="space-y-3">
+      <input
+        data-testid="selected-connection-id"
+        readOnly
+        tabIndex={-1}
+        type="hidden"
+        value={selectedConnectionId ?? ''}
+      />
       <button
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label={messages.configPanel.selectConnection(connectionTypeLabel)}
         className="editor-connection-picker-trigger"
-        data-testid="connection-select"
+        data-selected-connection-id={selectedConnectionId ?? ''}
+        data-selected-connection-name={selectedConnectionName ?? ''}
+        data-testid="connection-picker-trigger"
         onClick={handleToggle}
         type="button"
       >
@@ -233,6 +243,8 @@ export function ConnectionPicker({
         </button>
         <button
           className="editor-inspector-link"
+          data-testid="refresh-connection-picker-button"
+          disabled={pickerBusy}
           onClick={handleRefresh}
           type="button"
         >
@@ -241,6 +253,8 @@ export function ConnectionPicker({
         {selectedConnectionId ? (
           <button
             className="editor-inspector-link"
+            data-testid="clear-connection-picker-button"
+            disabled={pickerBusy}
             onClick={handleClear}
             type="button"
           >
@@ -250,9 +264,15 @@ export function ConnectionPicker({
       </div>
 
       {isOpen ? (
-        <div className="editor-connection-picker-panel">
+        <div
+          aria-busy={pickerBusy}
+          className="editor-connection-picker-panel"
+          data-testid="connection-picker-panel"
+        >
           <input
+            aria-label={messages.configPanel.searchConnectionsPlaceholder}
             className="dashboard-control-input"
+            data-testid="connection-picker-search"
             onChange={(event) => setSearch(event.target.value)}
             placeholder={messages.configPanel.searchConnectionsPlaceholder}
             type="search"
@@ -260,7 +280,11 @@ export function ConnectionPicker({
           />
 
           {error ? (
-            <div className="editor-connection-picker-alert" data-tone="danger">
+            <div
+              className="editor-connection-picker-alert"
+              data-testid="connection-picker-error-state"
+              data-tone="danger"
+            >
               {error}
             </div>
           ) : null}
@@ -268,6 +292,7 @@ export function ConnectionPicker({
           {showLoadingState ? (
             <div
               className="editor-connection-picker-state"
+              data-testid="connection-picker-loading-state"
               data-tone="loading"
               role="status"
             >
@@ -279,19 +304,30 @@ export function ConnectionPicker({
               </div>
             </div>
           ) : showEmptyState ? (
-            <div className="editor-connection-picker-state" data-tone="neutral">
+            <div
+              className="editor-connection-picker-state"
+              data-testid="connection-picker-empty-state"
+              data-tone="neutral"
+            >
               <p className="text-sm leading-5 text-slate-600">
                 {messages.configPanel.noConnectionsDescription(connectionTypeLabel)}
               </p>
             </div>
           ) : showSearchEmptyState ? (
-            <div className="editor-connection-picker-state" data-tone="neutral">
+            <div
+              className="editor-connection-picker-state"
+              data-testid="connection-picker-search-empty-state"
+              data-tone="neutral"
+            >
               <p className="text-sm leading-5 text-slate-600">
                 {messages.configPanel.searchEmptyConnections(normalizedQuery)}
               </p>
             </div>
           ) : hasItems ? (
-            <div className="editor-connection-picker-results">
+            <div
+              className="editor-connection-picker-results"
+              data-testid="connection-picker-results"
+            >
               <ul
                 aria-label={messages.configPanel.selectConnection(connectionTypeLabel)}
                 className="editor-connection-picker-list"
@@ -301,11 +337,13 @@ export function ConnectionPicker({
                   const isSelected = connection.id === selectedConnectionId;
 
                   return (
-                    <li key={connection.id}>
+                    <li key={connection.id} role="presentation">
                       <button
                         aria-selected={isSelected}
                         className="editor-connection-picker-item"
+                        data-connection-id={connection.id}
                         data-selected={isSelected}
+                        data-testid={`connection-picker-option-${connection.id}`}
                         onClick={() => handleSelect(connection)}
                         role="option"
                         type="button"
@@ -350,6 +388,8 @@ export function ConnectionPicker({
                 <div className="border-t border-slate-900/8 p-2.5">
                   <button
                     className="dashboard-filter-reset w-full"
+                    data-testid="connection-picker-load-more"
+                    disabled={loadingMore}
                     onClick={() =>
                       void loadCatalogPage((catalog?.page ?? 1) + 1, {
                         append: true,

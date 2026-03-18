@@ -419,7 +419,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     await page.getByLabel('Connection field value 1').fill(secret);
     await page.getByTestId('submit-create-connection-button').click();
     await expect(page.getByText(`Connection "${connectionName}" created.`)).toBeVisible();
-    connectionId = await page.getByTestId('connection-select').inputValue();
+    connectionId = await page.getByTestId('selected-connection-id').inputValue();
 
     await httpNode.click();
     await page.getByTestId('http-request-url-input').fill(httpRequestUrl);

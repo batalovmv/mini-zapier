@@ -3,13 +3,14 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-Q4 — `scale the editor connection picker`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт + TASK-O5 закрыт + TASK-O6 закрыт + TASK-P1 закрыт + TASK-P2 закрыт + TASK-P3 закрыт + TASK-P4 закрыт + TASK-P5 закрыт + TASK-P6 закрыт + TASK-P7 закрыт + TASK-Q0 закрыт + TASK-Q1 закрыт + TASK-Q2 закрыт + TASK-Q3 закрыт + TASK-Q4 закрыт; editor inspector больше не зависит от полного `GET /connections` и plain `<select>` для выбора connection, следующий рабочий срез — `TASK-Q5`
+- **Последнее изменение**: TASK-Q5 — `stabilize connections catalog and picker QA`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт + TASK-O5 закрыт + TASK-O6 закрыт + TASK-P1 закрыт + TASK-P2 закрыт + TASK-P3 закрыт + TASK-P4 закрыт + TASK-P5 закрыт + TASK-P6 закрыт + TASK-P7 закрыт + TASK-Q0 закрыт + TASK-Q1 закрыт + TASK-Q2 закрыт + TASK-Q3 закрыт + TASK-Q4 закрыт + TASK-Q5 закрыт; connections catalog track закрыт, `/connections` и editor connection picker получили стабильные QA hooks, а smoke больше не зависит от старого `<select>` semantics
 - **TASK-Q0 planning**: connections catalog redesign/scale track разложен на последовательные задачи `TASK-Q1`–`TASK-Q5`; первый implementation slice добавляет scalable summary API для больших библиотек подключений, не ломая существующие `GET /connections` и `GET /connections/:id`
 - **TASK-Q1 local build**: добавлен owner-scoped `GET /api/connections/catalog` с backend pagination/filter/sort/query (`page`, `limit`, `query`, `type`, `usage`, `sort`), summary-only payload без `credentials`, shared enums/contracts для catalog response, Swagger query/response DTO и page-level `usageCount` aggregation; существующие `GET /api/connections` и `GET /api/connections/:id` сохранены без breaking changes. Локально подтверждены `pnpm --filter @mini-zapier/shared build` и `pnpm --filter @mini-zapier/api build` ✅
 - **TASK-Q2 local build**: `/connections` больше не рендерит hero + per-type sections из полного `GET /connections`; initial load идёт через `GET /api/connections/catalog`, search/type/usage/sort/page работают server-side с fixed `limit=20`, create/edit/delete flows сохранены, а full `getConnection(id)` вызывается только перед открытием edit dialog. Initial empty library, filtered no-results, page loading и page error разведены отдельно; локально подтверждён `pnpm --filter @mini-zapier/web build` ✅
 - **TASK-Q3 local build**: `/connections` больше не показывает nested summary cards внутри строки; `name` поднят в главный anchor, `type / usage / fields / updated` сведены в quiet metadata strip, `Delete` переведён в quieter secondary-danger action, а loading/error/empty/no-results состояния ужаты под ту же operational hierarchy; локально подтверждён `pnpm --filter @mini-zapier/web build` ✅
 - **TASK-Q4 local verification**: inspector connection section теперь использует компактный searchable picker на summary endpoint `GET /api/connections/catalog` вместо full `listConnections()` + plain `<select>`; initial load lazy и type-scoped, search по имени идёт на backend, внутри picker есть `load more`, refresh, empty/search-empty/error states и clear action, а inline create по-прежнему создаёт connection из inspector, автоматически выбирает его и обновляет picker. Семантика `requiresConnection`, `updateNodeMeta(...connectionId...)`, `headerStatusLine` и step-test wiring сохранены. Локально подтверждены `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
+- **TASK-Q5 local verification**: residual QA по `/connections` и editor picker закрыт без расширения scope: добавлены стабильные `data-testid` для catalog controls/states/rows и picker trigger/panel/results/actions, live smoke переведён с хрупкого `connection-select.inputValue()` на стабильный hidden hook `selected-connection-id`, pending/focus states picker tightened, а copy `New/Новое` + `More/Ещё` сокращён до более понятных operational labels. Локально подтверждены `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -785,17 +786,12 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-Следующий рабочий срез: `TASK-Q3 — tighten connections list hierarchy and row density`.
+Следующий рабочий срез: не назначен.
 
-Перед исполнением:
-- держать scope внутри visual hierarchy/density polish текущего server-driven shell, не меняя catalog contract
-- сохранить lazy detail fetch на edit и не ломать уже переведённые create/edit/delete flows
-- не расширять scope до editor picker (`TASK-Q4`), smoke/copy stabilization (`TASK-Q5`), workflow names list, health checks, tags, bulk actions или sharing/RBAC/OAuth reconnect
-
-В `TASK-Q3`:
-- уплотнить rows/list hierarchy для более быстрого сканирования
-- сделать delete action тише и улучшить читаемость meta summary
-- не возвращать страницу к full `GET /connections`
+Перед новым кодовым срезом:
+- connections catalog track `TASK-Q0`–`TASK-Q5` закрыт; не открывать новый follow-up по `/connections` или editor picker без нового TASK-ID
+- backlog сейчас не содержит открытых задач, поэтому следующий исполнитель должен сначала получить новый scoped task и только потом менять код
+- если следующий срез затронет эти экраны, опираться на стабильные hooks `connections-*`, `connection-picker-*` и `selected-connection-id`, а не на текстовую copy или DOM старого `<select>`
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke против live Vercel не запускался; для TASK-J локальная проверка ограничена `build` + `playwright test --list`.
@@ -980,3 +976,4 @@
 | TASK-Q2 | done | см. `git log` (`TASK-Q2: rebuild connections page into operational catalog shell`) | Rebuilt `/connections` into a server-driven catalog shell with summary search/filter/sort/pagination, preserved create/edit/delete flows, and lazy-loaded full connection detail only when opening edit; `pnpm --filter @mini-zapier/web build` passed |
 | TASK-Q3 | done | см. `git log` (`TASK-Q3: tighten connections list hierarchy and row density`) | Tightened `/connections` into denser operational rows with dominant names, compact metadata, quieter delete action, and more compact loading/empty/error/no-results states; `pnpm --filter @mini-zapier/web build` passed |
 | TASK-Q4 | done | см. `git log` (`TASK-Q4: scale editor connection picker`) | Replaced the editor inspector connection `<select>` with a lazy type-scoped searchable picker on the catalog summary endpoint, kept inline create/refresh/current selection semantics, and confirmed web build + Playwright test list |
+| TASK-Q5 | done | см. `git log` (`TASK-Q5: stabilize connections catalog and picker QA`) | Closed residual `/connections` + picker QA: stabilized test ids/selectors, fixed smoke hook drift after the picker replaced the native `<select>`, polished compact picker copy, and re-verified web build + Playwright test list |
