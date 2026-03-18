@@ -3,8 +3,8 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-P2 — `fix editor page residual layout defects`
-- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт + TASK-O5 закрыт + TASK-P1 закрыт + TASK-P2 закрыт; dashboard redesign track закрыт, editor workspace hierarchy QA follow-up закрыт
+- **Последнее изменение**: TASK-P3 — `compact workflow editor command bar`
+- **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт + TASK-O5 закрыт + TASK-P1 закрыт + TASK-P2 закрыт + TASK-P3 закрыт; dashboard redesign track закрыт, editor workspace hierarchy command bar follow-up закрыт
 - **Prod verification (Vercel `mini-zapier-web-silk.vercel.app`, 2026-03-16)**:
   - Dashboard: stats cards, workflow list, CRUD buttons — ✅
   - Connections page (`/connections`): create/edit dialog для всех 4 типов (Webhook, SMTP, Telegram, PostgreSQL) — ✅
@@ -18,6 +18,7 @@
   - **TASK-O5 local verification**: dashboard copy сокращён и синхронизирован между RU/EN, header/attention/stats/list/recent activity получили стабильные `data-testid`, mobile/desktop layout tightened without logic changes, а smoke больше не зависит от текстовой ссылки `← Back`; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
   - **TASK-P1 local verification**: editor shell больше не растягивается в три одинаково тяжёлые desktop-панели; page composition ограничена по ширине, `NodeSidebar` и `FlowCanvas` стали компактнее и тише, empty canvas упрощён, а `FieldPicker` вынесен в viewport-aware portal overlay вместо локального `absolute` popover; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
   - **TASK-P2 local verification**: проведён manual QA route по пустому workflow, `trigger -> action`, `HTTP Request`, `DB Query`, `Data Transform`, `Email` и `Telegram` на desktop ширинах около `1280`, `1440` и `>=1600`; подтверждён только один residual defect: chip inspector у `TemplatedField` рендерился относительно неправильного ancestor и уезжал к верху inspector rail вместо позиции рядом с выбранным chip. Корневой контейнер `TemplatedField` переведён в `relative`, после чего overlay снова якорится рядом с chip; `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
+  - **TASK-P3 local verification**: верх editor-а пересобран из высокой hero-like card в компактный command bar: `Back` стал quieter text-action, workflow name поднят в доминирующий anchor, `status` / `dirty` / `version` сжаты в secondary meta chips, а `Save` остался primary при secondary `Activate/Pause` и `Run`; вертикальный gap между header и workspace уменьшен без изменения handlers, store logic или editor behavior. Локально подтверждены `pnpm --filter @mini-zapier/web build` и `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
   - Editor canvas: все 3 trigger types (Webhook, Cron, Email Trigger) + все 5 action types (HTTP Request, Email, Telegram, PostgreSQL Query, Data Transform) — узлы drag-and-drop, config panels — ✅
   - **TASK-056 preview UI**: Email config → кнопка «▸ Предпросмотр» → empty state корректный; Telegram config → аналогично ✅
   - **TASK-A local build**: editor dirty-state + route/beforeunload guard собраны локально, `pnpm --filter @mini-zapier/web build` ✅
@@ -79,6 +80,15 @@
     - `pnpm --filter @mini-zapier/web exec playwright test --list` ✓
   - **Ограничения TASK-N8**:
     - локальный live Playwright run против Vercel по-прежнему не запускался: на этой машине нет `MINI_ZAPIER_E2E_PASSWORD`, поэтому окончательное подтверждение фикса требует push и GitHub Actions `E2E Smoke`
+- **Что сделано в TASK-P3**:
+  - `apps/web/src/pages/WorkflowEditorPage.tsx` — верхняя панель editor-а собрана заново как компактный command bar: quieter back-link вынесен в top line, name field остался главным якорем, secondary meta (`status`, `dirty`, `version`) переехали в отдельный тихий слой, action cluster сжат и выровнен под иерархию `Save` primary -> `Activate/Pause` / `Run` secondary без изменения handlers, disabled states и `data-testid`
+  - `apps/web/src/index.css` — добавлены точечные `editor-command-*` styles с меньшими padding/shadow/radius, более тихим chrome и responsive stacking для desktop/mobile widths; общий gap между command bar и workspace также уменьшен, чтобы canvas получил больше пространства сверху
+  - `apps/web/src/locale/messages.en.ts`, `apps/web/src/locale/messages.ru.ts` — длинные dirty/version labels сокращены до коротких command-bar chips (`Unsaved` / `Saved` / `New`, `Не сохранён` / `Сохранён` / `Новый`), чтобы meta layer не спорил с именем сценария и primary action
+  - **Проверки TASK-P3**:
+    - `pnpm --filter @mini-zapier/web build` ✓
+    - `pnpm --filter @mini-zapier/web exec playwright test --list` ✓
+  - **Ограничения TASK-P3**:
+    - manual browser QA маршрута `new workflow / saved workflow / unsaved state / save / activate-pause / run` на `1280` / `1440` / `>=1600` в этой сессии не запускался; визуальная проверка остаётся ручным follow-up за пределами локальной сборки и suite parsing
 - **Что сделано в TASK-P2**:
   - `apps/web/src/components/editor/templated-input/TemplatedField.tsx` — корневой контейнер поля теперь `relative`, поэтому `ChipInspector` с `position: absolute` позиционируется относительно самого `TemplatedField`, а не верхнего контейнера inspector-а; подтверждённый defect с уезжающим overlay в `Email`/`Telegram` и других templated-field сценариях закрыт без изменения editor store, API или layout scope
   - **Проверки TASK-P2**:
@@ -765,7 +775,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-`TASK-P2` закрыл manual QA follow-up после workspace rebalance и не выявил новых подтверждённых editor defects в рамках заданного маршрута. Следующий практический шаг — зафиксировать новый backlog slice перед следующими изменениями editor-а; открытых `todo` в `backlog.md` сейчас нет.
+`TASK-P3` закрыл компактный command bar pass для editor header и не менял canvas, rails, inspector, API или store behavior. Следующий практический шаг — либо руками подтвердить visual QA на сценариях `new/saved/unsaved/save/activate-pause/run` и desktop widths `1280` / `1440` / `>=1600`, либо перед следующими изменениями editor-а зафиксировать новый backlog slice; открытых `todo` в `backlog.md` сейчас нет.
 
 ## Блокеры
 - На текущей машине не заданы env `MINI_ZAPIER_E2E_EMAIL` / `MINI_ZAPIER_E2E_PASSWORD`, поэтому локальный Playwright smoke против live Vercel не запускался; для TASK-J локальная проверка ограничена `build` + `playwright test --list`.
@@ -939,3 +949,4 @@
 | TASK-O5 | done | см. `git log` (`TASK-O5: polish dashboard redesign`) | Final dashboard polish: synced operational RU/EN copy, tightened mobile/desktop layout, added stable dashboard test ids, and removed brittle smoke navigation selectors |
 | TASK-P1 | done | см. `git log` (`TASK-P1: rebalance editor workspace layout`) | Rebalanced the workflow editor into a quieter workspace-first composition, compacted left rail/canvas chrome, simplified empty canvas, and moved FieldPicker into a viewport-aware portal overlay |
 | TASK-P2 | done | см. `git log` (`TASK-P2: fix editor page residual layout defects`) | Manual editor QA after workspace rebalance confirmed one residual templated-chip overlay defect; fixed `ChipInspector` anchoring in `TemplatedField` without expanding redesign scope |
+| TASK-P3 | done | см. `git log` (`TASK-P3: compact workflow editor command bar`) | Rebuilt the editor header into a compact command bar with a quieter back action, dominant workflow name, secondary meta chips, and tighter top spacing while keeping button behavior unchanged |

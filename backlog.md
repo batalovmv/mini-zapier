@@ -2416,3 +2416,37 @@
   - manual browser QA
   - `pnpm --filter @mini-zapier/web build`
   - `pnpm --filter @mini-zapier/web exec playwright test --list`
+
+### TASK-P3: compact workflow editor command bar
+- **Статус**: `done`
+- **Цель**: уменьшить визуальный и вертикальный вес верхней панели editor-а, чтобы canvas и рабочая область получали больше внимания и высоты без изменения поведения editor-а
+- **Scope**:
+  - пересобрать верх editor-а в более компактный command bar
+  - сделать `Back` quieter по визуальному весу
+  - оставить workflow name главным визуальным якорем
+  - перевести `status` / `version` / `dirty` во secondary meta layer
+  - сохранить `Save` как primary action, а `Activate/Pause` и `Run` как secondary
+  - уменьшить высоту, padding и общий chrome верхнего блока без изменения button logic, store behavior и product semantics
+  - обновить только editor-related RU/EN copy, если длинные meta labels сами раздувают command bar
+- **Не входит**:
+  - изменения canvas, rails, inspector, backend API, store logic и product behavior
+  - новый redesign editor-а за пределами верхнего command bar
+  - новые зависимости
+- **Файлы**:
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+  - `apps/web/src/index.css`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Acceptance**:
+  - верхняя панель editor-а стала заметно компактнее
+  - canvas получает больше визуального пространства сверху
+  - workflow name остаётся главным элементом
+  - `Save` остаётся primary
+  - `status` / `dirty` / `version` не спорят с основным действием
+  - `pnpm --filter @mini-zapier/web build` проходит
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` проходит
+- **Проверка**:
+  - manual QA: new workflow / saved workflow / unsaved state / save / activate-pause / run
+  - desktop widths `1280` / `1440` / `>=1600`
+  - `pnpm --filter @mini-zapier/web build`
+  - `pnpm --filter @mini-zapier/web exec playwright test --list`

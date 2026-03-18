@@ -39,7 +39,7 @@ function getStatusClasses(status: WorkflowDto['status']): string {
 function getDirtyStateClasses(hasUnsavedChanges: boolean): string {
   return hasUnsavedChanges
     ? 'border-amber-200 bg-amber-50 text-amber-700'
-    : 'border-emerald-200 bg-emerald-50 text-emerald-700';
+    : 'border-slate-900/10 bg-white/78 text-slate-600';
 }
 
 export function WorkflowEditorPage() {
@@ -211,22 +211,41 @@ export function WorkflowEditorPage() {
   const dirtyStateLabel = hasUnsavedChanges
     ? messages.workflowEditorPage.unsavedChanges
     : messages.workflowEditorPage.noUnsavedChanges;
+  const workflowVersionLabel =
+    workflowVersion === null
+      ? messages.workflowEditorPage.notSavedYet
+      : `v${workflowVersion}`;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 xl:overflow-hidden">
-      <section className="app-panel app-panel-strong mx-auto w-full max-w-[1740px] shrink-0 overflow-hidden">
-        <div className="flex flex-col gap-4 px-5 py-4 xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end xl:gap-6 xl:px-6 xl:py-5">
-          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
-            <Link
-              className="inline-flex h-11 shrink-0 items-center rounded-full border border-slate-900/10 bg-white/88 px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white"
-              to="/"
-            >
-              &larr; {messages.common.back}
-            </Link>
-            <label className="block min-w-0 max-w-2xl flex-1">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 xl:overflow-hidden">
+      <section className="editor-command-bar mx-auto w-full max-w-[1740px] shrink-0 overflow-hidden">
+        <div className="editor-command-bar__inner">
+          <div className="editor-command-bar__main">
+            <div className="editor-command-bar__topline">
+              <Link className="editor-command-back" to="/">
+                &larr; {messages.common.back}
+              </Link>
+              <div className="editor-command-meta">
+                <span
+                  className={`editor-command-meta-chip editor-command-status-chip ${getStatusClasses(workflowStatus)}`}
+                >
+                  {messages.common.workflowStatusLabels[workflowStatus]}
+                </span>
+                <span
+                  className={`editor-command-meta-chip ${getDirtyStateClasses(hasUnsavedChanges)}`}
+                >
+                  {dirtyStateLabel}
+                </span>
+                <span className="editor-command-meta-chip border-slate-900/10 bg-white/78 text-slate-600">
+                  {workflowVersionLabel}
+                </span>
+              </div>
+            </div>
+
+            <label className="editor-command-name-field">
               <span className="muted-label">{messages.workflowEditorPage.workflowName}</span>
               <input
-                className="mt-1 h-11 w-full rounded-[1.35rem] border border-slate-900/12 bg-white/92 px-4 text-base font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] outline-none transition focus:border-amber-500"
+                className="editor-command-name-input"
                 data-testid="workflow-name-input"
                 onChange={(event) => setWorkflowName(event.target.value)}
                 placeholder={messages.workflowEditorPage.untitledWorkflow}
@@ -236,26 +255,9 @@ export function WorkflowEditorPage() {
             </label>
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2 rounded-[1.45rem] border border-slate-900/10 bg-white/72 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
-            <span
-              className={`inline-flex h-10 items-center rounded-full border px-3.5 text-xs font-semibold uppercase tracking-[0.18em] ${getStatusClasses(workflowStatus)}`}
-            >
-              {messages.common.workflowStatusLabels[workflowStatus]}
-            </span>
-            <span
-              className={`inline-flex h-10 items-center rounded-full border px-3.5 text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] ${getDirtyStateClasses(hasUnsavedChanges)}`}
-            >
-              {dirtyStateLabel}
-            </span>
-            <span className="inline-flex h-10 items-center rounded-full border border-slate-900/10 bg-white/84 px-3.5 text-sm font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
-              {workflowVersion === null
-                ? messages.workflowEditorPage.notSavedYet
-                : `v${workflowVersion}`}
-            </span>
-            <span className="hidden h-7 w-px bg-slate-200/90 sm:block" />
-
+          <div className="editor-command-actions">
             <button
-              className="inline-flex h-10 items-center rounded-full bg-amber-600 px-4 text-sm font-semibold text-white shadow-[0_18px_30px_-20px_rgba(141,69,20,0.62)] transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-amber-300"
+              className="editor-command-action editor-command-action-primary w-full sm:w-auto"
               data-testid="save-workflow-button"
               disabled={saving}
               onClick={() => void handleSave()}
@@ -264,7 +266,7 @@ export function WorkflowEditorPage() {
               {saving ? messages.workflowEditorPage.saving : messages.common.save}
             </button>
             <button
-              className="inline-flex h-10 items-center rounded-full border border-slate-900/10 bg-white/90 px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-500/40 hover:bg-white disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+              className="editor-command-action editor-command-action-secondary"
               data-testid="toggle-workflow-status-button"
               disabled={!workflowId || statusUpdating}
               onClick={() => void handleToggleStatus()}
@@ -276,7 +278,7 @@ export function WorkflowEditorPage() {
                 : toggleStatusLabel}
             </button>
             <button
-              className="inline-flex h-10 items-center rounded-full border border-slate-900/10 bg-white/90 px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-500/40 hover:bg-white disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+              className="editor-command-action editor-command-action-secondary"
               data-testid="run-workflow-button"
               disabled={!workflowId || running}
               onClick={() => void handleRun()}
@@ -289,7 +291,7 @@ export function WorkflowEditorPage() {
         </div>
 
         {pageError ? (
-          <div className="px-6 pb-5">
+          <div className="editor-command-bar__error">
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
               {pageError}
             </div>
@@ -297,7 +299,7 @@ export function WorkflowEditorPage() {
         ) : null}
       </section>
 
-      <section className="mx-auto grid min-h-0 w-full max-w-[1740px] flex-1 gap-4 overflow-hidden xl:grid-cols-[300px_minmax(0,1fr)_320px] xl:grid-rows-[minmax(0,1fr)] 2xl:grid-cols-[312px_minmax(0,1fr)_336px]">
+      <section className="mx-auto grid min-h-0 w-full max-w-[1740px] flex-1 gap-3 overflow-hidden xl:grid-cols-[300px_minmax(0,1fr)_320px] xl:grid-rows-[minmax(0,1fr)] 2xl:grid-cols-[312px_minmax(0,1fr)_336px]">
         <div className="min-h-0 overflow-hidden">
           <NodeSidebar />
         </div>
