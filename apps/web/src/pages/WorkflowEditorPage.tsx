@@ -314,7 +314,7 @@ export function WorkflowEditorPage() {
       <section
         className={`mx-auto grid min-h-0 w-full max-w-[1740px] flex-1 gap-3 overflow-hidden xl:grid-rows-[minmax(0,1fr)] ${
           toolboxCollapsed
-            ? 'xl:grid-cols-[48px_minmax(0,1fr)_320px] 2xl:grid-cols-[48px_minmax(0,1fr)_336px]'
+            ? 'xl:grid-cols-[48px_minmax(0,1fr)_380px] 2xl:grid-cols-[48px_minmax(0,1fr)_400px]'
             : 'xl:grid-cols-[300px_minmax(0,1fr)_320px] 2xl:grid-cols-[312px_minmax(0,1fr)_336px]'
         }`}
       >

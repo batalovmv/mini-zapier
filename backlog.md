@@ -2779,3 +2779,13 @@
 - **Проверка**:
   - `pnpm --filter @mini-zapier/web build` ✅
   - `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
+
+### TASK-R6: widen inspector to 380px when toolbox collapsed
+- **Статус**: `done`
+- **Цель**: увеличить inspector column до 380px (400px на 2xl) когда toolbox свёрнут, чтобы дать больше места для форм
+- **Scope**: CSS/grid изменение в `WorkflowEditorPage.tsx`
+- **Файлы**:
+  - `apps/web/src/pages/WorkflowEditorPage.tsx`
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/web build` ✅
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` ✅
