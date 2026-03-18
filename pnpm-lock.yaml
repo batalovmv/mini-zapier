@@ -34,6 +34,9 @@ importers:
       '@prisma/client':
         specifier: ^6.19.2
         version: 6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3)
+      '@types/nodemailer':
+        specifier: ^7.0.11
+        version: 7.0.11
       bullmq:
         specifier: ^5.70.4
         version: 5.70.4
@@ -65,9 +68,6 @@ importers:
         specifier: ^7.8.2
         version: 7.8.2
     devDependencies:
-      '@types/nodemailer':
-        specifier: ^7.0.0
-        version: 7.0.11
       '@types/pg':
         specifier: ^8.18.0
         version: 8.18.0
@@ -2840,7 +2840,7 @@ snapshots:
 
   '@types/nodemailer@7.0.11':
     dependencies:
-      '@types/node': 18.19.130
+      '@types/node': 25.3.5
 
   '@types/pg@8.18.0':
     dependencies:
