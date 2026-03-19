@@ -380,9 +380,18 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
       throw new Error('One or more editor node ids were missing.');
     }
 
-    await connectNodesWithTestHelper(page, webhookNodeId, httpNodeId);
-    await connectNodesWithTestHelper(page, httpNodeId, transformNodeId);
+    // Ensure test bridge is available before connecting
+    await page.waitForFunction(
+      () => typeof (window as any).__MINI_ZAPIER_TEST__?.connectNodes === 'function',
+      { timeout: 10000 },
+    );
 
+    await connectNodesWithTestHelper(page, webhookNodeId, httpNodeId);
+    await expect(page.locator('.react-flow__edge')).toHaveCount(1, {
+      timeout: 10000,
+    });
+
+    await connectNodesWithTestHelper(page, httpNodeId, transformNodeId);
     await expect(page.locator('.react-flow__edge')).toHaveCount(2, {
       timeout: 10000,
     });
