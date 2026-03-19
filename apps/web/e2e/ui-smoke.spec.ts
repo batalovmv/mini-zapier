@@ -99,9 +99,9 @@ async function signIn(page: Page): Promise<void> {
 }
 
 /**
- * Select a node via the test bridge, then verify the config panel actually
- * shows the expected node. Falls back to a DOM click on the node element if
- * the bridge selection doesn't take effect within a short timeout.
+ * Select a node and wait for the config panel to appear.
+ * Uses bridge first, falls back to DOM click.  Detects ErrorBoundary
+ * (the entire editor disappears when a React render error occurs).
  */
 async function selectEditorNode(
   page: Page,
@@ -110,26 +110,32 @@ async function selectEditorNode(
 ): Promise<void> {
   const configPanelStatus = page.getByTestId('config-panel-status-line');
 
-  // Deselect first so we can reliably detect when the new node is selected
-  await page.evaluate(
-    () => (window as any).__MINI_ZAPIER_TEST__?.selectNode(null),
-  );
-  // Brief pause for React to process deselection
-  await page.waitForTimeout(200);
+  // Ensure the node element is still in the DOM before attempting selection
+  await expect(nodeLocator).toBeVisible({ timeout: 5000 });
 
   // Try bridge first
-  await page.evaluate(
-    (id) => (window as any).__MINI_ZAPIER_TEST__?.selectNode(id),
+  const bridgeResult = await page.evaluate(
+    (id) => {
+      const bridge = (window as any).__MINI_ZAPIER_TEST__;
+      if (!bridge?.selectNode) return 'NO_BRIDGE';
+      bridge.selectNode(id);
+      return 'OK';
+    },
     nodeId,
   );
 
-  try {
-    await configPanelStatus.waitFor({ state: 'visible', timeout: 3000 });
-  } catch {
-    // Bridge didn't work — fall back to clicking the actual node
-    await nodeLocator.click({ force: true, timeout: 5000 });
-    await configPanelStatus.waitFor({ state: 'visible', timeout: 5000 });
+  if (bridgeResult === 'OK') {
+    try {
+      await configPanelStatus.waitFor({ state: 'visible', timeout: 3000 });
+      return;
+    } catch {
+      // Bridge selection didn't produce a visible panel — fall through to click
+    }
   }
+
+  // Fall back to clicking the actual node
+  await nodeLocator.click({ force: true, timeout: 5000 });
+  await configPanelStatus.waitFor({ state: 'visible', timeout: 5000 });
 }
 
 async function dropPaletteItem(options: {
@@ -441,8 +447,15 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
       },
     );
 
-    // Wait a bit for console logs to flush
-    await page.waitForTimeout(500);
+    // Wait for React to settle after edge additions
+    await page.waitForTimeout(1000);
+
+    // Detect if ErrorBoundary captured a render error (replaces entire UI)
+    const hasErrorBoundary = await page.locator('text=Reload').isVisible().catch(() => false);
+    if (hasErrorBoundary) {
+      const errorText = await page.locator('body').innerText();
+      throw new Error(`React ErrorBoundary triggered after connectNodes:\n${errorText}`);
+    }
 
     // Select webhook node and wait for config panel to appear
     await selectEditorNode(page, webhookNodeId, webhookNode);
