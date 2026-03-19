@@ -380,6 +380,12 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
       throw new Error('One or more editor node ids were missing.');
     }
 
+    // Wait for the test bridge to be available before connecting nodes
+    await page.waitForFunction(
+      () => !!(window as any).__MINI_ZAPIER_TEST__?.connectNodes,
+      { timeout: 10000 },
+    );
+
     await page.evaluate(
       ({ sourceNodeId, targetNodeId }) => {
         (
@@ -395,6 +401,10 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
         targetNodeId: httpNodeId,
       },
     );
+
+    // Small delay to let React Flow process the first connection
+    await page.waitForTimeout(300);
+
     await page.evaluate(
       ({ sourceNodeId, targetNodeId }) => {
         (
@@ -411,7 +421,9 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
       },
     );
 
-    await expect(page.locator('.react-flow__edge')).toHaveCount(2);
+    await expect(page.locator('.react-flow__edge')).toHaveCount(2, {
+      timeout: 10000,
+    });
 
     await webhookNode.click();
     await page.getByTestId('create-connection-button').click();
