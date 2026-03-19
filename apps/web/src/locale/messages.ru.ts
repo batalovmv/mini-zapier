@@ -237,11 +237,11 @@ export const ru = {
         DRAFT: 'Черновики',
       },
       attentionOptions: {
-        ALL: 'Все причины внимания',
-        failed: 'Ошибка в последнем запуске',
+        ALL: 'Любые',
+        failed: 'С ошибкой',
         paused: 'На паузе',
         draft: 'Черновик',
-        activeWithoutRuns: 'Активен без запусков',
+        activeWithoutRuns: 'Без запусков',
       },
       sortOptions: {
         attention: 'Требуют внимания',
