@@ -400,6 +400,56 @@ export class ExecutionService {
     };
   }
 
+  async retryExecution(
+    userId: string,
+    executionId: string,
+  ): Promise<{ executionId: string }> {
+    const execution = await this.prisma.workflowExecution.findFirst({
+      where: {
+        id: executionId,
+        workflow: { is: { userId } },
+      },
+      include: {
+        workflow: { include: { nodes: true, edges: true } },
+      },
+    });
+
+    if (!execution) {
+      throw new NotFoundException(`Execution "${executionId}" not found.`);
+    }
+
+    if (execution.status !== ExecutionStatus.FAILED) {
+      throw new BadRequestException('Only failed executions can be retried.');
+    }
+
+    const workflow = execution.workflow;
+
+    const newExecution = await this.prisma.workflowExecution.create({
+      data: {
+        workflowId: workflow.id,
+        workflowVersion: workflow.version,
+        status: ExecutionStatus.PENDING,
+        triggerData: execution.triggerData ?? Prisma.JsonNull,
+        definitionSnapshot: this.buildDefinitionSnapshot(workflow),
+      },
+      select: { id: true },
+    });
+
+    try {
+      await this.queueService.addWorkflowExecutionJob(newExecution.id);
+    } catch {
+      await this.prisma.workflowExecution.delete({
+        where: { id: newExecution.id },
+      });
+
+      throw new InternalServerErrorException(
+        'Failed to enqueue retry execution.',
+      );
+    }
+
+    return { executionId: newExecution.id };
+  }
+
   async getExecution(
     userId: string,
     executionId: string,

@@ -348,6 +348,15 @@ export const ru = {
     nothingInProgressTitle: 'Сейчас ничего не выполняется',
     nothingInProgressDescription:
       'Запуски в очереди и в процессе будут показаны здесь, пока работа не завершена.',
+    retryBtn: 'Повторить',
+    retryingBtn: 'Повторяем...',
+    retryConfirmTitle: 'Повторить запуск?',
+    retryConfirmWarning:
+      'Повторный запуск может вызвать побочные эффекты (отправка писем, запись в БД). Продолжить?',
+    retryConfirmYes: 'Повторить',
+    retryConfirmNo: 'Отмена',
+    retrySuccess: 'Повторный запуск создан',
+    retryError: 'Не удалось повторить запуск',
   },
   stepLogViewer: {
     eyebrow: 'Логи шагов',

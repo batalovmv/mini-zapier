@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { ConfirmationDialog } from '../components/ui/ConfirmationDialog';
 import { useLocale } from '../locale/LocaleProvider';
 import { getApiErrorMessage } from '../lib/api/client';
-import { listAllExecutions } from '../lib/api/executions';
+import { listAllExecutions, retryExecution } from '../lib/api/executions';
 import { listWorkflows } from '../lib/api/workflows';
 import type {
   ExecutionCounts,
@@ -63,6 +64,8 @@ export function GlobalExecutionHistoryPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowOption[]>([]);
+  const [retryTargetId, setRetryTargetId] = useState<string | null>(null);
+  const [retryingExecutionId, setRetryingExecutionId] = useState<string | null>(null);
 
   const requestRef = useRef(0);
 
@@ -150,6 +153,23 @@ export function GlobalExecutionHistoryPage() {
     }
 
     return formatDurationMs(finishedAt - startedAt);
+  }
+
+  async function handleRetryConfirm(): Promise<void> {
+    if (!retryTargetId) return;
+
+    const targetId = retryTargetId;
+    setRetryTargetId(null);
+    setRetryingExecutionId(targetId);
+
+    try {
+      await retryExecution(targetId);
+      void loadExecutions(page, statusFilter, workflowFilter);
+    } catch {
+      // Error is visible through list refresh
+    } finally {
+      setRetryingExecutionId(null);
+    }
   }
 
   const { items, total, counts } = response;
@@ -313,12 +333,27 @@ export function GlobalExecutionHistoryPage() {
                         {getDurationLabel(execution)}
                       </td>
                       <td className="px-6 py-4">
-                        <Link
-                          className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
-                          to={`/workflows/${execution.workflowId}/history`}
-                        >
-                          {messages.executionTable.view}
-                        </Link>
+                        <div className="flex gap-2">
+                          <Link
+                            className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+                            to={`/workflows/${execution.workflowId}/history`}
+                          >
+                            {messages.executionTable.view}
+                          </Link>
+                          {execution.status === 'FAILED' ? (
+                            <button
+                              className="rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:border-rose-400 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                              data-testid={`execution-retry-${execution.id}`}
+                              disabled={retryingExecutionId === execution.id}
+                              onClick={() => setRetryTargetId(execution.id)}
+                              type="button"
+                            >
+                              {retryingExecutionId === execution.id
+                                ? messages.executionTable.retryingBtn
+                                : messages.executionTable.retryBtn}
+                            </button>
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -353,6 +388,18 @@ export function GlobalExecutionHistoryPage() {
           </>
         )}
       </section>
+
+      {retryTargetId ? (
+        <ConfirmationDialog
+          cancelLabel={messages.executionTable.retryConfirmNo}
+          confirmLabel={messages.executionTable.retryConfirmYes}
+          confirmTone="danger"
+          description={messages.executionTable.retryConfirmWarning}
+          onCancel={() => setRetryTargetId(null)}
+          onConfirm={() => void handleRetryConfirm()}
+          title={messages.executionTable.retryConfirmTitle}
+        />
+      ) : null}
     </div>
   );
 }

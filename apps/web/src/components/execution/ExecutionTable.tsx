@@ -21,6 +21,8 @@ interface ExecutionTableProps {
   onPageChange: (page: number) => void;
   onSelectExecution: (executionId: string) => void;
   onStatusFilterChange: (status: ExecutionHistoryStatusFilter) => void;
+  onRetry?: (executionId: string) => void;
+  retryingExecutionId?: string | null;
 }
 
 function getExecutionStatusClasses(status: WorkflowExecutionDto['status']): string {
@@ -101,6 +103,8 @@ export function ExecutionTable({
   onPageChange,
   onSelectExecution,
   onStatusFilterChange,
+  onRetry,
+  retryingExecutionId,
 }: ExecutionTableProps) {
   const { messages, formatDateTime, formatDurationMs, formatNumber } = useLocale();
 
@@ -336,14 +340,29 @@ export function ExecutionTable({
                         {getDurationLabel(execution)}
                       </td>
                       <td className="px-6 py-4">
-                        <button
-                          className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
-                          data-testid={`execution-view-${execution.id}`}
-                          onClick={() => onSelectExecution(execution.id)}
-                          type="button"
-                        >
-                          {isSelected ? messages.executionTable.viewing : messages.executionTable.view}
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            className="rounded-full border border-slate-900/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500/40 hover:bg-amber-50"
+                            data-testid={`execution-view-${execution.id}`}
+                            onClick={() => onSelectExecution(execution.id)}
+                            type="button"
+                          >
+                            {isSelected ? messages.executionTable.viewing : messages.executionTable.view}
+                          </button>
+                          {execution.status === 'FAILED' && onRetry ? (
+                            <button
+                              className="rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:border-rose-400 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                              data-testid={`execution-retry-${execution.id}`}
+                              disabled={retryingExecutionId === execution.id}
+                              onClick={() => onRetry(execution.id)}
+                              type="button"
+                            >
+                              {retryingExecutionId === execution.id
+                                ? messages.executionTable.retryingBtn
+                                : messages.executionTable.retryBtn}
+                            </button>
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
                   );

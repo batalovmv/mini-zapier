@@ -2,11 +2,16 @@ import type { WorkflowExecutionDto } from '@mini-zapier/shared';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { ConfirmationDialog } from '../components/ui/ConfirmationDialog';
 import { ExecutionTable } from '../components/execution/ExecutionTable';
 import { StepLogViewer } from '../components/execution/StepLogViewer';
 import { useLocale } from '../locale/LocaleProvider';
 import { getApiErrorMessage } from '../lib/api/client';
-import { getExecution, listWorkflowExecutions } from '../lib/api/executions';
+import {
+  getExecution,
+  listWorkflowExecutions,
+  retryExecution,
+} from '../lib/api/executions';
 import type {
   ExecutionHistoryStatusFilter,
   ExecutionListResponse,
@@ -59,6 +64,9 @@ export function ExecutionHistoryPage() {
   const [detailRefreshing, setDetailRefreshing] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
+
+  const [retryTargetId, setRetryTargetId] = useState<string | null>(null);
+  const [retryingExecutionId, setRetryingExecutionId] = useState<string | null>(null);
 
   const listRequestRef = useRef(0);
   const detailRequestRef = useRef(0);
@@ -265,6 +273,27 @@ export function ExecutionHistoryPage() {
     setPage(1);
   }
 
+  function handleRetryRequest(executionId: string): void {
+    setRetryTargetId(executionId);
+  }
+
+  async function handleRetryConfirm(): Promise<void> {
+    if (!retryTargetId) return;
+
+    const targetId = retryTargetId;
+    setRetryTargetId(null);
+    setRetryingExecutionId(targetId);
+
+    try {
+      await retryExecution(targetId);
+      void loadExecutionList(page, statusFilter);
+    } catch {
+      // Error is visible through list refresh
+    } finally {
+      setRetryingExecutionId(null);
+    }
+  }
+
   return (
     <div className="space-y-8">
       <section className="app-panel overflow-hidden">
@@ -308,10 +337,12 @@ export function ExecutionHistoryPage() {
           limit={executionsResponse.limit}
           loading={listLoading}
           onPageChange={setPage}
+          onRetry={handleRetryRequest}
           onSelectExecution={handleSelectExecution}
           onStatusFilterChange={handleStatusFilterChange}
           page={executionsResponse.page}
           refreshing={listRefreshing}
+          retryingExecutionId={retryingExecutionId}
           selectedExecutionId={selectedExecutionId}
           statusFilter={statusFilter}
           total={executionsResponse.total}
@@ -324,6 +355,18 @@ export function ExecutionHistoryPage() {
           refreshing={detailRefreshing}
         />
       </section>
+
+      {retryTargetId ? (
+        <ConfirmationDialog
+          cancelLabel={messages.executionTable.retryConfirmNo}
+          confirmLabel={messages.executionTable.retryConfirmYes}
+          confirmTone="danger"
+          description={messages.executionTable.retryConfirmWarning}
+          onCancel={() => setRetryTargetId(null)}
+          onConfirm={() => void handleRetryConfirm()}
+          title={messages.executionTable.retryConfirmTitle}
+        />
+      ) : null}
     </div>
   );
 }

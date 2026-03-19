@@ -2809,3 +2809,21 @@
   - `pnpm --filter @mini-zapier/api build` ✅
   - `pnpm --filter @mini-zapier/web build` ✅
   - `pnpm --filter @mini-zapier/web exec playwright test --list` — 4 smoke tests ✅
+
+### TASK-R14: add retry for failed executions with safety confirmation
+- **Статус**: `done`
+- **Цель**: POST /api/executions/:id/retry для FAILED executions + кнопка Retry с confirmation dialog о side effects
+- **Scope**: backend retry endpoint + frontend retry button в ExecutionTable и GlobalExecutionHistoryPage + confirmation dialog + i18n EN/RU
+- **Файлы**:
+  - `apps/api/src/execution/execution.controller.ts`
+  - `apps/api/src/execution/execution.service.ts`
+  - `apps/web/src/lib/api/executions.ts`
+  - `apps/web/src/components/execution/ExecutionTable.tsx`
+  - `apps/web/src/pages/ExecutionHistoryPage.tsx`
+  - `apps/web/src/pages/GlobalExecutionHistoryPage.tsx`
+  - `apps/web/src/locale/messages.en.ts`
+  - `apps/web/src/locale/messages.ru.ts`
+- **Проверка**:
+  - `pnpm --filter @mini-zapier/api build` ✅
+  - `pnpm --filter @mini-zapier/web build` ✅
+  - `pnpm --filter @mini-zapier/web exec playwright test --list` — 4 smoke tests ✅

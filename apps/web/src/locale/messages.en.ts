@@ -319,6 +319,15 @@ export const en = {
     nothingInProgressTitle: 'Nothing in progress',
     nothingInProgressDescription:
       'Queued and running executions will appear here while work is still in progress.',
+    retryBtn: 'Retry',
+    retryingBtn: 'Retrying...',
+    retryConfirmTitle: 'Retry execution?',
+    retryConfirmWarning:
+      'Retrying may cause side effects (sending emails, DB writes). Continue?',
+    retryConfirmYes: 'Retry',
+    retryConfirmNo: 'Cancel',
+    retrySuccess: 'Retry execution created',
+    retryError: 'Failed to retry execution',
   },
   stepLogViewer: {
     eyebrow: 'Step logs',

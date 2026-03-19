@@ -124,6 +124,23 @@ export class ExecutionController {
     return this.executionService.getAvailableFields(currentUser.id, workflowId);
   }
 
+  @Post('executions/:id/retry')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({ summary: 'Retry a failed execution with original trigger data' })
+  @ApiParam({ name: 'id', description: 'Execution id' })
+  @ApiAcceptedResponse({
+    description: 'Retry execution created and queued.',
+    schema: { example: { executionId: 'cm123retryexec' } },
+  })
+  @ApiNotFoundResponse({ description: 'Execution not found.' })
+  @ApiBadRequestResponse({ description: 'Execution is not in FAILED status.' })
+  async retryExecution(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id') executionId: string,
+  ): Promise<{ executionId: string }> {
+    return this.executionService.retryExecution(currentUser.id, executionId);
+  }
+
   @Get('executions')
   @ApiOperation({
     summary: 'List all executions for the current user with optional filters',

@@ -69,6 +69,16 @@ export async function listAllExecutions(
   return response.data;
 }
 
+export async function retryExecution(
+  executionId: string,
+): Promise<ExecutionStartResponse> {
+  const response = await apiClient.post<ExecutionStartResponse>(
+    `/executions/${executionId}/retry`,
+  );
+
+  return response.data;
+}
+
 export async function getExecution(
   executionId: string,
 ): Promise<WorkflowExecutionDto> {
