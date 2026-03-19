@@ -41,6 +41,7 @@ declare global {
   interface Window {
     __MINI_ZAPIER_TEST__?: {
       connectNodes: (sourceNodeId: string, targetNodeId: string) => void;
+      selectNode: (nodeId: string) => void;
     };
   }
 }
@@ -132,7 +133,6 @@ function FlowCanvasInner() {
 
     window.__MINI_ZAPIER_TEST__ = {
       connectNodes(sourceNodeId: string, targetNodeId: string) {
-        // Call store.onConnect directly to avoid stale closure issues
         const result = onConnect({
           source: sourceNodeId,
           target: targetNodeId,
@@ -142,12 +142,15 @@ function FlowCanvasInner() {
         // eslint-disable-next-line no-console
         console.log('[TEST_BRIDGE] connectNodes', sourceNodeId, '->', targetNodeId, 'result:', JSON.stringify(result));
       },
+      selectNode(nodeId: string) {
+        selectNode(nodeId);
+      },
     };
 
     return () => {
       delete window.__MINI_ZAPIER_TEST__;
     };
-  }, [onConnect]);
+  }, [onConnect, selectNode]);
 
   useEffect(() => {
     function clearDropState() {

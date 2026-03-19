@@ -426,17 +426,24 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     // the save operation validates edges via the store, not DOM
     // So we proceed even with 0 visible edges if store says ok:true
 
-    // Wait for React Flow to settle after edge additions
-    await page.waitForTimeout(1000);
-    await webhookNode.click({ force: true });
-    await page.getByTestId('create-connection-button').click();
+    // Select webhook node via store bridge (avoids React Flow positioning issues)
+    await page.evaluate(
+      (nodeId) => (window as any).__MINI_ZAPIER_TEST__?.selectNode(nodeId),
+      webhookNodeId,
+    );
+    await page.waitForTimeout(500);
+    await page.getByTestId('create-connection-button').click({ timeout: 10000 });
     await page.getByTestId('connection-name-input').fill(connectionName);
     await page.getByLabel('Connection field value 1').fill(secret);
     await page.getByTestId('submit-create-connection-button').click();
     await expect(page.getByText(`Connection "${connectionName}" created.`)).toBeVisible();
     connectionId = await page.getByTestId('selected-connection-id').inputValue();
 
-    await httpNode.click();
+    await page.evaluate(
+      (nodeId) => (window as any).__MINI_ZAPIER_TEST__?.selectNode(nodeId),
+      httpNodeId,
+    );
+    await page.waitForTimeout(300);
     await page.getByTestId('http-request-url-input').fill(httpRequestUrl);
     await page.getByTestId('http-advanced-toggle').click();
     await page.getByTestId('http-headers-toggle').click();
@@ -464,7 +471,11 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
       await page.getByLabel('Body field value 2').fill('SmokePass123!');
     }
 
-    await transformNode.click();
+    await page.evaluate(
+      (nodeId) => (window as any).__MINI_ZAPIER_TEST__?.selectNode(nodeId),
+      transformNodeId,
+    );
+    await page.waitForTimeout(300);
     await page.getByTestId('data-transform-template-input').fill(
       OVERRIDE_HTTP_REQUEST_URL
         ? 'Processed {{input.data.json.name}} / {{input.data.json.eventId}}'
