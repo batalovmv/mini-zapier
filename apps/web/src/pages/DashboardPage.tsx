@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 
@@ -216,6 +216,56 @@ export function DashboardPage() {
     setSearchQuery('');
     setStatusFilter('ALL');
     setAttentionFilter('ALL');
+  }
+
+  const workflowListRef = useRef<HTMLDivElement>(null);
+
+  const handleAttentionCardClick = useCallback(
+    (key: AttentionReasonKey) => {
+      const isAlreadyActive = isAttentionCardActive(key);
+
+      if (isAlreadyActive) {
+        setStatusFilter('ALL');
+        setAttentionFilter('ALL');
+      } else {
+        setSearchQuery('');
+        switch (key) {
+          case 'failed':
+            setStatusFilter('ALL');
+            setAttentionFilter('failed');
+            break;
+          case 'paused':
+            setStatusFilter(PAUSED_STATUS);
+            setAttentionFilter('ALL');
+            break;
+          case 'activeWithoutRuns':
+            setStatusFilter(ACTIVE_STATUS);
+            setAttentionFilter('activeWithoutRuns');
+            break;
+          case 'draft':
+            setStatusFilter(DRAFT_STATUS);
+            setAttentionFilter('ALL');
+            break;
+        }
+        workflowListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    },
+    [statusFilter, attentionFilter],
+  );
+
+  function isAttentionCardActive(key: AttentionReasonKey): boolean {
+    switch (key) {
+      case 'failed':
+        return attentionFilter === 'failed';
+      case 'paused':
+        return statusFilter === PAUSED_STATUS && attentionFilter === 'ALL';
+      case 'activeWithoutRuns':
+        return statusFilter === ACTIVE_STATUS && attentionFilter === 'activeWithoutRuns';
+      case 'draft':
+        return statusFilter === DRAFT_STATUS && attentionFilter === 'ALL';
+      default:
+        return false;
+    }
   }
 
   function getRecentExecutionSummary(
@@ -482,12 +532,23 @@ export function DashboardPage() {
             </div>
 
             <div className={`mt-3.5 grid gap-2.5 md:grid-cols-2 ${visibleAttentionItems.length >= 4 ? 'xl:grid-cols-4' : visibleAttentionItems.length === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-2'}`}>
-              {visibleAttentionItems.map((item) => (
+              {visibleAttentionItems.map((item) => {
+                const active = isAttentionCardActive(item.key as AttentionReasonKey);
+                return (
                 <article
                   key={item.key}
-                  className={`dashboard-attention-card ${item.activeClass}`}
-                  data-active={true}
+                  className={`dashboard-attention-card cursor-pointer transition-shadow hover:shadow-md ${active ? 'ring-2 ring-offset-1 ring-slate-900/20 shadow-md' : ''} ${item.activeClass}`}
+                  data-active={active}
                   data-testid={`dashboard-attention-${item.key}`}
+                  onClick={() => handleAttentionCardClick(item.key as AttentionReasonKey)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleAttentionCardClick(item.key as AttentionReasonKey);
+                    }
+                  }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -512,13 +573,14 @@ export function DashboardPage() {
                     </div>
                   </div>
                 </article>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.72fr)_minmax(18rem,0.9fr)] xl:items-start xl:gap-5">
+      <div ref={workflowListRef} className="grid gap-4 xl:grid-cols-[minmax(0,1.72fr)_minmax(18rem,0.9fr)] xl:items-start xl:gap-5">
         <WorkflowList
           attentionFilter={attentionFilter}
           controlsDisabled={controlsDisabled}

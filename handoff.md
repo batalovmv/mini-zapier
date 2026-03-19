@@ -3,7 +3,7 @@
 > Обновляется после каждой завершённой задачи. Новая сессия начинается с чтения этого файла.
 
 ## Текущее состояние
-- **Последнее изменение**: TASK-S1 — `shorten RU workflow action labels and add client-side pagination`
+- **Последнее изменение**: TASK-S2 — `make attention cards clickable to filter workflow list`
 - **Статус проекта**: backlog v1 закрыт + post-v1 fix закрыт + TASK-018–056 закрыты + TASK-A закрыт + TASK-B закрыт + TASK-C закрыт + TASK-D закрыт + TASK-E закрыт + TASK-F закрыт + TASK-G закрыт + TASK-H закрыт + TASK-I закрыт + TASK-J закрыт + TASK-K закрыт + TASK-L закрыт + TASK-M закрыт + TASK-N1 закрыт + TASK-N2 закрыт + TASK-N3 закрыт + TASK-N4 закрыт + TASK-N5 закрыт + TASK-N6 закрыт + TASK-N7 закрыт + TASK-N8 закрыт + TASK-O0 закрыт + TASK-O1 закрыт + TASK-O2 закрыт + TASK-O3 закрыт + TASK-O4 закрыт + TASK-O5 закрыт + TASK-O6 закрыт + TASK-P1 закрыт + TASK-P2 закрыт + TASK-P3 закрыт + TASK-P4 закрыт + TASK-P5 закрыт + TASK-P6 закрыт + TASK-P7 закрыт + TASK-Q0 закрыт + TASK-Q1 закрыт + TASK-Q2 закрыт + TASK-Q3 закрыт + TASK-Q4 закрыт + TASK-Q5 закрыт + TASK-R1 закрыт + TASK-R2 закрыт + TASK-R3 закрыт + TASK-R4 закрыт + TASK-R5 закрыт + TASK-R6 закрыт + TASK-R7 закрыт; connections catalog track закрыт, `/connections` и editor connection picker получили стабильные QA hooks, а smoke больше не зависит от старого `<select>` semantics; известные backend error messages теперь локализуются на фронте
 - **TASK-Q0 planning**: connections catalog redesign/scale track разложен на последовательные задачи `TASK-Q1`–`TASK-Q5`; первый implementation slice добавляет scalable summary API для больших библиотек подключений, не ломая существующие `GET /connections` и `GET /connections/:id`
 - **TASK-Q1 local build**: добавлен owner-scoped `GET /api/connections/catalog` с backend pagination/filter/sort/query (`page`, `limit`, `query`, `type`, `usage`, `sort`), summary-only payload без `credentials`, shared enums/contracts для catalog response, Swagger query/response DTO и page-level `usageCount` aggregation; существующие `GET /api/connections` и `GET /api/connections/:id` сохранены без breaking changes. Локально подтверждены `pnpm --filter @mini-zapier/shared build` и `pnpm --filter @mini-zapier/api build` ✅
@@ -786,7 +786,7 @@
     - `pnpm --filter @mini-zapier/web build`
     - desktop visual smoke dashboard/editor через локальный `vite preview` + Playwright screenshots с mock `GET /api/auth/me`, `GET /api/stats`, `GET /api/workflows`, `GET /api/workflows/:id/executions`, `GET /api/connections`
 ## Следующий шаг
-Следующий рабочий срез: не назначен. TASK-S1 закрыт.
+Следующий рабочий срез: не назначен. TASK-S2 закрыт.
 
 Перед новым кодовым срезом:
 - connections catalog track `TASK-Q0`–`TASK-Q5` закрыт; не открывать новый follow-up по `/connections` или editor picker без нового TASK-ID
@@ -992,3 +992,4 @@
 | TASK-R13 | done | см. `git log` (`TASK-R13: add type-specific connection test endpoint and UI button`) | POST /api/connections/:id/test with type-specific testing (SMTP verify, Telegram getMe, PostgreSQL SELECT 1, Webhook info); ConnectionTestService with 10s timeout; "Test" button in ConnectionFormDialog edit mode with result display; webhook info banner; EN/RU locale; both builds pass |
 | TASK-R14 | done | см. `git log` (`TASK-R14: add retry for failed executions with safety confirmation`) | POST /api/executions/:id/retry creates new execution with original triggerData + current workflow version; retry button in ExecutionTable and GlobalExecutionHistoryPage (FAILED only); ConfirmationDialog warns about side effects; EN/RU locale; both builds pass |
 | TASK-S1 | done | см. `git log` (`TASK-S1: shorten RU workflow action labels and add client-side pagination`) | RU card labels shortened (Изменить/Включить/Пауза); card-specific short keys for activate/pause to preserve long forms in editor; client-side pagination 10/page with Prev/Next + page indicator; resets on filter/search change; both builds pass |
+| TASK-S2 | done | см. `git log` (`TASK-S2: make attention cards clickable to filter workflow list`) | Attention cards clickable with cursor-pointer + hover shadow; click sets status/attention filters (failed→attention, paused→status, activeWithoutRuns→status+attention, draft→status); toggle on repeat click; ring-2 highlight on active card; smooth scroll to workflow list; keyboard accessible (Enter/Space); build passes |
