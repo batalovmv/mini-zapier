@@ -1,8 +1,12 @@
+import { useEffect, useState } from 'react';
+
 import { useLocale } from '../../locale/LocaleProvider';
 import { DashboardWorkflowSummary } from '../../lib/api/types';
 import { EmptyState } from '../ui/EmptyState';
 import { LoadingState } from '../ui/LoadingState';
 import { WorkflowCard, WorkflowCardAction } from './WorkflowCard';
+
+const PAGE_SIZE = 10;
 
 export type WorkflowListStatusFilter = DashboardWorkflowSummary['status'] | 'ALL';
 export type WorkflowListAttentionFilter =
@@ -58,6 +62,20 @@ export function WorkflowList({
   onDelete,
 }: WorkflowListProps) {
   const { messages } = useLocale();
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to page 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, attentionFilter, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil(workflows.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedWorkflows = workflows.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE,
+  );
+
   const hasActiveFilters =
     searchQuery.trim().length > 0 ||
     statusFilter !== 'ALL' ||
@@ -247,23 +265,57 @@ export function WorkflowList({
             />
           </div>
         ) : (
-          <div className="workflow-list-shell" data-testid="dashboard-workflow-rows">
-            {workflows.map((workflow) => (
-              <WorkflowCard
-                key={workflow.id}
-                executionLoading={refreshing}
-                onDelete={onDelete}
-                onRun={onRun}
-                onToggleStatus={onToggleStatus}
-                pendingAction={
-                  pendingAction?.workflowId === workflow.id
-                    ? pendingAction.action
-                    : null
-                }
-                workflow={workflow}
-              />
-            ))}
-          </div>
+          <>
+            <div className="workflow-list-shell" data-testid="dashboard-workflow-rows">
+              {paginatedWorkflows.map((workflow) => (
+                <WorkflowCard
+                  key={workflow.id}
+                  executionLoading={refreshing}
+                  onDelete={onDelete}
+                  onRun={onRun}
+                  onToggleStatus={onToggleStatus}
+                  pendingAction={
+                    pendingAction?.workflowId === workflow.id
+                      ? pendingAction.action
+                      : null
+                  }
+                  workflow={workflow}
+                />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div
+                className="mt-4 flex items-center justify-center gap-3"
+                data-testid="dashboard-pagination"
+              >
+                <button
+                  className="rounded border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  data-testid="dashboard-pagination-prev"
+                  disabled={safePage <= 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  type="button"
+                >
+                  {messages.workflowList.pagination.prev}
+                </button>
+                <span
+                  className="text-sm text-slate-600"
+                  data-testid="dashboard-pagination-info"
+                >
+                  {messages.workflowList.pagination.pageOf(safePage, totalPages)}
+                </span>
+                <button
+                  className="rounded border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  data-testid="dashboard-pagination-next"
+                  disabled={safePage >= totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  type="button"
+                >
+                  {messages.workflowList.pagination.next}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>

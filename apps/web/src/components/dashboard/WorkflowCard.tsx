@@ -85,8 +85,8 @@ export function WorkflowCard({
   const attentionReason = getRowAttentionReason(workflow, messages);
   const statusActionLabel =
     workflow.status === 'ACTIVE'
-      ? messages.common.pause
-      : messages.common.activate;
+      ? messages.workflowCard.pauseShort
+      : messages.workflowCard.activateShort;
   const primaryActionLabel =
     workflow.status === 'DRAFT' ? messages.common.edit : messages.common.open;
   const lastExecution = workflow.lastExecution;

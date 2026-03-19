@@ -227,6 +227,11 @@ export const en = {
       },
     },
     createWorkflow: 'Create Workflow',
+    pagination: {
+      prev: 'Prev',
+      next: 'Next',
+      pageOf: (page: number, total: number) => `Page ${page} of ${total}`,
+    },
   },
   workflowCard: {
     eyebrow: 'Workflow',
@@ -249,6 +254,8 @@ export const en = {
       failed: 'Failed last run',
       activeWithoutRuns: 'Waiting for first run',
     },
+    activateShort: 'Activate',
+    pauseShort: 'Pause',
     running: 'Running...',
     updating: 'Updating...',
     deleting: 'Deleting...',
