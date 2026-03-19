@@ -448,23 +448,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     );
 
     // Wait for React to settle after edge additions
-    await page.waitForTimeout(1000);
-
-    // Diagnostic: dump page state if editor nodes vanished
-    const editorNodesCount = await page.locator('[data-testid="editor-node"]').count();
-    if (editorNodesCount === 0) {
-      const url = page.url();
-      const bodyText = await page.locator('body').innerText().catch(() => '(unable to read body)');
-      const bodySnippet = bodyText.slice(0, 500);
-      throw new Error(
-        `All editor nodes vanished after connectNodes.\n` +
-        `URL: ${url}\n` +
-        `Nodes in DOM: ${editorNodesCount}\n` +
-        `Console errors: ${consoleErrors.join('; ') || 'none'}\n` +
-        `Page errors: ${pageErrors.join('; ') || 'none'}\n` +
-        `Body text (first 500 chars): ${bodySnippet}`,
-      );
-    }
+    await page.waitForTimeout(500);
 
     // Select webhook node and wait for config panel to appear
     await selectEditorNode(page, webhookNodeId, webhookNode);

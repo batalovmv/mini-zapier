@@ -469,21 +469,19 @@ export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: Fi
       ? computeChainPosition(nodes, edges, selectedNodeId)
       : -1;
 
-  if (chainPosition < 0) {
-    return null;
-  }
-
   const currentFingerprint = computeStructuralFingerprint(nodes, edges);
 
-  const positionData = data?.positions.find(
-    (p) => p.position === chainPosition,
-  );
+  const positionData =
+    chainPosition >= 0
+      ? data?.positions.find((p) => p.position === chainPosition)
+      : undefined;
   const tree = positionData?.tree ?? [];
   const fields = positionData?.fields ?? [];
   const hasCurrentPositionData = tree.length > 0 || fields.length > 0;
 
   // Bypass unsaved-changes warning only when test results (not stale API data) provide data for this position
-  const hasTestOverlayForPosition = overlay.testPositions.has(chainPosition);
+  const hasTestOverlayForPosition =
+    chainPosition >= 0 && overlay.testPositions.has(chainPosition);
   const hasUnsavedChanges =
     savedFingerprint !== null &&
     currentFingerprint !== savedFingerprint &&
@@ -561,6 +559,10 @@ export function FieldPicker({ onSelect, open: controlledOpen, onOpenChange }: Fi
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [open]);
+
+  if (chainPosition < 0) {
+    return null;
+  }
 
   function handleToggle() {
     if (open) {
