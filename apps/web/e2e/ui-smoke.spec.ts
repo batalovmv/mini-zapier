@@ -132,6 +132,11 @@ async function connectNodesWithTestHelper(
   sourceNodeId: string,
   targetNodeId: string,
 ): Promise<void> {
+  // Ensure bridge is available (may be re-created after React re-renders)
+  await page.waitForFunction(
+    () => typeof (window as any).__MINI_ZAPIER_TEST__?.connectNodes === 'function',
+    { timeout: 10000 },
+  );
   await page.evaluate(
     ({ sourceNodeId, targetNodeId }) => {
       (
@@ -140,13 +145,15 @@ async function connectNodesWithTestHelper(
             connectNodes: (sourceNodeId: string, targetNodeId: string) => void;
           };
         }
-      ).__MINI_ZAPIER_TEST__?.connectNodes(sourceNodeId, targetNodeId);
+      ).__MINI_ZAPIER_TEST__!.connectNodes(sourceNodeId, targetNodeId);
     },
     {
       sourceNodeId,
       targetNodeId,
     },
   );
+  // Small delay for React Flow to process the connection
+  await page.waitForTimeout(200);
 }
 
 test('blocks adding a second trigger to the canvas', async ({ page }) => {
@@ -379,12 +386,6 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     if (!webhookNodeId || !httpNodeId || !transformNodeId) {
       throw new Error('One or more editor node ids were missing.');
     }
-
-    // Ensure test bridge is available before connecting
-    await page.waitForFunction(
-      () => typeof (window as any).__MINI_ZAPIER_TEST__?.connectNodes === 'function',
-      { timeout: 10000 },
-    );
 
     await connectNodesWithTestHelper(page, webhookNodeId, httpNodeId);
     await expect(page.locator('.react-flow__edge')).toHaveCount(1, {
