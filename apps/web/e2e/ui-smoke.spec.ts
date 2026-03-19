@@ -86,7 +86,7 @@ async function signIn(page: Page): Promise<void> {
   await expect(page.getByRole('heading', { name: 'Mini-Zapier' })).toBeVisible();
 
   await page.getByLabel('Email').fill(E2E_EMAIL);
-  await page.getByLabel('Password').fill(E2E_PASSWORD);
+  await page.locator('#password').fill(E2E_PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();
 
   try {
