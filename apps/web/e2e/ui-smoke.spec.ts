@@ -426,7 +426,9 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     // the save operation validates edges via the store, not DOM
     // So we proceed even with 0 visible edges if store says ok:true
 
-    await webhookNode.click();
+    // Wait for React Flow to settle after edge additions
+    await page.waitForTimeout(1000);
+    await webhookNode.click({ force: true });
     await page.getByTestId('create-connection-button').click();
     await page.getByTestId('connection-name-input').fill(connectionName);
     await page.getByLabel('Connection field value 1').fill(secret);
