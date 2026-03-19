@@ -302,10 +302,15 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
   }
 
   const consoleErrors: string[] = [];
+  const bridgeLogs: string[] = [];
   const pageErrors: string[] = [];
 
   page.on('console', (message) => {
     const messageText = message.text();
+
+    if (messageText.includes('[TEST_BRIDGE]')) {
+      bridgeLogs.push(messageText);
+    }
 
     if (
       message.type() === 'error' &&
@@ -412,6 +417,16 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
         ],
       },
     );
+
+    // Wait a bit for console logs to flush
+    await page.waitForTimeout(500);
+
+    // Log bridge results for debugging
+    if (bridgeLogs.length > 0) {
+      console.log('Bridge logs:', bridgeLogs.join(' | '));
+    } else {
+      console.log('WARNING: No bridge logs captured — connectNodes may not have been called');
+    }
 
     await expect(page.locator('.react-flow__edge')).toHaveCount(2, {
       timeout: 15000,

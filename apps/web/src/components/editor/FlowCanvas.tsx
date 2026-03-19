@@ -133,12 +133,14 @@ function FlowCanvasInner() {
     window.__MINI_ZAPIER_TEST__ = {
       connectNodes(sourceNodeId: string, targetNodeId: string) {
         // Call store.onConnect directly to avoid stale closure issues
-        onConnect({
+        const result = onConnect({
           source: sourceNodeId,
           target: targetNodeId,
           sourceHandle: null,
           targetHandle: null,
         });
+        // eslint-disable-next-line no-console
+        console.log('[TEST_BRIDGE] connectNodes', sourceNodeId, '->', targetNodeId, 'result:', JSON.stringify(result));
       },
     };
 
