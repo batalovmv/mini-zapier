@@ -341,8 +341,14 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
   try {
     await signIn(page);
 
-    await page.goto('/workflows/new');
+    // Full page reload to ensure clean React state from previous tests
+    await page.goto('/workflows/new', { waitUntil: 'networkidle' });
     await expect(page.getByTestId('workflow-name-input')).toBeVisible();
+
+    // Ensure no stale nodes from previous tests
+    await expect(page.locator('[data-testid="editor-node"]')).toHaveCount(0, {
+      timeout: 5000,
+    });
 
     await page.getByTestId('workflow-name-input').fill(workflowName);
 
