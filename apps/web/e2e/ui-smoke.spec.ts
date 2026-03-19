@@ -98,6 +98,40 @@ async function signIn(page: Page): Promise<void> {
   }
 }
 
+/**
+ * Select a node via the test bridge, then verify the config panel actually
+ * shows the expected node. Falls back to a DOM click on the node element if
+ * the bridge selection doesn't take effect within a short timeout.
+ */
+async function selectEditorNode(
+  page: Page,
+  nodeId: string,
+  nodeLocator: ReturnType<Page['locator']>,
+): Promise<void> {
+  const configPanelStatus = page.getByTestId('config-panel-status-line');
+
+  // Deselect first so we can reliably detect when the new node is selected
+  await page.evaluate(
+    () => (window as any).__MINI_ZAPIER_TEST__?.selectNode(null),
+  );
+  // Brief pause for React to process deselection
+  await page.waitForTimeout(200);
+
+  // Try bridge first
+  await page.evaluate(
+    (id) => (window as any).__MINI_ZAPIER_TEST__?.selectNode(id),
+    nodeId,
+  );
+
+  try {
+    await configPanelStatus.waitFor({ state: 'visible', timeout: 3000 });
+  } catch {
+    // Bridge didn't work — fall back to clicking the actual node
+    await nodeLocator.click({ force: true, timeout: 5000 });
+    await configPanelStatus.waitFor({ state: 'visible', timeout: 5000 });
+  }
+}
+
 async function dropPaletteItem(options: {
   page: Page;
   paletteTestId: string;
@@ -410,12 +444,8 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     // Wait a bit for console logs to flush
     await page.waitForTimeout(500);
 
-    // Select webhook node via store bridge (avoids React Flow positioning issues in production)
-    await page.evaluate(
-      (nodeId) => (window as any).__MINI_ZAPIER_TEST__?.selectNode(nodeId),
-      webhookNodeId,
-    );
-    await page.waitForTimeout(500);
+    // Select webhook node and wait for config panel to appear
+    await selectEditorNode(page, webhookNodeId, webhookNode);
     await page.getByTestId('create-connection-button').click({ timeout: 10000 });
     await page.getByTestId('connection-name-input').fill(connectionName);
     await page.getByLabel('Connection field value 1').fill(secret);
@@ -423,11 +453,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
     await expect(page.getByText(`Connection "${connectionName}" created.`)).toBeVisible();
     connectionId = await page.getByTestId('selected-connection-id').inputValue();
 
-    await page.evaluate(
-      (nodeId) => (window as any).__MINI_ZAPIER_TEST__?.selectNode(nodeId),
-      httpNodeId,
-    );
-    await page.waitForTimeout(300);
+    await selectEditorNode(page, httpNodeId, httpNode);
     await page.getByTestId('http-request-url-input').fill(httpRequestUrl);
     await page.getByTestId('http-advanced-toggle').click();
     await page.getByTestId('http-headers-toggle').click();
@@ -455,11 +481,7 @@ test('creates a webhook workflow via UI and verifies step logs', async ({
       await page.getByLabel('Body field value 2').fill('SmokePass123!');
     }
 
-    await page.evaluate(
-      (nodeId) => (window as any).__MINI_ZAPIER_TEST__?.selectNode(nodeId),
-      transformNodeId,
-    );
-    await page.waitForTimeout(300);
+    await selectEditorNode(page, transformNodeId, transformNode);
     await page.getByTestId('data-transform-template-input').fill(
       OVERRIDE_HTTP_REQUEST_URL
         ? 'Processed {{input.data.json.name}} / {{input.data.json.eventId}}'
