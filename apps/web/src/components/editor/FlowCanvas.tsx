@@ -123,9 +123,6 @@ function FlowCanvasInner() {
     };
   }, [reactFlow, viewport, workflowId, workflowVersion]);
 
-  const handleConnectRef = useRef(handleConnect);
-  handleConnectRef.current = handleConnect;
-
   useEffect(() => {
     const isAutomatedBrowser = window.navigator.webdriver;
 
@@ -135,7 +132,8 @@ function FlowCanvasInner() {
 
     window.__MINI_ZAPIER_TEST__ = {
       connectNodes(sourceNodeId: string, targetNodeId: string) {
-        handleConnectRef.current({
+        // Call store.onConnect directly to avoid stale closure issues
+        onConnect({
           source: sourceNodeId,
           target: targetNodeId,
           sourceHandle: null,
@@ -147,7 +145,7 @@ function FlowCanvasInner() {
     return () => {
       delete window.__MINI_ZAPIER_TEST__;
     };
-  }, []);
+  }, [onConnect]);
 
   useEffect(() => {
     function clearDropState() {
